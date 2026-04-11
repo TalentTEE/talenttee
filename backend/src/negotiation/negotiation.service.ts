@@ -86,11 +86,12 @@ export class NegotiationService {
     });
   }
 
-  async intervene(sessionId: string, direction: string): Promise<void> {
-    // Verify session exists
-    await this.getSession(sessionId);
+  async intervene(sessionId: string, nearAccountId: string, direction: string): Promise<void> {
+    const session = await this.getSession(sessionId);
+    // 역할 판별: seeker인지 employer인지에 따라 별도 키로 저장
+    const role = session.seeker?.nearAccountId === nearAccountId ? 'SEEKER' : 'EMPLOYER';
     // NOTE: In-memory only — 서버 재시작 시 소실
-    this.interventions.set(sessionId, direction);
+    this.interventions.set(`${sessionId}:${role}`, direction);
   }
 
   private async executeRounds(session: NegotiationSession): Promise<void> {
@@ -110,7 +111,8 @@ export class NegotiationService {
     while (!isTerminal(session.state)) {
       try {
         const actor = getActorForState(session.state);
-        const intervention = this.interventions.get(session.id) || null;
+        const role = actor === NegotiationActor.EMPLOYER_AGENT ? 'EMPLOYER' : 'SEEKER';
+        const intervention = this.interventions.get(`${session.id}:${role}`) || null;
 
         // Build prompt based on actor
         let systemPrompt: string;
@@ -177,7 +179,7 @@ export class NegotiationService {
 
         // Clear intervention after use
         if (intervention) {
-          this.interventions.delete(session.id);
+          this.interventions.delete(`${session.id}:${role}`);
         }
 
         this.logger.log(`Session ${session.id} round ${round.round}: ${parsed.decision} → ${nextState}`);
