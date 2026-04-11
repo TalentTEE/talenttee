@@ -53,7 +53,12 @@ export class JobService {
 
     state.history.push({ role: 'assistant', content: result.content });
 
-    const parsed = JSON.parse(result.content);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(result.content);
+    } catch {
+      return { sessionId: sid, response: { complete: false, question: result.content } };
+    }
     if (parsed.complete && parsed.jobPosting) {
       const job = await this.createJob(employerId, parsed.jobPosting);
       this.chatSessions.delete(sid);
@@ -85,7 +90,12 @@ export class JobService {
 
     state.history.push({ role: 'assistant', content: result.content });
 
-    const parsed = JSON.parse(result.content);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(result.content);
+    } catch {
+      return { sessionId: sid, response: { complete: false, question: result.content } };
+    }
     if (parsed.complete && parsed.boundary) {
       const boundary = {
         ...parsed.boundary,
