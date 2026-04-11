@@ -1,3 +1,0 @@
-vec![
-  "/Users/stephen/Desktop/project/near-agent/contract/agreement/target/debug/build/cranelift-assembler-x64-9e37e36a7c18eccd/out/assembler.rs".into(),
-]
