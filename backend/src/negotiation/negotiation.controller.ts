@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Get, Body, Param, UseGuards, HttpCode,
+  Controller, Post, Get, Body, Param, Req, UseGuards, HttpCode,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { NegotiationService } from './negotiation.service.js';
@@ -34,8 +34,8 @@ export class NegotiationController {
   }
 
   @Post('sessions/:id/intervene')
-  async intervene(@Param('id') id: string, @Body() dto: InterveneDto) {
-    await this.negotiationService.intervene(id, dto.direction);
+  async intervene(@Param('id') id: string, @Req() req, @Body() dto: InterveneDto) {
+    await this.negotiationService.intervene(id, req.user.nearAccountId, dto.direction);
     return { message: 'Intervention registered', sessionId: id };
   }
 }
