@@ -76,9 +76,8 @@ export class AgreementService {
       jobId: session.jobId,
       seekerId: session.seekerId,
       sessionId: session.id,
-      timestamp: new Date().toISOString(),
     };
-    // Keys already sorted above for canonical JSON
+    // Keys sorted alphabetically for deterministic canonical JSON
     const canonical = JSON.stringify(data);
     return createHash('sha256').update(canonical).digest('hex');
   }
@@ -104,6 +103,14 @@ export class AgreementService {
       deposit: '0',
       gas: '30000000000000',
     };
+  }
+
+  async confirmTx(sessionId: string, txHash: string): Promise<void> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (!session.agreementHash) throw new ConflictException('Agreement not yet approved');
+    session.onChainTxHash = txHash;
+    await this.sessionRepo.save(session);
   }
 
   async getAgreement(sessionId: string): Promise<any> {
