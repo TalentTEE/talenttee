@@ -6,17 +6,10 @@ import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { NegotiationState, NegotiationDecision } from '../common/enums/index.js';
 
-interface ApprovalState {
-  seekerApproved: boolean;
-  employerApproved: boolean;
-}
-
 @Injectable()
 export class AgreementService {
   private readonly agreementContractId = process.env.AGREEMENT_CONTRACT_ID || 'agreement.testnet';
   private readonly nearNodeUrl = process.env.NEAR_NODE_URL || 'https://rpc.testnet.near.org';
-  // NOTE: In-memory — 서버 재시작 시 소실
-  private approvals = new Map<string, ApprovalState>();
 
   constructor(
     @InjectRepository(NegotiationSession)
@@ -40,16 +33,12 @@ export class AgreementService {
     const isEmployer = session.employer?.nearAccountId === nearAccountId;
     if (!isSeeker && !isEmployer) throw new ForbiddenException('Not a participant');
 
-    // Track approval
-    let state = this.approvals.get(sessionId);
-    if (!state) {
-      state = { seekerApproved: false, employerApproved: false };
-      this.approvals.set(sessionId, state);
-    }
-    if (isSeeker) state.seekerApproved = true;
-    if (isEmployer) state.employerApproved = true;
+    // Track approval in DB (survives restart)
+    if (isSeeker) session.seekerApproved = true;
+    if (isEmployer) session.employerApproved = true;
+    await this.sessionRepo.save(session);
 
-    if (!state.seekerApproved || !state.employerApproved) {
+    if (!session.seekerApproved || !session.employerApproved) {
       return { status: 'waiting_for_other_party' };
     }
 
@@ -62,8 +51,6 @@ export class AgreementService {
     const agreementHash = this.computeAgreementHash(session, lastRound);
     session.agreementHash = agreementHash;
     await this.sessionRepo.save(session);
-
-    this.approvals.delete(sessionId);
 
     const txParams = this.getRecordAgreementTxParams(session, agreementHash);
     return { status: 'both_approved', txParams };
