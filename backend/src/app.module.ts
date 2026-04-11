@@ -4,6 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config.js';
 import { AuthModule } from './auth/auth.module.js';
 import { EscrowModule } from './escrow/escrow.module.js';
+import { CryptoModule } from './crypto/crypto.module.js';
+import { JobModule } from './job/job.module.js';
+import { NegotiationModule } from './negotiation/negotiation.module.js';
+import { AgreementModule } from './agreement/agreement.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -13,6 +17,10 @@ import { AppService } from './app.service.js';
     TypeOrmModule.forRoot(databaseConfig()),
     AuthModule,
     EscrowModule,
+    CryptoModule,
+    JobModule,
+    NegotiationModule,
+    AgreementModule,
   ],
   controllers: [AppController],
   providers: [AppService],
