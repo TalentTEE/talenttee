@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.1",
     "@noble/ciphers": "^2.1.1",
+    "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -86,7 +87,13 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    }
+      "^(\\.{1,2}/.*)\\.js$": "$1",
+      "^@noble/curves/(.+?)(\\.js)?$": "<rootDir>/../node_modules/@noble/curves/$1.js",
+      "^@noble/hashes/(.+?)(\\.js)?$": "<rootDir>/../node_modules/@noble/hashes/$1.js",
+      "^@noble/ciphers/(.+?)(\\.js)?$": "<rootDir>/../node_modules/@noble/ciphers/$1.js"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@noble)/)"
+    ]
   }
 }
