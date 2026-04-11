@@ -94,18 +94,37 @@ export class NegotiationService {
     this.interventions.set(`${sessionId}:${role}`, direction);
   }
 
+  private parsePublicKey(key: string): Uint8Array {
+    if (key.startsWith('ed25519:')) {
+      return Buffer.from(key.slice(8), 'base64');
+    }
+    return Buffer.from(key, 'hex');
+  }
+
   private async executeRounds(session: NegotiationSession): Promise<void> {
     // Reload with relations
     session = await this.getSession(session.id);
     const job = session.job;
     const seeker = session.seeker;
 
+    if (!job || !seeker) {
+      this.logger.error(`Session ${session.id} missing job or seeker relation`);
+      session.state = NegotiationState.FAILED;
+      await this.sessionRepo.save(session);
+      return;
+    }
+
     // Derive session encryption key
-    const seekerPubKey = Buffer.from(seeker.publicKey, 'hex');
+    const seekerPubKey = this.parsePublicKey(seeker.publicKey);
     const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, session.sessionKeyNonce);
 
     const seekerProfile = await this.matchQuery.getSeekerProfile(session.seekerId);
-    const boundary = (job.negotiationBoundary || {}) as NegotiationBoundary;
+    const boundary: NegotiationBoundary = {
+      salaryMin: 0, salaryMax: 0, salaryHardMax: 0,
+      remotePolicyOptions: [], nonNegotiableItems: [], flexibleItems: [],
+      negotiationStyle: 'moderate',
+      ...((job.negotiationBoundary || {}) as Partial<NegotiationBoundary>),
+    };
     const roundHistory: AgentResponse[] = [];
 
     while (!isTerminal(session.state)) {
@@ -154,7 +173,18 @@ export class NegotiationService {
           userMessage: `라운드 ${session.currentRound} 진행해주세요.`,
         });
 
-        const parsed: AgentResponse = JSON.parse(result.content);
+        let parsed: AgentResponse;
+        try {
+          parsed = JSON.parse(result.content);
+        } catch {
+          this.logger.warn(`Session ${session.id} round ${session.currentRound}: JSON parse failed, retrying`);
+          const retry = await this.aiClient.chat({
+            agentId: actor === NegotiationActor.EMPLOYER_AGENT ? 'employer-agent' : 'seeker-agent',
+            systemPrompt,
+            userMessage: `이전 응답이 올바른 JSON이 아닙니다. 반드시 JSON 형식으로만 응답하세요. 라운드 ${session.currentRound}`,
+          });
+          parsed = JSON.parse(retry.content);
+        }
         roundHistory.push(parsed);
 
         // Encrypt and save round
