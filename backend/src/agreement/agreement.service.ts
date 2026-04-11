@@ -19,41 +19,42 @@ export class AgreementService {
   ) {}
 
   async approve(sessionId: string, nearAccountId: string): Promise<{ status: string; txParams?: any }> {
-    const session = await this.sessionRepo.findOne({
-      where: { id: sessionId },
-      relations: ['seeker', 'employer', 'job'],
+    return this.sessionRepo.manager.transaction(async (manager) => {
+      const session = await manager.findOne(NegotiationSession, {
+        where: { id: sessionId },
+        relations: ['seeker', 'employer', 'job'],
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!session) throw new NotFoundException('Session not found');
+      if (session.state !== NegotiationState.AGREED) {
+        throw new ConflictException('Session is not in AGREED state');
+      }
+
+      const isSeeker = session.seeker?.nearAccountId === nearAccountId;
+      const isEmployer = session.employer?.nearAccountId === nearAccountId;
+      if (!isSeeker && !isEmployer) throw new ForbiddenException('Not a participant');
+
+      if (isSeeker) session.seekerApproved = true;
+      if (isEmployer) session.employerApproved = true;
+      await manager.save(session);
+
+      if (!session.seekerApproved || !session.employerApproved) {
+        return { status: 'waiting_for_other_party' };
+      }
+
+      // Both approved — generate agreement hash and tx params
+      const lastRound = await manager.findOne(NegotiationRound, {
+        where: { sessionId, decision: NegotiationDecision.ACCEPT },
+        order: { round: 'DESC' },
+      });
+
+      const agreementHash = this.computeAgreementHash(session, lastRound);
+      session.agreementHash = agreementHash;
+      await manager.save(session);
+
+      const txParams = this.getRecordAgreementTxParams(session, agreementHash);
+      return { status: 'both_approved', txParams };
     });
-    if (!session) throw new NotFoundException('Session not found');
-    if (session.state !== NegotiationState.AGREED) {
-      throw new ConflictException('Session is not in AGREED state');
-    }
-
-    // Determine role by comparing nearAccountId against loaded relations
-    const isSeeker = session.seeker?.nearAccountId === nearAccountId;
-    const isEmployer = session.employer?.nearAccountId === nearAccountId;
-    if (!isSeeker && !isEmployer) throw new ForbiddenException('Not a participant');
-
-    // Track approval in DB (survives restart)
-    if (isSeeker) session.seekerApproved = true;
-    if (isEmployer) session.employerApproved = true;
-    await this.sessionRepo.save(session);
-
-    if (!session.seekerApproved || !session.employerApproved) {
-      return { status: 'waiting_for_other_party' };
-    }
-
-    // Both approved — generate agreement hash and tx params
-    const lastRound = await this.roundRepo.findOne({
-      where: { sessionId, decision: NegotiationDecision.ACCEPT },
-      order: { round: 'DESC' },
-    });
-
-    const agreementHash = this.computeAgreementHash(session, lastRound);
-    session.agreementHash = agreementHash;
-    await this.sessionRepo.save(session);
-
-    const txParams = this.getRecordAgreementTxParams(session, agreementHash);
-    return { status: 'both_approved', txParams };
   }
 
   private computeAgreementHash(session: NegotiationSession, lastRound: NegotiationRound | null): string {
