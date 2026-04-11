@@ -3,7 +3,7 @@ import { ed25519, x25519 } from '@noble/curves/ed25519.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import nacl from 'tweetnacl';
 
 @Injectable()
@@ -12,9 +12,16 @@ export class CryptoService implements OnModuleInit {
   private serverKeyPair: nacl.SignKeyPair;
 
   onModuleInit() {
-    this.serverKeyPair = nacl.sign.keyPair();
-    // NOTE: Ephemeral keypair — 서버 재시작 시 소실, 기존 암호화 데이터 복호화 불가
-    this.logger.log('Server Ed25519 keypair generated (ephemeral)');
+    const seedHex = process.env.SERVER_KEYPAIR_SEED;
+    if (seedHex) {
+      // 환경변수 시드로 결정적 keypair 생성 — 재시작해도 동일 키
+      const seed = Buffer.from(createHash('sha256').update(seedHex).digest().subarray(0, 32));
+      this.serverKeyPair = nacl.sign.keyPair.fromSeed(seed);
+      this.logger.log('Server Ed25519 keypair derived from SERVER_KEYPAIR_SEED (persistent)');
+    } else {
+      this.serverKeyPair = nacl.sign.keyPair();
+      this.logger.warn('No SERVER_KEYPAIR_SEED set — ephemeral keypair, encrypted data lost on restart');
+    }
   }
 
   getServerPublicKey(): Uint8Array {
