@@ -50,6 +50,12 @@ export class NegotiationSession {
   @Column({ name: 'on_chain_tx_hash', type: 'varchar', length: 64, nullable: true })
   onChainTxHash: string;
 
+  @Column({ name: 'seeker_approved', type: 'boolean', default: false })
+  seekerApproved: boolean;
+
+  @Column({ name: 'employer_approved', type: 'boolean', default: false })
+  employerApproved: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
