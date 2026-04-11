@@ -1,6 +1,6 @@
 # 승연 — Negotiation + Crypto (협상 엔진 + 암호화)
 
-> **역할**: 협상 엔진, 채용 에이전트(공고 작성), ECDH 암호화, 온체인 기록/결제 트리거
+> **역할**: 협상 엔진, 채용 에이전트(공고 작성), ECDH 암호화, 온체인 합의 기록
 > **마감**: 2026-04-17
 > **의존**: 성훈 Day 1 (DB 스키마, Auth), 성훈 Day 2-3 (스마트컨트랙트 ABI), 준하 (NearAiClient, 매칭 결과)
 > **피의존**: 현정이 협상 실시간 표시 UI를 더미 → 실제로 전환할 때 사용
@@ -13,11 +13,11 @@
 |---|------|---------|---------|
 | 1 | ECDH 암호화 모듈 | Section 9, NFR-1 | Day 1 오전 (4/12, 선행 가능) |
 | 2 | 채용 에이전트 — 대화형 공고 작성 + 바운더리 설정 | FR-005, FR-006 | Day 1 오후 (4/12) |
-| 3 | 협상 엔진 — 상태머신 + 라운드 관리 | FR-009 | Day 1 오후 ~ Day 2 오전 (4/12-13) |
-| 4 | 협상 에이전트 프롬프트 (구직자측 + 채용측) | FR-009 | Day 2 오전 (4/13) |
-| 5 | 사용자 중간 개입 | FR-009 동작 6 | Day 2 오전 (4/13) |
-| 6 | 합의 → 온체인 기록 + 에스크로 결제 트리거 | FR-010 | Day 2 오후 (4/13) |
-| 7 | 협상 히스토리 열람 (복호화) | FR-012 | Day 2 오후 (4/13) |
+| 3 | 협상 엔진 — 상태머신 + 라운드 관리 | FR-010 | Day 1 오후 ~ Day 2 오전 (4/12-13) |
+| 4 | 협상 에이전트 프롬프트 (구직자측 + 채용측) | FR-010 | Day 2 오전 (4/13) |
+| 5 | 사용자 중간 개입 | FR-010 동작 6 | Day 2 오전 (4/13) |
+| 6 | 합의 → 온체인 기록 (Agreement Contract) | FR-011 | Day 2 오후 (4/13) |
+| 7 | 협상 히스토리 열람 (복호화) | FR-013 | Day 2 오후 (4/13) |
 | 8 | 프론트 연결 + ECDH 복호화 연동 (현정과 페어) | - | Day 3-4 (4/14-15) |
 | 9 | 협상 시나리오 다양화 + 프롬프트 고도화 | - | Day 4-5 (4/15-16) |
 | 10 | 최종 리허설 + 제출 | - | Day 6 (4/17) |
@@ -146,7 +146,7 @@ POST /jobs/:id/boundary/chat → 바운더리 설정 대화
 }
 ```
 
-### 3-3. 협상 엔진 — 상태머신 (FR-009)
+### 3-3. 협상 엔진 — 상태머신 (FR-010)
 
 **상태 전이:**
 
@@ -273,7 +273,7 @@ JSON 형식으로 응답:
 JSON 형식으로 응답 (위와 동일 구조, actor: "EMPLOYER_AGENT")
 ```
 
-### 3-5. 사용자 중간 개입 (FR-009)
+### 3-5. 사용자 중간 개입 (FR-010)
 
 ```
 POST /negotiation/sessions/:id/intervene
@@ -287,7 +287,9 @@ Body: {
 → 진행 중인 라운드에는 영향 없음, 다음 차례부터 적용
 ```
 
-### 3-6. 합의 → 온체인 기록 + 결제 (FR-010)
+### 3-6. 합의 → 온체인 기록 (FR-011)
+
+결제는 이미 프로필 열람 시점(FR-008, 준하 담당)에 완료됨. 이 단계에서는 합의 기록만 수행.
 
 ```
 양측 에이전트 accept → 세션 상태 AGREED
@@ -297,15 +299,13 @@ POST /negotiation/sessions/:id/approve
   → 합의 내용 SHA-256 해시 생성
   → Agreement Contract: record_agreement() 호출 (near-api-js)
      - session_id, agreement_hash, summary, seeker_sig, employer_sig
-  → Escrow Contract: release_payment() 호출 (Function Call Key)
-     - session_id, amount, to(seeker), agreement_hash
-  → PaymentRecord 저장
+  → NegotiationSession에 onChainTxHash 기록
   → 양측 통보
 ```
 
-**성훈이 배포한 스마트컨트랙트의 ABI를 사용하여 호출.**
+**성훈이 배포한 Agreement Contract의 ABI를 사용하여 호출.**
 
-### 3-7. 협상 히스토리 열람 (FR-012)
+### 3-7. 협상 히스토리 열람 (FR-013)
 
 ```
 GET /negotiation/sessions/:id/rounds
@@ -357,6 +357,5 @@ POST /negotiation/sessions/:id/decrypt
 - [ ] 사용자 개입 → 다음 라운드 에이전트 프롬프트에 반영
 - [ ] 양측 accept → AGREED 상태 전이
 - [ ] MAX_ROUNDS 도달 → MAX_ROUNDS 상태 전이 (무한루프 없음)
-- [ ] 양측 승인 → Agreement Contract `record_agreement` 호출 성공
-- [ ] 양측 승인 → Escrow Contract `release_payment` 호출 성공
+- [ ] 양측 승인 → Agreement Contract `record_agreement` 호출 성공 (온체인 합의 기록)
 - [ ] 프론트엔드에서 ECDH 복호화 → 전체 라운드 내역 표시

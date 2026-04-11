@@ -17,10 +17,11 @@
 | 4 | 벡터 임베딩 (Qwen3-Embedding) | FR-003 동작 8 | Day 2 오전 (4/13) |
 | 5 | 시장가치 산출 | FR-004 | Day 2 오전 (4/13) |
 | 6 | 2단계 시맨틱 매칭 (ANN + Reranker) | FR-007 | Day 2 오후 (4/13) |
-| 7 | 매칭 통보 + 양쪽 동의 | FR-008 | Day 2 오후 (4/13) |
-| 8 | 프론트 연결 + 프롬프트 튜닝 | - | Day 3-4 (4/14-15) |
-| 9 | 매칭 정확도 검증 + 고도화 | - | Day 4-5 (4/15-16) |
-| 10 | 최종 리허설 + 제출 | - | Day 6 (4/17) |
+| 7 | 상세 프로필 열람 API (토큰 결제 연동) | FR-008 | Day 2 오후 (4/13) |
+| 8 | 매칭 동의 + 협상 핸드오프 | FR-009 | Day 2 오후 (4/13) |
+| 9 | 프론트 연결 + 프롬프트 튜닝 | - | Day 3-4 (4/14-15) |
+| 10 | 매칭 정확도 검증 + 고도화 | - | Day 4-5 (4/15-16) |
+| 11 | 최종 리허설 + 제출 | - | Day 6 (4/17) |
 
 ## 2. Day 1 선행 작업 (성훈 DB 완성 전)
 
@@ -212,11 +213,35 @@ Step 3: MatchResult 저장
   { seekerId, jobId, annScore, rerankScore, finalRank }
 ```
 
-### 3-5. 매칭 통보 + 양쪽 동의 (FR-008)
+### 3-5. 상세 프로필 열람 (FR-008)
+
+매칭 결과에서 기본 정보(스킬 태그, 경력 구간, 매칭 점수)는 무료. 채용측이 에이전트 분석 리포트를 보려면 에스크로 결제 필요.
+
+```
+POST /profile/:seekerId/access → 상세 프로필 열람 요청
+  1. 에스크로 잔액 확인 (성훈의 Escrow Contract 조회)
+  2. 잔액 충분 → pay_for_profile() 호출 (Function Call Key, 지갑 팝업 없음)
+  3. ProfileAccessGrant 레코드 생성
+  4. 커리어 에이전트가 정리한 상세 리포트 반환
+
+GET /profile/:seekerId/report → 열람 권한 확인 후 리포트 반환
+GET /profile/access/history   → 프로필 열람 내역
+```
+
+**상세 프로필 포함 내용:**
+- 기술 역량 상세 (언어별 숙련도, 프레임워크 경험)
+- 프로젝트 경험 요약 (주요 기여, 역할, 임팩트)
+- 협업/리더십 시그널 (코드 리뷰 빈도, 토론 참여도)
+- 성장 곡선 (시간에 따른 기술 확장)
+- 자격/학력
+- 시장가치 범위 (구직자 동의 시에만)
+
+### 3-6. 매칭 동의 + 협상 핸드오프 (FR-009)
 
 ```
 매칭 결과 생성 후:
-  → 양측 대시보드에 매칭 결과 표시 (API로 조회)
+  → 양측 대시보드에 매칭 결과 표시 (기본 정보)
+  → 채용측: 상세 프로필 열람 (FR-008 결제 선행)
   → 구직자 동의 + 채용측 동의 시 → 승연의 협상 엔진으로 핸드오프
 
 POST /match/:matchId/agree   → { userId } → 동의 기록
@@ -224,7 +249,7 @@ GET  /match/:matchId/status  → 양측 동의 상태
 ```
 
 양측 동의 완료 시, `NegotiationSession` 생성은 **승연의 협상 엔진**이 담당.
-준하는 매칭 결과와 동의 상태까지만 관리.
+준하는 매칭 결과, 프로필 열람, 동의 상태까지 관리.
 
 ## 4. API 목록
 
@@ -239,8 +264,11 @@ GET  /match/:matchId/status  → 양측 동의 상태
 | GET | /resume/:id | 이력서 조회 |
 | GET | /resume/:id/status | 처리 상태 |
 | GET | /resume/:id/market-value | 시장가치 결과 |
-| GET | /match/seeker/:seekerId | 구직자 기준 매칭 |
-| GET | /match/job/:jobId | 공고 기준 매칭 |
+| GET | /match/seeker/:seekerId | 구직자 기준 매칭 (기본 정보) |
+| GET | /match/job/:jobId | 공고 기준 매칭 (기본 정보) |
+| POST | /profile/:seekerId/access | 상세 프로필 열람 (에스크로 결제) |
+| GET | /profile/:seekerId/report | 상세 프로필 리포트 |
+| GET | /profile/access/history | 열람 내역 |
 | POST | /match/:matchId/agree | 매칭 동의 |
 | GET | /match/:matchId/status | 동의 상태 |
 
@@ -261,4 +289,6 @@ GET  /match/:matchId/status  → 양측 동의 상태
 - [ ] 시장가치 산출 → marketValueMin/Max + reasoning 반환
 - [ ] 이력서 + 공고 벡터 임베딩 → pgvector 저장
 - [ ] 매칭 쿼리 → Top-5 결과 반환 (ANN + Rerank)
+- [ ] `POST /profile/:seekerId/access` → 에스크로 차감 + 상세 리포트 반환
+- [ ] 열람 권한 없이 `/profile/:seekerId/report` 호출 시 접근 거부
 - [ ] 양측 동의 → 승연 협상 엔진으로 핸드오프 성공

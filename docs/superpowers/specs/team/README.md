@@ -98,10 +98,11 @@ Day 6 (4/17 목):
 | `/datasource/*` | 준하 |
 | `/resume/*` | 준하 |
 | `/match/*` | 준하 |
+| `/profile/*` | 준하 (열람 API + 에스크로 결제 연동) |
 | `/jobs/*` | 승연 |
 | `/negotiation/*` | 승연 |
 | `/agreement/*` | 승연 |
-| `/payments/*` | 성훈 (DB) + 승연 (트리거) |
+| `/payments/*` | 성훈 (DB) |
 
 ## 공유 모듈
 

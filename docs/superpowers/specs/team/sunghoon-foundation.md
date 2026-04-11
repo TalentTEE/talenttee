@@ -15,7 +15,7 @@
 | 2 | DB 스키마 + TypeORM 엔티티 + 마이그레이션 + 공유 타입 | Section 4.6, 4.7 | Day 1 오전 (4/12) |
 | 3 | NEAR 지갑 로그인 (NEP-413 서명 검증 + JWT) | FR-001 | Day 1 오후 (4/12) |
 | 4 | Agreement + Escrow Smart Contract (Rust) | Section 8.1, 8.2 | Day 1 오후 ~ Day 2 오전 (4/12-13) |
-| 5 | Escrow 예치 API + Function Call Key 부여 | FR-011 | Day 2 오후 (4/13) |
+| 5 | Escrow 예치 API + Function Call Key 부여 | FR-012 | Day 2 오후 (4/13) |
 | 6 | 프론트 연결 지원 + E2E 시나리오 테스트 | - | Day 3-4 (4/14-15) |
 | 7 | 온체인 트랜잭션 검증 + 고도화 | - | Day 4-5 (4/15-16) |
 | 8 | 최종 리허설 + 제출 | - | Day 6 (4/17) |
@@ -33,6 +33,7 @@
 - `negotiation_session` — state, currentRound, maxRounds, agreementHash
 - `negotiation_round` — sessionId, actor, encryptedData, decision
 - `escrow_deposit` — employerId, amount, remainingBalance, agentKeyPublicKey
+- `profile_access_grant` — employerId, seekerId, amount, nearTxHash
 - `payment_record` — sessionId, amount, nearTxHash, agreementHash
 - `match_result` — seekerId, jobId, annScore, rerankScore, finalRank
 
@@ -128,21 +129,19 @@ pub struct EscrowAccount {
     pub agent_key: PublicKey,
 }
 
-pub struct PaymentRecord {
-    pub session_id: String,
+pub struct ProfileAccessRecord {
+    pub employer_id: AccountId,
+    pub seeker_id: AccountId,
     pub amount: Balance,
-    pub from: AccountId,
-    pub to: AccountId,
-    pub agreement_hash: String,
     pub timestamp: u64,
 }
 
 // 함수
 #[payable]
-fn deposit()                                    // 채용측 NEAR 예치
-fn release_payment(session_id, amount, to, agreement_hash)  // Function Call Key로 호출
+fn deposit()                                                // 채용측 NEAR 예치
+fn pay_for_profile(seeker_id: AccountId)                    // 에이전트가 호출 → 프로필 열람 결제
 fn get_balance(employer_id) -> Balance
-fn get_payment_history(employer_id) -> Vec<PaymentRecord>
+fn get_access_history(employer_id) -> Vec<ProfileAccessRecord>
 ```
 
 ### 3-3. Escrow 예치 + Function Call Key API
@@ -152,7 +151,7 @@ POST /escrow/deposit  → 프론트엔드가 지갑으로 deposit() 호출하도
 GET  /escrow/balance  → 잔액 조회 (NEAR RPC로 컨트랙트 상태 조회)
 ```
 
-- Function Call Access Key: `escrow_contract`의 `release_payment`만 호출 가능
+- Function Call Access Key: `escrow_contract`의 `pay_for_profile`만 호출 가능
 - 키 부여는 프론트엔드에서 지갑 팝업으로 처리 (near-api-js `addKey`)
 
 ## 4. 인프라
@@ -177,8 +176,8 @@ Day 1에 `docker-compose.yml` 작성 + pgvector 확장 활성화 + 마이그레�
 ## 6. 수락 기준
 
 - [ ] `docker-compose up` → PostgreSQL + pgvector + Redis 정상 기동
-- [ ] 마이그레이션 실행 → 8개 테이블 생성, pgvector 확장 활성화
+- [ ] 마이그레이션 실행 → 9개 테이블 생성 (profile_access_grant 포함), pgvector 확장 활성화
 - [ ] `POST /auth/near/verify` → 유효한 서명 시 JWT 반환
 - [ ] Agreement Contract가 Testnet에 배포되고, `record_agreement` + `get_agreement` 동작
-- [ ] Escrow Contract가 Testnet에 배포되고, `deposit` + `release_payment` + `get_balance` 동작
-- [ ] Function Call Key로 `release_payment` 호출 가능 (지갑 팝업 없이)
+- [ ] Escrow Contract가 Testnet에 배포되고, `deposit` + `pay_for_profile` + `get_balance` 동작
+- [ ] Function Call Key로 `pay_for_profile` 호출 가능 (지갑 팝업 없이)
