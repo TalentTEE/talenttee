@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: near-agent-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: near_agent
+      POSTGRES_USER: near_agent
+      POSTGRES_PASSWORD: near_agent_dev
+    ports:
+      - '5434:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+
+volumes:
+  pgdata:
