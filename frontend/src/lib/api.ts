@@ -32,9 +32,27 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// === Auth ===
+// === Auth (Dummy) ===
 export async function getDummyUser(role: 'SEEKER' | 'EMPLOYER'): Promise<User> {
   return role === 'SEEKER' ? DUMMY_ALICE : DUMMY_BOB;
+}
+
+// === Auth (Real API) ===
+export async function requestChallenge(): Promise<{ nonce: string; expiresAt: string }> {
+  return apiFetch('/auth/near/challenge', { method: 'POST' });
+}
+
+export async function verifyNearAuth(params: {
+  nearAccountId: string;
+  publicKey: string;
+  signature: string;
+  nonce: string;
+  role: string;
+}): Promise<{ jwt: string; user: User }> {
+  return apiFetch('/auth/near/verify', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
 }
 
 // === Job Seeking Status ===
@@ -157,12 +175,31 @@ export async function getAgreement(sessionId: string): Promise<AgreementRecord> 
 }
 
 // === Escrow ===
-export async function getEscrowBalance(): Promise<EscrowAccount> {
+function yoctoToNear(yocto: string): number {
+  const YOCTO_PER_NEAR = 1e24;
+  return Number(BigInt(yocto || '0')) / YOCTO_PER_NEAR;
+}
+
+export async function getEscrowBalance(accountId?: string): Promise<EscrowAccount> {
   if (USE_DUMMY) return DUMMY_ESCROW;
-  return apiFetch('/escrow/balance');
+  const data = await apiFetch<{ balance: string }>(`/escrow/balance?accountId=${accountId}`);
+  return {
+    employerId: accountId || '',
+    balance: yoctoToNear(data.balance),
+    agentKeySet: false,
+  };
 }
 
 export async function getEscrowPayments(): Promise<EscrowPayment[]> {
   if (USE_DUMMY) return DUMMY_ESCROW_PAYMENTS;
   return apiFetch('/escrow/payments');
+}
+
+export async function depositToEscrow(amount: string): Promise<{
+  contractId: string; methodName: string; args: object; deposit: string;
+}> {
+  return apiFetch('/escrow/deposit', {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  });
 }

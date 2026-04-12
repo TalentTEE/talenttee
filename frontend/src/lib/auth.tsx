@@ -2,11 +2,12 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from './types';
-import { getDummyUser } from './api';
+import { getDummyUser, requestChallenge, verifyNearAuth } from './api';
 
 interface AuthContextType {
   user: User | null;
   login: (role: UserRole) => Promise<void>;
+  loginWithNear: (nearAccountId: string, role: UserRole) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -14,6 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => {},
+  loginWithNear: async () => {},
   logout: () => {},
   isLoading: true,
 });
@@ -41,6 +43,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // TODO: Real NEAR wallet login (Day 3)
   };
 
+  const loginWithNear = async (nearAccountId: string, role: UserRole) => {
+    const { nonce } = await requestChallenge();
+
+    // PoC: backend does not verify signature, so use placeholders
+    const signature = 'poc-signature-placeholder';
+    const publicKey = 'ed25519:placeholder';
+
+    const { jwt, user: apiUser } = await verifyNearAuth({
+      nearAccountId,
+      publicKey,
+      signature,
+      nonce,
+      role,
+    });
+
+    const userData: User = {
+      id: apiUser.id,
+      nearAccountId: apiUser.nearAccountId,
+      role: apiUser.role as UserRole,
+      publicKey: apiUser.publicKey,
+      createdAt: apiUser.createdAt,
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('jwt', jwt);
+    setUser(userData);
+  };
+
   const logout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('jwt');
@@ -48,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, loginWithNear, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
