@@ -27,6 +27,9 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.1",
+    "@noble/ciphers": "^2.1.1",
+    "@noble/curves": "^2.0.1",
+    "@noble/hashes": "^2.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "jsonwebtoken": "^9.0.3",
@@ -37,6 +40,7 @@
     "pgvector": "^0.2.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "tweetnacl": "^1.0.3",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
@@ -83,7 +87,13 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    }
+      "^(\\.{1,2}/.*)\\.js$": "$1",
+      "^@noble/curves/(.+?)(\\.js)?$": "<rootDir>/../node_modules/@noble/curves/$1.js",
+      "^@noble/hashes/(.+?)(\\.js)?$": "<rootDir>/../node_modules/@noble/hashes/$1.js",
+      "^@noble/ciphers/(.+?)(\\.js)?$": "<rootDir>/../node_modules/@noble/ciphers/$1.js"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@noble)/)"
+    ]
   }
 }
