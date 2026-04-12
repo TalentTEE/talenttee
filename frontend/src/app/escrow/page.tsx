@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getEscrowBalance, getEscrowPayments } from '@/lib/api';
+import { getEscrowBalance, getEscrowPayments, depositToEscrow } from '@/lib/api';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 
 export default function EscrowPage() {
@@ -15,7 +15,7 @@ export default function EscrowPage() {
   useEffect(() => {
     if (!user) return;
 
-    Promise.all([getEscrowBalance(), getEscrowPayments()])
+    Promise.all([getEscrowBalance(user.nearAccountId), getEscrowPayments()])
       .then(([balance, history]) => {
         setEscrow(balance);
         setPayments(history);
@@ -23,15 +23,24 @@ export default function EscrowPage() {
       .finally(() => setIsLoading(false));
   }, [user]);
 
-  const handleDeposit = () => {
+  const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
+
+  const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid amount.');
       return;
     }
-    alert(
-      `Deposit of ${amount} NEAR initiated. This is a mock transaction \u2014 on-chain integration coming soon.`
-    );
+
+    if (USE_DUMMY) {
+      alert(`Deposit of ${amount} NEAR initiated (mock).`);
+    } else {
+      const nearAmount = (amount * 1e24).toLocaleString('fullwide', { useGrouping: false });
+      const txParams = await depositToEscrow(nearAmount);
+      alert(
+        `Transaction prepared:\nContract: ${txParams.contractId}\nMethod: ${txParams.methodName}\nDeposit: ${amount} NEAR\n\nWallet signing will be available in Stage 7.`
+      );
+    }
     setDepositAmount('');
   };
 

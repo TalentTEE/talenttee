@@ -17,7 +17,7 @@ export default function EmployerDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    getEscrowBalance().then(setEscrow);
+    getEscrowBalance(user.nearAccountId).then(setEscrow);
     getJobs().then(setJobs);
     getEmployerMatches('job-1').then(setMatches);
     getNegotiationSessions().then(setSessions);

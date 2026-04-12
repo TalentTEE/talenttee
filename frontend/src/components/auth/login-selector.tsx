@@ -1,15 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { UserRole } from '@/lib/types';
+
+const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
 
 export function LoginSelector() {
-  const { login } = useAuth();
+  const { login, loginWithNear } = useAuth();
   const router = useRouter();
+  const [customAccount, setCustomAccount] = useState('');
+  const [customRole, setCustomRole] = useState<UserRole>('SEEKER');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (role: 'SEEKER' | 'EMPLOYER') => {
-    await login(role);
-    router.push(role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+    setIsLoggingIn(true);
+    setError(null);
+    try {
+      if (USE_DUMMY) {
+        await login(role);
+      } else {
+        const nearAccountId = role === 'SEEKER' ? 'alice.testnet' : 'bob.testnet';
+        await loginWithNear(nearAccountId, role);
+      }
+      router.push(role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleCustomLogin = async () => {
+    if (!customAccount.trim()) return;
+    setIsLoggingIn(true);
+    setError(null);
+    try {
+      await loginWithNear(customAccount.trim(), customRole);
+      router.push(customRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   return (
@@ -93,6 +128,56 @@ export function LoginSelector() {
             </div>
           </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-6 w-full max-w-5xl px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Loading Overlay */}
+        {isLoggingIn && (
+          <div className="mt-6 flex items-center gap-2 text-muted-foreground">
+            <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+            <span className="text-sm">Authenticating...</span>
+          </div>
+        )}
+
+        {/* Custom NEAR Account (only in real API mode) */}
+        {!USE_DUMMY && (
+          <div className="mt-10 w-full max-w-5xl">
+            <div className="rounded-2xl border border-border/10 bg-card p-8">
+              <h3 className="font-[var(--font-manrope)] text-lg font-bold text-foreground mb-4">
+                Custom NEAR Account
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={customAccount}
+                  onChange={(e) => setCustomAccount(e.target.value)}
+                  placeholder="your-account.testnet"
+                  className="flex-1 bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                />
+                <select
+                  value={customRole}
+                  onChange={(e) => setCustomRole(e.target.value as UserRole)}
+                  className="bg-muted rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                >
+                  <option value="SEEKER">Seeker</option>
+                  <option value="EMPLOYER">Employer</option>
+                </select>
+                <button
+                  onClick={handleCustomLogin}
+                  disabled={!customAccount.trim() || isLoggingIn}
+                  className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Login
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer Meta */}
         <div className="mt-16 flex flex-col items-center gap-4">
