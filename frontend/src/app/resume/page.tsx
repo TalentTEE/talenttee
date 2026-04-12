@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getResume, generateResume } from '@/lib/api';
+import { getResume, generateResume, getResumeStatus, USE_DUMMY } from '@/lib/api';
 import { ResumeProfile } from '@/lib/types';
 
 const STEPS = [
@@ -43,33 +43,52 @@ export default function ResumePage() {
     setGenerating(true);
     setSimulatedStatus('COLLECTING');
 
-    try {
-      await generateResume();
-    } catch {
-      // continue with simulation even if API fails in dummy mode
+    if (USE_DUMMY) {
+      setTimeout(() => setSimulatedStatus('ANALYZING'), 1500);
+      setTimeout(() => {
+        setSimulatedStatus('COMPLETED');
+        if (user) {
+          getResume(user.id)
+            .then((data) => {
+              setResume(data);
+              setGenerating(false);
+              setSimulatedStatus(null);
+            })
+            .catch(() => {
+              setGenerating(false);
+              setSimulatedStatus(null);
+            });
+        }
+      }, 3000);
+      return;
     }
 
-    // Simulate status transitions
-    setTimeout(() => {
-      setSimulatedStatus('ANALYZING');
-    }, 1500);
+    try {
+      const { resumeId } = await generateResume();
+      const pollInterval = setInterval(async () => {
+        try {
+          const { status: currentStatus } = await getResumeStatus(resumeId);
+          setSimulatedStatus(currentStatus as ResumeProfile['status']);
 
-    setTimeout(() => {
-      setSimulatedStatus('COMPLETED');
-      // Reload resume data after completion
-      if (user) {
-        getResume(user.id)
-          .then((data) => {
-            setResume(data);
+          if (currentStatus === 'COMPLETED') {
+            clearInterval(pollInterval);
+            if (user) {
+              const fullResume = await getResume(user.id);
+              setResume(fullResume);
+            }
             setGenerating(false);
             setSimulatedStatus(null);
-          })
-          .catch(() => {
-            setGenerating(false);
-            setSimulatedStatus(null);
-          });
-      }
-    }, 3000);
+          }
+        } catch {
+          clearInterval(pollInterval);
+          setGenerating(false);
+          setSimulatedStatus(null);
+        }
+      }, 2000);
+    } catch {
+      setGenerating(false);
+      setSimulatedStatus(null);
+    }
   }, [user]);
 
   const currentStatus = simulatedStatus || resume?.status;

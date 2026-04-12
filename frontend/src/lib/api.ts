@@ -13,7 +13,7 @@ import { DUMMY_SESSIONS, DUMMY_ROUNDS } from './dummy/negotiation';
 import { DUMMY_AGREEMENT } from './dummy/agreement';
 import { DUMMY_ESCROW, DUMMY_ESCROW_PAYMENTS } from './dummy/escrow';
 
-const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
+export const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 function authHeaders(): HeadersInit {
@@ -70,6 +70,10 @@ export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
   return apiFetch('/datasource/status');
 }
 
+export async function connectGithubOAuth(): Promise<{ redirectUrl: string }> {
+  return apiFetch('/datasource/connect/github');
+}
+
 export async function connectDatasourceMock(provider: string): Promise<DataSourceConnection> {
   if (USE_DUMMY) {
     return { id: `ds-new-${Date.now()}`, userId: 'user-1', provider: provider as DataSourceConnection['provider'], status: 'MOCK', lastSyncAt: new Date().toISOString() };
@@ -88,9 +92,14 @@ export async function getResumeStatus(userId: string): Promise<{ status: string 
   return apiFetch(`/resume/${userId}/status`);
 }
 
-export async function generateResume(): Promise<void> {
-  if (USE_DUMMY) return;
-  await apiFetch('/resume/generate', { method: 'POST' });
+export async function generateResume(): Promise<{ resumeId: string }> {
+  if (USE_DUMMY) return { resumeId: 'dummy-resume-1' };
+  const res = await fetch(`${API_URL}/resume/generate`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  if (res.status !== 202 && !res.ok) throw new Error(`API Error: ${res.status}`);
+  return res.json();
 }
 
 // === Jobs ===
@@ -115,6 +124,11 @@ export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatRes
     return { complete: false, question: questions[Math.min(messages.length, questions.length - 1)] };
   }
   return apiFetch('/jobs/chat', { method: 'POST', body: JSON.stringify({ messages }) });
+}
+
+export async function createJob(jobData: Partial<JobPosting>): Promise<JobPosting> {
+  if (USE_DUMMY) return { ...DUMMY_JOBS[0], ...jobData } as JobPosting;
+  return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(jobData) });
 }
 
 // === Matching ===

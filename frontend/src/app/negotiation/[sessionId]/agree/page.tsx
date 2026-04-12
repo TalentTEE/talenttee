@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getAgreement, approveAgreement } from '@/lib/api';
+import { getAgreement, approveAgreement, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord } from '@/lib/types';
 
 function formatSalary(value: number): string {
@@ -37,9 +37,17 @@ export default function AgreementPage() {
     setApproving(true);
     try {
       await approveAgreement(sessionId);
-      const mockTx = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-      setTxHash(mockTx);
+      if (USE_DUMMY) {
+        const mockTx = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+        setTxHash(mockTx);
+      } else {
+        const updatedAgreement = await getAgreement(sessionId);
+        setTxHash(updatedAgreement.onChainTxHash);
+        setAgreement(updatedAgreement);
+      }
       setApproved(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to approve agreement');
     } finally {
       setApproving(false);
     }

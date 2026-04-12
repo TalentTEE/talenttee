@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getDatasourceStatus, connectDatasourceMock } from '@/lib/api';
+import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
 import { DataSourceConnection } from '@/lib/types';
 
 const PROVIDERS: {
@@ -49,6 +49,12 @@ export default function DatasourcePage() {
     getDatasourceStatus()
       .then(setConnections)
       .finally(() => setLoading(false));
+
+    // Handle OAuth callback
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connected')) {
+      getDatasourceStatus().then(setConnections);
+    }
   }, []);
 
   function getConnectionStatus(
@@ -60,6 +66,12 @@ export default function DatasourcePage() {
   async function handleConnect(provider: string) {
     setConnecting(provider);
     try {
+      if (!USE_DUMMY && provider === 'github') {
+        const { redirectUrl } = await connectGithubOAuth();
+        window.location.href = redirectUrl;
+        return;
+      }
+
       const result = await connectDatasourceMock(provider);
       setConnections((prev) => {
         const existing = prev.findIndex((c) => c.provider === provider);
