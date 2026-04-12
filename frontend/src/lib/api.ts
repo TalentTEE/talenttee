@@ -37,6 +37,15 @@ export async function getDummyUser(role: 'SEEKER' | 'EMPLOYER'): Promise<User> {
   return role === 'SEEKER' ? DUMMY_ALICE : DUMMY_BOB;
 }
 
+// === Job Seeking Status ===
+export async function updateJobSeekingStatus(active: boolean): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch('/seeker/job-seeking-status', {
+    method: 'PUT',
+    body: JSON.stringify({ active }),
+  });
+}
+
 // === Datasource ===
 export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
   if (USE_DUMMY) return DUMMY_DATASOURCES;

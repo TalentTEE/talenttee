@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions } from '@/lib/api';
+import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions, updateJobSeekingStatus } from '@/lib/api';
 import { DataSourceConnection, ResumeProfile, MatchResult, NegotiationSession } from '@/lib/types';
+import { JobSeekingToggle } from '@/components/dashboard/job-seeking-toggle';
 import { DatasourceStatus } from '@/components/dashboard/datasource-status';
 import { ResumeSummary } from '@/components/dashboard/resume-summary';
 import { MarketValueCard } from '@/components/dashboard/market-value-card';
-import { MatchList } from '@/components/dashboard/match-list';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
 
 export default function SeekerDashboard() {
@@ -26,15 +26,20 @@ export default function SeekerDashboard() {
   }, [user]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Seeker Dashboard</h1>
+    <div className="space-y-6 max-w-6xl">
+      <div>
+        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+          Welcome back, {user?.nearAccountId?.split('.')[0] || 'Seeker'}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">Your career overview at a glance</p>
+      </div>
+      <JobSeekingToggle onToggle={(active) => updateJobSeekingStatus(active)} />
       <DatasourceStatus connections={datasources} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ResumeSummary resume={resume} />
         <MarketValueCard resume={resume} />
       </div>
-      <MatchList matches={matches} role="SEEKER" />
-      <NegotiationList sessions={sessions} />
+      <NegotiationList sessions={sessions} matches={matches} />
     </div>
   );
 }

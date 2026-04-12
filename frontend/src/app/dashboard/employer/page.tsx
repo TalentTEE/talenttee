@@ -6,7 +6,6 @@ import { getEscrowBalance, getJobs, getEmployerMatches, getNegotiationSessions }
 import { EscrowAccount, JobPosting, MatchResult, NegotiationSession } from '@/lib/types';
 import { EscrowBalance } from '@/components/dashboard/escrow-balance';
 import { JobList } from '@/components/dashboard/job-list';
-import { MatchList } from '@/components/dashboard/match-list';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
 
 export default function EmployerDashboard() {
@@ -25,12 +24,16 @@ export default function EmployerDashboard() {
   }, [user]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Employer Dashboard</h1>
+    <div className="space-y-6 max-w-6xl">
+      <div>
+        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+          Welcome back, {user?.nearAccountId?.split('.')[0] || 'Employer'}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your talent pipeline</p>
+      </div>
       <EscrowBalance escrow={escrow} />
       <JobList jobs={jobs} />
-      <MatchList matches={matches} role="EMPLOYER" />
-      <NegotiationList sessions={sessions} />
+      <NegotiationList sessions={sessions} matches={matches} />
     </div>
   );
 }
