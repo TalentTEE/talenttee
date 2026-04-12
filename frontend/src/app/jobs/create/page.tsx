@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { chatCreateJob } from '@/lib/api';
+import { chatCreateJob, createJob } from '@/lib/api';
 import { ChatMessage, JobPosting, JobChatResponse } from '@/lib/types';
 
 type Tab = 'chat' | 'form';
@@ -246,18 +246,15 @@ function FormMode() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Build a ChatMessage array from the form data for the API
-    const formMessages: ChatMessage[] = [
-      { role: 'user', content: `Title: ${form.title}` },
-      { role: 'user', content: `Description: ${form.description}` },
-      { role: 'user', content: `Required Skills: ${form.skills}` },
-      { role: 'user', content: `Salary Range: ${form.salaryMin} - ${form.salaryMax}` },
-      { role: 'user', content: `Remote Policy: ${form.remotePolicy}` },
-      { role: 'user', content: 'Please create the job posting.' },
-    ];
-
     try {
-      await chatCreateJob(formMessages);
+      await createJob({
+        title: form.title,
+        description: form.description,
+        requiredSkills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
+        salaryMin: Number(form.salaryMin),
+        salaryMax: Number(form.salaryMax),
+        remotePolicy: form.remotePolicy,
+      });
       setSubmitted(true);
     } catch {
       alert('Failed to create job posting. Please try again.');

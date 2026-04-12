@@ -48,13 +48,25 @@ export default function NegotiationMonitorPage() {
 
   const [session, setSession] = useState<NegotiationSession | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
-  useEffect(() => {
-    if (!sessionId) return;
-    getNegotiationSession(sessionId).then(setSession);
-    getNegotiationRounds(sessionId).then(setRounds);
-  }, [sessionId]);
 
   const isTerminal = session?.state === 'AGREED' || session?.state === 'FAILED' || session?.state === 'MAX_ROUNDS';
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadData = () => {
+      getNegotiationSession(sessionId).then(setSession);
+      getNegotiationRounds(sessionId).then(setRounds);
+    };
+
+    loadData();
+
+    const interval = setInterval(() => {
+      if (!isTerminal) loadData();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, isTerminal]);
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">

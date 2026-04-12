@@ -233,6 +233,8 @@ export default function MatchingPage() {
     try {
       const report = await accessProfile(seekerId);
       setProfileReport(report);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to access profile. Please check your escrow balance.');
     } finally {
       setProfileLoading(false);
     }
