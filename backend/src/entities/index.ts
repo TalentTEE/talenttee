@@ -1,0 +1,10 @@
+export { User } from './user.entity.js';
+export { ResumeProfile } from './resume-profile.entity.js';
+export { DataSourceConnection } from './data-source-connection.entity.js';
+export { JobPosting } from './job-posting.entity.js';
+export { NegotiationSession } from './negotiation-session.entity.js';
+export { NegotiationRound } from './negotiation-round.entity.js';
+export { EscrowDeposit } from './escrow-deposit.entity.js';
+export { ProfileAccessGrant } from './profile-access-grant.entity.js';
+export { PaymentRecord } from './payment-record.entity.js';
+export { MatchResult } from './match-result.entity.js';
