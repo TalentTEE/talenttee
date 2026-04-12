@@ -15,6 +15,8 @@ export interface NegotiationBoundary {
   salaryHardMax: number;
   remotePolicyOptions: string[];
   nonNegotiableItems: string[];
+  flexibleItems: string[];
+  negotiationStyle: 'conservative' | 'moderate' | 'aggressive';
 }
 
 export interface AgentResponse {
