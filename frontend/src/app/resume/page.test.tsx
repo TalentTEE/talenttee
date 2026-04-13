@@ -31,7 +31,7 @@ import ResumePage from './page';
 const MOCK_RESUME = {
   id: 'resume-1',
   userId: 'user-1',
-  status: 'COMPLETED' as const,
+  status: 'COMPLETE' as const,
   skills: ['TypeScript', 'React', 'Next.js'],
   experience: [
     { role: 'Full-stack Developer', company: 'Tech Corp', period: '2023.03 - present', highlights: ['Built SaaS platform'] },

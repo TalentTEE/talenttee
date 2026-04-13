@@ -49,25 +49,25 @@ describe('API — Dummy mode', () => {
     it('returns dummy datasource array with 4 providers', async () => {
       const ds = await getDatasourceStatus();
       expect(ds).toHaveLength(4);
-      expect(ds.map(d => d.provider)).toEqual(['github', 'slack', 'discord', 'gov24']);
+      expect(ds.map(d => d.provider)).toEqual(['GITHUB', 'SLACK', 'DISCORD', 'GOV24']);
     });
   });
 
   describe('connectDatasourceMock', () => {
     it('returns a DataSourceConnection with MOCK status', async () => {
-      const conn = await connectDatasourceMock('github');
-      expect(conn.provider).toBe('github');
+      const conn = await connectDatasourceMock('GITHUB');
+      expect(conn.provider).toBe('GITHUB');
       expect(conn.status).toBe('MOCK');
       expect(conn.userId).toBe('user-1');
       expect(conn.id).toMatch(/^ds-new-/);
-      expect(conn.lastSyncAt).toBeTruthy();
+      expect(conn.lastSyncedAt).toBeTruthy();
     });
   });
 
   describe('getResume', () => {
     it('returns dummy resume with COMPLETED status', async () => {
       const resume = await getResume('user-1');
-      expect(resume.status).toBe('COMPLETED');
+      expect(resume.status).toBe('COMPLETE');
       expect(resume.skills).toContain('TypeScript');
       expect(resume.experience.length).toBeGreaterThan(0);
     });
@@ -76,7 +76,7 @@ describe('API — Dummy mode', () => {
   describe('getResumeStatus', () => {
     it('returns COMPLETED status', async () => {
       const result = await getResumeStatus('user-1');
-      expect(result.status).toBe('COMPLETED');
+      expect(result.status).toBe('COMPLETE');
     });
   });
 

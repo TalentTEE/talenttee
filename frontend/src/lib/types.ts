@@ -11,15 +11,15 @@ export interface User {
 export interface DataSourceConnection {
   id: string;
   userId: string;
-  provider: 'github' | 'slack' | 'discord' | 'gov24';
+  provider: 'GITHUB' | 'SLACK' | 'DISCORD' | 'GOV24';
   status: 'CONNECTED' | 'MOCK' | 'DISCONNECTED';
-  lastSyncAt: string | null;
+  lastSyncedAt: string | null;
 }
 
 export interface ResumeProfile {
   id: string;
   userId: string;
-  status: 'COLLECTING' | 'ANALYZING' | 'COMPLETED';
+  status: 'COLLECTING' | 'ANALYZING' | 'COMPLETE' | 'ERROR';
   skills: string[];
   experience: ExperienceItem[];
   education: EducationItem[];
@@ -59,7 +59,7 @@ export interface JobPosting {
   salaryMax: number;
   remotePolicy: string;
   workingHours: string;
-  benefits: string[];
+  benefits: string;
   status: 'ACTIVE' | 'CLOSED';
   negotiationBoundary: NegotiationBoundary | null;
 }
@@ -83,6 +83,10 @@ export interface MatchResult {
   finalRank: number;
   seekerAgreed: boolean;
   employerAgreed: boolean;
+}
+
+/** Extended match result with joined display fields (not in backend entity) */
+export interface MatchResultDisplay extends MatchResult {
   seekerSkills: string[];
   seekerExperienceYears: string;
   jobTitle: string;

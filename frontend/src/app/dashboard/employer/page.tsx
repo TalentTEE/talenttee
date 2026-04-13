@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { getEscrowBalance, getJobs, getEmployerMatches, getNegotiationSessions } from '@/lib/api';
-import { EscrowAccount, JobPosting, MatchResult, NegotiationSession } from '@/lib/types';
+import { EscrowAccount, JobPosting, MatchResultDisplay, NegotiationSession } from '@/lib/types';
 import { EscrowBalance } from '@/components/dashboard/escrow-balance';
 import { JobList } from '@/components/dashboard/job-list';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
@@ -13,7 +13,7 @@ export default function EmployerDashboard() {
   const { user } = useAuth();
   const [escrow, setEscrow] = useState<EscrowAccount | null>(null);
   const [jobs, setJobs] = useState<JobPosting[]>([]);
-  const [matches, setMatches] = useState<MatchResult[]>([]);
+  const [matches, setMatches] = useState<MatchResultDisplay[]>([]);
   const [sessions, setSessions] = useState<NegotiationSession[]>([]);
   const [loading, setLoading] = useState(true);
 

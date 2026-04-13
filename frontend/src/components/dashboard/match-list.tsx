@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MatchResult, NegotiationSession } from '@/lib/types';
+import { MatchResultDisplay, NegotiationSession } from '@/lib/types';
 
 const stateLabels: Record<string, { label: string; icon: string; className: string }> = {
   INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-yellow-400 bg-yellow-400/10' },
@@ -18,7 +18,7 @@ export function MatchList({
   role,
   sessions = [],
 }: {
-  matches: MatchResult[];
+  matches: MatchResultDisplay[];
   role: 'SEEKER' | 'EMPLOYER';
   sessions?: NegotiationSession[];
 }) {

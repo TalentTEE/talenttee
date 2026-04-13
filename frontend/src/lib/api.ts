@@ -1,6 +1,6 @@
 import {
   User, DataSourceConnection, ResumeProfile, JobPosting,
-  MatchResult, ProfileReport, NegotiationSession, NegotiationRound,
+  MatchResult, MatchResultDisplay, ProfileReport, NegotiationSession, NegotiationRound,
   EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
 } from './types';
@@ -43,7 +43,16 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // === Auth (Dummy) ===
-export async function getDummyUser(role: 'SEEKER' | 'EMPLOYER'): Promise<User> {
+export async function getDummyUser(role: 'SEEKER' | 'EMPLOYER', nearAccountId?: string): Promise<User> {
+  if (nearAccountId) {
+    return {
+      id: `user-${nearAccountId}`,
+      nearAccountId,
+      role,
+      publicKey: 'ed25519:dummy',
+      createdAt: new Date().toISOString(),
+    };
+  }
   return role === 'SEEKER' ? DUMMY_ALICE : DUMMY_BOB;
 }
 
@@ -81,24 +90,26 @@ export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
 }
 
 export async function connectGithubOAuth(): Promise<{ redirectUrl: string }> {
-  return apiFetch('/datasource/connect/github');
+  return apiFetch('/datasource/connect/github', { method: 'POST' });
 }
 
 export async function connectDatasourceMock(provider: string): Promise<DataSourceConnection> {
   if (USE_DUMMY) {
-    return { id: `ds-new-${Date.now()}`, userId: 'user-1', provider: provider as DataSourceConnection['provider'], status: 'MOCK', lastSyncAt: new Date().toISOString() };
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    const uid = storedUser ? JSON.parse(storedUser).id : 'user-1';
+    return { id: `ds-new-${Date.now()}`, userId: uid, provider: provider as DataSourceConnection['provider'], status: 'MOCK', lastSyncedAt: new Date().toISOString() };
   }
   return apiFetch('/datasource/connect/mock', { method: 'POST', body: JSON.stringify({ provider }) });
 }
 
 // === Resume ===
 export async function getResume(userId: string): Promise<ResumeProfile> {
-  if (USE_DUMMY) return DUMMY_RESUME;
+  if (USE_DUMMY) return { ...DUMMY_RESUME, userId };
   return apiFetch(`/resume/${userId}`);
 }
 
 export async function getResumeStatus(userId: string): Promise<{ status: string }> {
-  if (USE_DUMMY) return { status: 'COMPLETED' };
+  if (USE_DUMMY) return { status: 'COMPLETE' };
   return apiFetch(`/resume/${userId}/status`);
 }
 
@@ -115,6 +126,8 @@ export async function generateResume(): Promise<{ resumeId: string }> {
 // === Jobs ===
 export async function getJobs(): Promise<JobPosting[]> {
   if (USE_DUMMY) return DUMMY_JOBS;
+  // TODO: Backend only has GET /jobs/:id (single), no list endpoint yet.
+  // Once backend adds GET /jobs, remove this comment.
   return apiFetch('/jobs');
 }
 
@@ -133,7 +146,12 @@ export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatRes
     ];
     return { complete: false, question: questions[Math.min(messages.length, questions.length - 1)] };
   }
-  return apiFetch('/jobs/chat', { method: 'POST', body: JSON.stringify({ messages }) });
+  // Backend expects { message: string, sessionId?: string }
+  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+  return apiFetch('/jobs/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message: lastUserMsg?.content ?? '' }),
+  });
 }
 
 export async function createJob(jobData: Partial<JobPosting>): Promise<JobPosting> {
@@ -142,12 +160,12 @@ export async function createJob(jobData: Partial<JobPosting>): Promise<JobPostin
 }
 
 // === Matching ===
-export async function getSeekerMatches(seekerId: string): Promise<MatchResult[]> {
-  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+export async function getSeekerMatches(seekerId: string): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES.map(m => ({ ...m, seekerId }));
   return apiFetch(`/match/seeker/${seekerId}`);
 }
 
-export async function getEmployerMatches(jobId: string): Promise<MatchResult[]> {
+export async function getEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {
   if (USE_DUMMY) return DUMMY_EMPLOYER_MATCHES;
   return apiFetch(`/match/job/${jobId}`);
 }
@@ -166,6 +184,8 @@ export async function accessProfile(seekerId: string): Promise<ProfileReport> {
 // === Negotiation ===
 export async function getNegotiationSessions(): Promise<NegotiationSession[]> {
   if (USE_DUMMY) return DUMMY_SESSIONS;
+  // TODO: Backend has no list endpoint for sessions yet.
+  // Currently only GET /negotiation/sessions/:id exists.
   return apiFetch('/negotiation/sessions');
 }
 
@@ -183,7 +203,7 @@ export async function sendIntervention(sessionId: string, direction: string): Pr
   if (USE_DUMMY) return;
   await apiFetch(`/negotiation/sessions/${sessionId}/intervene`, {
     method: 'POST',
-    body: JSON.stringify({ direction, applyFromRound: 'next' }),
+    body: JSON.stringify({ direction }),
   });
 }
 

@@ -25,12 +25,12 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Resume</h3>
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-          resume.status === 'COMPLETED'
+          resume.status === 'COMPLETE'
             ? 'bg-primary/10 text-primary'
             : 'bg-muted text-muted-foreground'
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-          {resume.status === 'COMPLETED' ? 'Complete' : resume.status === 'ANALYZING' ? 'Analyzing...' : 'Collecting...'}
+          {resume.status === 'COMPLETE' ? 'Complete' : resume.status === 'ANALYZING' ? 'Analyzing...' : 'Collecting...'}
         </div>
       </div>
       <div className="flex gap-1.5 flex-wrap mb-3">
