@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth';
+import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
@@ -9,9 +10,11 @@ interface HeaderProps {
 
 export function Header({ onMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
+  const { signOut } = useWallet();
   const router = useRouter();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     logout();
     router.push('/');
   };

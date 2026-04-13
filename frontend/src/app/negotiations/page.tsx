@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { getNegotiationSessions, getSeekerMatches, getEmployerMatches } from '@/lib/api';
-import { NegotiationSession, MatchResult } from '@/lib/types';
+import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
 
 const stateInfo: Record<string, { label: string; icon: string; className: string }> = {
   INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-yellow-400' },
@@ -19,7 +19,7 @@ const stateInfo: Record<string, { label: string; icon: string; className: string
 export default function NegotiationsPage() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<NegotiationSession[]>([]);
-  const [matches, setMatches] = useState<MatchResult[]>([]);
+  const [matches, setMatches] = useState<MatchResultDisplay[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -107,7 +107,7 @@ function Section({ title, count, children }: { title: string; count: number; chi
   );
 }
 
-function SessionRow({ session: s, match }: { session: NegotiationSession; match?: MatchResult }) {
+function SessionRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
   const isAgreed = s.state === 'AGREED';
   const isTerminal = isAgreed || s.state === 'FAILED' || s.state === 'MAX_ROUNDS';
   const score = match ? Math.round(match.rerankScore * 100) : null;
