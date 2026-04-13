@@ -11,6 +11,12 @@ import { InterveneDto } from './dto/intervene.dto.js';
 export class NegotiationController {
   constructor(private readonly negotiationService: NegotiationService) {}
 
+  @Get('sessions')
+  async listSessions(@Req() req) {
+    const userId = req.user.id ?? req.user.nearAccountId;
+    return this.negotiationService.listSessions(userId);
+  }
+
   @Post('sessions')
   async createSession(@Body() dto: CreateSessionDto) {
     return this.negotiationService.createSession(dto.jobId, dto.seekerId, dto.maxRounds);
@@ -37,5 +43,10 @@ export class NegotiationController {
   async intervene(@Param('id') id: string, @Req() req, @Body() dto: InterveneDto) {
     await this.negotiationService.intervene(id, req.user.nearAccountId, dto.direction);
     return { message: 'Intervention registered', sessionId: id };
+  }
+
+  @Post('sessions/:id/decrypt')
+  async decryptRounds(@Param('id') id: string, @Body() body: { sessionKey: string }) {
+    return this.negotiationService.decryptRounds(id, body.sessionKey);
   }
 }

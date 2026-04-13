@@ -1,13 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { createHash } from 'crypto';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { NegotiationState, NegotiationDecision } from '../common/enums/index.js';
+import { CryptoService } from '../crypto/crypto.service.js';
 
 @Injectable()
 export class AgreementService {
+  private readonly logger = new Logger(AgreementService.name);
   private readonly agreementContractId = process.env.AGREEMENT_CONTRACT_ID || 'agreement.testnet';
   private readonly nearNodeUrl = process.env.NEAR_NODE_URL || 'https://rpc.testnet.near.org';
 
@@ -16,7 +18,15 @@ export class AgreementService {
     private readonly sessionRepo: Repository<NegotiationSession>,
     @InjectRepository(NegotiationRound)
     private readonly roundRepo: Repository<NegotiationRound>,
+    private readonly cryptoService: CryptoService,
   ) {}
+
+  private parsePublicKey(key: string): Uint8Array {
+    if (key.startsWith('ed25519:')) {
+      return Buffer.from(key.slice(8), 'base64');
+    }
+    return Buffer.from(key, 'base64');
+  }
 
   async approve(sessionId: string, nearAccountId: string): Promise<{ status: string; txParams?: any }> {
     return this.sessionRepo.manager.transaction(async (manager) => {
@@ -48,11 +58,26 @@ export class AgreementService {
         order: { round: 'DESC' },
       });
 
+      // Decrypt salary from the last negotiation round
+      let agreedSalary = 0;
+      try {
+        if (lastRound?.encryptedData && session.seeker?.publicKey && session.sessionKeyNonce) {
+          const seekerPubKey = this.parsePublicKey(session.seeker.publicKey);
+          const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, session.sessionKeyNonce);
+          const decrypted = this.cryptoService.decrypt(sessionKey, lastRound.encryptedData);
+          const parsed = JSON.parse(decrypted);
+          agreedSalary = parsed?.proposal?.salary ?? parsed?.proposal?.baseSalary ?? 0;
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to decrypt salary for session ${sessionId}: ${err.message}`);
+        agreedSalary = 0;
+      }
+
       const agreementHash = this.computeAgreementHash(session, lastRound);
       session.agreementHash = agreementHash;
       await manager.save(session);
 
-      const txParams = this.getRecordAgreementTxParams(session, agreementHash);
+      const txParams = this.getRecordAgreementTxParams(session, agreementHash, agreedSalary);
       return { status: 'both_approved', txParams };
     });
   }
@@ -70,7 +95,7 @@ export class AgreementService {
     return createHash('sha256').update(canonical).digest('hex');
   }
 
-  private getRecordAgreementTxParams(session: NegotiationSession, agreementHash: string) {
+  private getRecordAgreementTxParams(session: NegotiationSession, agreementHash: string, agreedSalary: number) {
     return {
       contractId: this.agreementContractId,
       methodName: 'record_agreement',
@@ -79,7 +104,7 @@ export class AgreementService {
         agreement_hash: agreementHash,
         summary: {
           position_title: session.job?.title || 'Unknown',
-          agreed_salary: 0, // Will be filled from decrypted final offer
+          agreed_salary: agreedSalary,
           start_date: new Date().toISOString().split('T')[0],
           negotiation_rounds: session.currentRound,
         },

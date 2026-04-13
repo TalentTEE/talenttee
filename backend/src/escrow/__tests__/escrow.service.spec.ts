@@ -1,12 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { EscrowService } from '../escrow.service.js';
+import { PaymentRecord } from '../../entities/payment-record.entity.js';
 
 describe('EscrowService', () => {
   let service: EscrowService;
 
+  const mockPaymentRepo = {
+    find: jest.fn().mockResolvedValue([]),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EscrowService],
+      providers: [
+        EscrowService,
+        { provide: getRepositoryToken(PaymentRecord), useValue: mockPaymentRepo },
+      ],
     }).compile();
     service = module.get<EscrowService>(EscrowService);
   });

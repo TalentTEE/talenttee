@@ -23,6 +23,13 @@ export class JobService {
     private readonly aiClient: NearAiClient,
   ) {}
 
+  async listJobs(employerId?: string): Promise<JobPosting[]> {
+    if (employerId) {
+      return this.jobRepo.find({ where: { employerId }, order: { createdAt: 'DESC' } });
+    }
+    return this.jobRepo.find({ where: { status: 'ACTIVE' as any }, order: { createdAt: 'DESC' } });
+  }
+
   async createJob(employerId: string, dto: CreateJobDto): Promise<JobPosting> {
     const job = this.jobRepo.create({ ...dto, employerId });
     return this.jobRepo.save(job);

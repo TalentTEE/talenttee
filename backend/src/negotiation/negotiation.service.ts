@@ -38,6 +38,14 @@ export class NegotiationService {
     private readonly cryptoService: CryptoService,
   ) {}
 
+  async listSessions(userId: string): Promise<NegotiationSession[]> {
+    return this.sessionRepo.find({
+      where: [{ seekerId: userId }, { employerId: userId }],
+      relations: ['job', 'seeker', 'employer'],
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
   async createSession(jobId: string, seekerId: string, maxRounds = 5): Promise<NegotiationSession> {
     const job = await this.jobRepo.findOne({ where: { id: jobId } });
     if (!job) throw new NotFoundException('Job not found');
@@ -222,5 +230,31 @@ export class NegotiationService {
     }
 
     this.logger.log(`Session ${session.id} finished: ${session.state}`);
+  }
+
+  async decryptRounds(sessionId: string, sessionKeyHex: string): Promise<any[]> {
+    const rounds = await this.getRounds(sessionId);
+    const sessionKey = Buffer.from(sessionKeyHex, 'hex');
+    return rounds.map(round => {
+      try {
+        const decrypted = this.cryptoService.decrypt(sessionKey, round.encryptedData);
+        return {
+          round: round.round,
+          actor: round.actor,
+          decision: round.decision,
+          data: JSON.parse(decrypted),
+          timestamp: round.timestamp,
+        };
+      } catch {
+        return {
+          round: round.round,
+          actor: round.actor,
+          decision: round.decision,
+          data: null,
+          error: 'Decryption failed — invalid session key',
+          timestamp: round.timestamp,
+        };
+      }
+    });
   }
 }

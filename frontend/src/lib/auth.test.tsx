@@ -67,7 +67,7 @@ describe('AuthProvider', () => {
   });
 
   it('login() stores dummy user in localStorage', async () => {
-    const dummyUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:key', createdAt: '2026-01-01' };
+    const dummyUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER' as const, publicKey: 'ed25519:key', createdAt: '2026-01-01' };
     mockGetDummyUser.mockResolvedValue(dummyUser);
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
@@ -87,7 +87,7 @@ describe('AuthProvider', () => {
     vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
     mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce', expiresAt: '2026-12-31' });
     mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
-    const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER', publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
+    const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER' as const, publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
     mockVerifyNearAuth.mockResolvedValue({ jwt: 'real-jwt', user: apiUser });
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);

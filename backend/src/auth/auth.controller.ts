@@ -23,8 +23,10 @@ export class AuthController {
       throw new UnauthorizedException('Invalid or expired challenge nonce');
     }
 
-    // TODO: near-sign-verify로 실제 Ed25519 서명 검증
-    // PoC에서는 challenge 유효성만 확인
+    const isValidSig = this.authService.verifyNearSignature(body.nonce, body.signature, body.publicKey);
+    if (!isValidSig) {
+      throw new UnauthorizedException('Ed25519 signature verification failed');
+    }
 
     const role = body.role === 'EMPLOYER' ? UserRole.EMPLOYER : UserRole.SEEKER;
     const user = await this.authService.findOrCreateUser(body.nearAccountId, role, body.publicKey);

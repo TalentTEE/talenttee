@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes } from 'crypto';
+import nacl from 'tweetnacl';
 import { User } from '../entities/user.entity.js';
 import { UserRole } from '../common/enums/index.js';
 
@@ -32,6 +33,20 @@ export class AuthService {
     }
     this.challenges.delete(nonce);
     return true;
+  }
+
+  verifyNearSignature(message: string, signature: string, publicKey: string): boolean {
+    try {
+      const sigBytes = Buffer.from(signature, 'base64');
+      const keyStr = publicKey.startsWith('ed25519:')
+        ? publicKey.slice('ed25519:'.length)
+        : publicKey;
+      const keyBytes = Buffer.from(keyStr, 'base64');
+      const msgBytes = Buffer.from(message, 'utf-8');
+      return nacl.sign.detached.verify(msgBytes, sigBytes, keyBytes);
+    } catch {
+      return false;
+    }
   }
 
   async findOrCreateUser(nearAccountId: string, role: UserRole, publicKey: string): Promise<User> {
