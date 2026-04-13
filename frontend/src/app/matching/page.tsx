@@ -223,7 +223,7 @@ export default function MatchingPage() {
     setLoading(true);
     const fetchMatches = isEmployer
       ? getEmployerMatches('job-1')
-      : getSeekerMatches(user.id);
+      : getSeekerMatches();
 
     fetchMatches.then(setMatches).finally(() => setLoading(false));
   }, [user, isEmployer]);
