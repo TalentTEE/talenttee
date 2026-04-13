@@ -23,8 +23,8 @@ export default function SeekerDashboard() {
     if (!user) return;
     Promise.all([
       getDatasourceStatus().then(setDatasources),
-      getResume(user.id).then(setResume).catch(() => setResume(null)),
-      getSeekerMatches(user.id).then(setMatches),
+      getResume().then(setResume).catch(() => setResume(null)),
+      getSeekerMatches().then(setMatches),
       getNegotiationSessions().then(setSessions),
     ]).finally(() => setLoading(false));
   }, [user]);

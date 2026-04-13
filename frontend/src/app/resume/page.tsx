@@ -39,7 +39,7 @@ export default function ResumePage() {
 
   useEffect(() => {
     if (!user) return;
-    getResume(user.id)
+    getResume()
       .then(setResume)
       .catch(() => setResume(null))
       .finally(() => setLoading(false));
@@ -54,7 +54,7 @@ export default function ResumePage() {
       setTimeout(() => {
         setSimulatedStatus('COMPLETE');
         if (user) {
-          getResume(user.id)
+          getResume()
             .then((data) => {
               setResume(data);
               setGenerating(false);
@@ -73,13 +73,13 @@ export default function ResumePage() {
       const { resumeId } = await generateResume();
       const pollInterval = setInterval(async () => {
         try {
-          const { status: currentStatus } = await getResumeStatus(resumeId);
+          const { status: currentStatus } = await getResumeStatus();
           setSimulatedStatus(currentStatus as ResumeProfile['status']);
 
           if (currentStatus === 'COMPLETE') {
             clearInterval(pollInterval);
             if (user) {
-              const fullResume = await getResume(user.id);
+              const fullResume = await getResume();
               setResume(fullResume);
             }
             setGenerating(false);

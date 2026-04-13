@@ -27,7 +27,7 @@ export default function NegotiationsPage() {
     Promise.all([
       getNegotiationSessions(),
       user.role === 'SEEKER'
-        ? getSeekerMatches(user.id)
+        ? getSeekerMatches()
         : getEmployerMatches('job-1'),
     ]).then(([s, m]) => {
       setSessions(s);

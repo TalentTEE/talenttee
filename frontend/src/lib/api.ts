@@ -105,14 +105,14 @@ export async function connectDatasourceMock(provider: string): Promise<DataSourc
 }
 
 // === Resume ===
-export async function getResume(userId: string): Promise<ResumeProfile> {
-  if (USE_DUMMY) return { ...DUMMY_RESUME, userId };
-  return apiFetch(`/resume/${userId}`);
+export async function getResume(): Promise<ResumeProfile> {
+  if (USE_DUMMY) return { ...DUMMY_RESUME, userId: 'dummy-user' };
+  return apiFetch('/resume/me');
 }
 
-export async function getResumeStatus(userId: string): Promise<{ status: string }> {
+export async function getResumeStatus(): Promise<{ status: string }> {
   if (USE_DUMMY) return { status: 'COMPLETE' };
-  return apiFetch(`/resume/${userId}/status`);
+  return apiFetch('/resume/me/status');
 }
 
 export async function generateResume(): Promise<{ resumeId: string }> {
@@ -162,9 +162,9 @@ export async function createJob(jobData: Partial<JobPosting>): Promise<JobPostin
 }
 
 // === Matching ===
-export async function getSeekerMatches(seekerId: string): Promise<MatchResultDisplay[]> {
-  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES.map(m => ({ ...m, seekerId }));
-  return apiFetch(`/match/seeker/${seekerId}`);
+export async function getSeekerMatches(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me');
 }
 
 export async function getEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {
