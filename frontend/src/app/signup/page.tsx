@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 export default function SignupPage() {
   const { signup } = useAuth();
-  const { modal, signedAccountId, signOut } = useWallet();
+  const { modal, signedAccountId } = useWallet();
   const router = useRouter();
 
   const [step, setStep] = useState<'role' | 'account'>('role');
@@ -23,28 +23,34 @@ export default function SignupPage() {
     setStep('account');
   };
 
+  const doSignup = useCallback(async (accountId: string) => {
+    if (!selectedRole) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await signup(accountId, selectedRole);
+      router.push(selectedRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Signup failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [selectedRole, signup, router]);
+
   // When wallet connects and we're waiting, auto-signup
   useEffect(() => {
     if (!waitingForWallet.current || !signedAccountId || !selectedRole) return;
     waitingForWallet.current = false;
-
-    (async () => {
-      setIsSubmitting(true);
-      setError(null);
-      try {
-        await signup(signedAccountId, selectedRole);
-        router.push(selectedRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Signup failed');
-      } finally {
-        setIsSubmitting(false);
-      }
-    })();
-  }, [signedAccountId, selectedRole, signup, router]);
+    doSignup(signedAccountId);
+  }, [signedAccountId, selectedRole, doSignup]);
 
   const handleConnectWallet = async () => {
     if (!modal) return;
-    await signOut();
+    // If already signed in, signup directly without disconnecting
+    if (signedAccountId) {
+      doSignup(signedAccountId);
+      return;
+    }
     waitingForWallet.current = true;
     modal.show();
   };
