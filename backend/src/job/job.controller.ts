@@ -12,6 +12,12 @@ import { ChatMessageDto } from './dto/chat-message.dto.js';
 export class JobController {
   constructor(private readonly jobService: JobService) {}
 
+  @Get('jobs')
+  async listJobs(@Req() req) {
+    const employerId = req.user.role === 'EMPLOYER' ? req.user.nearAccountId : undefined;
+    return this.jobService.listJobs(employerId);
+  }
+
   @Post('jobs')
   async createJob(@Req() req, @Body() dto: CreateJobDto) {
     this.ensureEmployer(req);

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { EscrowService } from './escrow.service.js';
 import { JwtGuard } from '../auth/jwt.guard.js';
 
@@ -17,5 +17,12 @@ export class EscrowController {
   @Post('deposit')
   getDepositParams(@Body() body: { amount: string }) {
     return this.escrowService.getDepositTxParams(body.amount);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('payments')
+  async getPaymentHistory(@Req() req) {
+    const userId = req.user.id ?? req.user.nearAccountId;
+    return this.escrowService.getPaymentHistory(userId);
   }
 }

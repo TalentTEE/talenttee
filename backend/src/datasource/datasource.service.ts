@@ -6,12 +6,32 @@ import { join } from 'path';
 import { DataSourceConnection } from '../entities/data-source-connection.entity.js';
 import { DataSourceProvider, DataSourceStatus } from '../common/enums/index.js';
 
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+
 @Injectable()
 export class DatasourceService {
   constructor(
     @InjectRepository(DataSourceConnection)
     private readonly dsRepo: Repository<DataSourceConnection>,
   ) {}
+
+  async exchangeGithubCode(code: string): Promise<string> {
+    const response = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code,
+      }),
+    });
+    const data = await response.json();
+    return data.access_token;
+  }
 
   async connectMock(userId: string, provider: DataSourceProvider): Promise<DataSourceConnection> {
     const existing = await this.dsRepo.findOne({ where: { userId, provider } });

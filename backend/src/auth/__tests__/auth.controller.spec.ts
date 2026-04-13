@@ -9,6 +9,7 @@ describe('AuthController', () => {
   const mockAuthService = {
     generateChallenge: jest.fn(),
     validateChallenge: jest.fn(),
+    verifyNearSignature: jest.fn(),
     findOrCreateUser: jest.fn(),
     generateJwt: jest.fn(),
   };
@@ -35,6 +36,7 @@ describe('AuthController', () => {
     it('should return JWT and user on valid signature', async () => {
       const user = { id: 'uuid-1', nearAccountId: 'alice.testnet', role: 'SEEKER' };
       mockAuthService.validateChallenge.mockReturnValue(true);
+      mockAuthService.verifyNearSignature.mockReturnValue(true);
       mockAuthService.findOrCreateUser.mockResolvedValue(user);
       mockAuthService.generateJwt.mockReturnValue('jwt-token');
 

@@ -75,8 +75,7 @@ export default function DatasourcePage() {
     setConnecting(provider);
     try {
       if (!USE_DUMMY && provider === 'GITHUB') {
-        const { redirectUrl } = await connectGithubOAuth();
-        window.location.href = redirectUrl;
+        connectGithubOAuth();
         return;
       }
 
