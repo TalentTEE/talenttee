@@ -1,0 +1,25 @@
+{
+  "activities": [
+    {
+      "id": "discord-001",
+      "server": "NEAR Korea Developers",
+      "role": "Core Contributor",
+      "messages_count": 234,
+      "helpful_answers": 45
+    },
+    {
+      "id": "discord-002",
+      "server": "TypeScript Korea",
+      "role": "Moderator",
+      "messages_count": 567,
+      "helpful_answers": 89
+    },
+    {
+      "id": "discord-003",
+      "server": "Web3 Builders",
+      "role": "Member",
+      "messages_count": 123,
+      "helpful_answers": 23
+    }
+  ]
+}
