@@ -225,7 +225,7 @@ export default function MatchingPage() {
       ? getEmployerMatches('job-1')
       : getSeekerMatches();
 
-    fetchMatches.then(setMatches).finally(() => setLoading(false));
+    fetchMatches.then(setMatches).catch(() => setMatches([])).finally(() => setLoading(false));
   }, [user, isEmployer]);
 
   const handleViewProfile = async (seekerId: string) => {
