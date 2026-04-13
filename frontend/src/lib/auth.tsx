@@ -4,8 +4,32 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { User, UserRole } from './types';
 import { getDummyUser, requestChallenge, verifyNearAuth } from './api';
 
+const ACCOUNTS_KEY = 'registeredAccounts';
+
+/** Read the account→role registry from localStorage */
+function getAccountRegistry(): Record<string, UserRole> {
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Save an account→role mapping */
+function saveAccountRole(accountId: string, role: UserRole) {
+  const reg = getAccountRegistry();
+  reg[accountId] = role;
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(reg));
+}
+
 interface AuthContextType {
   user: User | null;
+  /** Signup: choose role + create account */
+  signup: (nearAccountId: string, role: UserRole) => Promise<void>;
+  /** Login: account only, role looked up from registration */
+  loginByAccount: (nearAccountId: string) => Promise<void>;
+  /** Legacy dummy login */
   login: (role: UserRole) => Promise<void>;
   loginWithNear: (nearAccountId: string, role: UserRole) => Promise<void>;
   logout: () => void;
@@ -14,6 +38,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  signup: async () => {},
+  loginByAccount: async () => {},
   login: async () => {},
   loginWithNear: async () => {},
   logout: () => {},
@@ -32,42 +58,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (role: UserRole) => {
-    const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
-    if (USE_DUMMY) {
+  const doLogin = async (nearAccountId: string, role: UserRole) => {
+    const useDummy = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
+    if (useDummy) {
       const dummyUser = await getDummyUser(role);
-      localStorage.setItem('user', JSON.stringify(dummyUser));
+      const userData = { ...dummyUser, nearAccountId };
+      localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('jwt', 'dummy-jwt-token');
-      setUser(dummyUser);
+      setUser(userData);
+    } else {
+      const { nonce } = await requestChallenge();
+      const signature = 'poc-signature-placeholder';
+      const publicKey = 'ed25519:placeholder';
+
+      const { jwt, user: apiUser } = await verifyNearAuth({
+        nearAccountId,
+        publicKey,
+        signature,
+        nonce,
+        role,
+      });
+
+      const userData: User = {
+        id: apiUser.id,
+        nearAccountId: apiUser.nearAccountId,
+        role: apiUser.role as UserRole,
+        publicKey: apiUser.publicKey,
+        createdAt: apiUser.createdAt,
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('jwt', jwt);
+      setUser(userData);
     }
-    // TODO: Real NEAR wallet login (Day 3)
   };
 
+  /** Signup: register role + log in */
+  const signup = async (nearAccountId: string, role: UserRole) => {
+    saveAccountRole(nearAccountId, role);
+    await doLogin(nearAccountId, role);
+  };
+
+  /** Login by account ID — looks up stored role */
+  const loginByAccount = async (nearAccountId: string) => {
+    const registry = getAccountRegistry();
+    const role = registry[nearAccountId];
+    if (!role) {
+      throw new Error('Account not found. Please sign up first.');
+    }
+    await doLogin(nearAccountId, role);
+  };
+
+  /** Legacy: dummy login by role */
+  const login = async (role: UserRole) => {
+    const accountId = role === 'SEEKER' ? 'alice.testnet' : 'bob.testnet';
+    saveAccountRole(accountId, role);
+    await doLogin(accountId, role);
+  };
+
+  /** Legacy: login with explicit NEAR account + role */
   const loginWithNear = async (nearAccountId: string, role: UserRole) => {
-    const { nonce } = await requestChallenge();
-
-    // PoC: backend does not verify signature, so use placeholders
-    const signature = 'poc-signature-placeholder';
-    const publicKey = 'ed25519:placeholder';
-
-    const { jwt, user: apiUser } = await verifyNearAuth({
-      nearAccountId,
-      publicKey,
-      signature,
-      nonce,
-      role,
-    });
-
-    const userData: User = {
-      id: apiUser.id,
-      nearAccountId: apiUser.nearAccountId,
-      role: apiUser.role as UserRole,
-      publicKey: apiUser.publicKey,
-      createdAt: apiUser.createdAt,
-    };
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('jwt', jwt);
-    setUser(userData);
+    saveAccountRole(nearAccountId, role);
+    await doLogin(nearAccountId, role);
   };
 
   const logout = () => {
@@ -77,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, loginWithNear, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, signup, loginByAccount, login, loginWithNear, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
