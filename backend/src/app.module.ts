@@ -10,6 +10,7 @@ import { NegotiationModule } from './negotiation/negotiation.module.js';
 import { AgreementModule } from './agreement/agreement.module.js';
 import { AgentModule } from './agent/agent.module.js';
 import { DatasourceModule } from './datasource/datasource.module.js';
+import { ResumeModule } from './resume/resume.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -19,6 +20,7 @@ import { AppService } from './app.service.js';
     TypeOrmModule.forRoot(databaseConfig()),
     AgentModule,
     DatasourceModule,
+    ResumeModule,
     AuthModule,
     EscrowModule,
     CryptoModule,
