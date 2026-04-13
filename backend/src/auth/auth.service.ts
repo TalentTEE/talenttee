@@ -90,7 +90,8 @@ export class AuthService {
 
   generateJwt(user: User): string {
     return this.jwtService.sign({
-      sub: user.nearAccountId,
+      sub: user.id,
+      nearAccountId: user.nearAccountId,
       role: user.role,
       publicKey: user.publicKey,
     });
