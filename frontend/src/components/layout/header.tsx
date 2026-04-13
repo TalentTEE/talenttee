@@ -3,7 +3,11 @@
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
-export function Header() {
+interface HeaderProps {
+  onMenuToggle?: () => void;
+}
+
+export function Header({ onMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
 
@@ -18,6 +22,14 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-[#0e0e0e] border-b border-border/10">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
+          {onMenuToggle && (
+            <button
+              onClick={onMenuToggle}
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+            >
+              <span className="material-symbols-outlined text-xl">menu</span>
+            </button>
+          )}
           <span className="text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
             Talent-Tee
           </span>
@@ -31,7 +43,7 @@ export function Header() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <div className="hidden sm:flex items-center gap-2 text-muted-foreground text-sm">
             <span className="material-symbols-outlined text-base">account_balance_wallet</span>
             <span>{user.nearAccountId}</span>
           </div>
