@@ -38,7 +38,10 @@ Phase 7 ─── Day 4 (4/15) ─── ECDH 복호화 + 에스크로 지갑 �
   │         ↓ E2E 암호화 협상 히스토리 + NEAR 지갑 트랜잭션 서명
   │
 Phase 8 ─── Day 5-6 (4/16-17) ─── UX 폴리싱 + 데모 리허설
-            ↓ 에러 핸들링, 로딩 상태, 반응형, 데모 리허설 완료
+  │         ↓ 에러 핸들링, 로딩 상태, 반응형, 데모 리허설 완료
+  │
+Phase 9 ─── Day 7+ (4/18~) ─── 랜딩 페이지 + NEAR Wallet Selector 연동
+            ↓ 실서비스 가입/로그인 + 지갑 팝업 연결 + 랜딩 어필
 ```
 
 ## Phase 의존 관계
@@ -76,6 +79,7 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 | 6 | [phase-6-backend-api-remaining.md](./phase-6-backend-api-remaining.md) | 완료 | ~2h |
 | 7 | [phase-7-ecdh-escrow-wallet.md](./phase-7-ecdh-escrow-wallet.md) | 완료 | ~3h |
 | 8 | [phase-8-ux-polishing-demo.md](./phase-8-ux-polishing-demo.md) | 완료 | ~3h |
+| 9 | [phase-9-landing-wallet-selector.md](./phase-9-landing-wallet-selector.md) | 진행 중 | ~4h |
 
 ## 전체 수락 기준
 
@@ -91,3 +95,6 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 - [x] 에러 핸들링 (toast 알림) + 로딩 상태 (Skeleton/Spinner) 전체 적용
 - [x] 반응형 레이아웃 (모바일/태블릿/데스크톱) 정상 표시
 - [x] 전체 E2E 데모 시나리오 1회 이상 리허설 완료
+- [ ] 랜딩 페이지에서 AI Agent 가치 어필 + 가입/로그인 유도
+- [ ] NEAR Wallet Selector 팝업으로 지갑 연결 (MetaMask 포함)
+- [ ] 가입 시 역할 선택 → 로그인 시 역할 자동 감지
