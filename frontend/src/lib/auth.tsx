@@ -68,8 +68,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
-    if (stored) {
-      setUser(JSON.parse(stored));
+    const jwt = localStorage.getItem('jwt');
+    if (stored && jwt) {
+      // Check if JWT is expired by decoding the payload
+      try {
+        const payload = JSON.parse(atob(jwt.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          // JWT expired — clear stale session
+          localStorage.removeItem('user');
+          localStorage.removeItem('jwt');
+        } else {
+          setUser(JSON.parse(stored));
+        }
+      } catch {
+        // Malformed JWT — clear it
+        localStorage.removeItem('user');
+        localStorage.removeItem('jwt');
+      }
+    } else if (stored && !jwt) {
+      // User without JWT — clear stale data
+      localStorage.removeItem('user');
     }
     setIsLoading(false);
     prefetchChallenge();
