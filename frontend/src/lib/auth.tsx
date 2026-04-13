@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('This wallet does not support message signing (NEP-413). Please use a compatible wallet.');
       }
 
-      const nonceBuffer = Buffer.from(nonce);
+      const nonceBuffer = Buffer.from(nonce, 'hex');
       const signed = await wallet.signMessage({
         message: nonce,
         recipient: 'talent-tee',
