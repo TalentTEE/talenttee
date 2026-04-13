@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '@/lib/types';
 import Link from 'next/link';
+
+const SIGNUP_ROLE_KEY = 'signup_selectedRole';
+const SIGNUP_WAITING_KEY = 'signup_waiting';
 
 export default function SignupPage() {
   const { signup } = useAuth();
@@ -16,23 +19,35 @@ export default function SignupPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const waitingForWallet = useRef(false);
+
+  // Restore role from sessionStorage (survives redirect-based wallet flow)
+  useEffect(() => {
+    const savedRole = sessionStorage.getItem(SIGNUP_ROLE_KEY) as UserRole | null;
+    if (savedRole) {
+      setSelectedRole(savedRole);
+      setStep('account');
+    }
+  }, []);
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
+    sessionStorage.setItem(SIGNUP_ROLE_KEY, role);
     setStep('account');
   };
 
-  // When wallet connects and we're waiting, auto-signup
+  // When wallet connects AND we're in a connect flow, auto-signup
   useEffect(() => {
-    if (!waitingForWallet.current || !signedAccountId || !selectedRole) return;
-    waitingForWallet.current = false;
+    const waiting = sessionStorage.getItem(SIGNUP_WAITING_KEY);
+    if (!waiting || !signedAccountId || !selectedRole) return;
+
+    sessionStorage.removeItem(SIGNUP_WAITING_KEY);
 
     (async () => {
       setIsSubmitting(true);
       setError(null);
       try {
         await signup(signedAccountId, selectedRole);
+        sessionStorage.removeItem(SIGNUP_ROLE_KEY);
         router.push(selectedRole === 'SEEKER' ? '/datasource' : '/dashboard/employer');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Signup failed');
@@ -45,7 +60,7 @@ export default function SignupPage() {
   const handleConnectWallet = async () => {
     if (!modal) return;
     await signOut();
-    waitingForWallet.current = true;
+    sessionStorage.setItem(SIGNUP_WAITING_KEY, 'true');
     modal.show();
   };
 
@@ -63,7 +78,12 @@ export default function SignupPage() {
           </Link>
         ) : (
           <button
-            onClick={() => { setStep('role'); setError(null); }}
+            onClick={() => {
+              setStep('role');
+              setError(null);
+              sessionStorage.removeItem(SIGNUP_ROLE_KEY);
+              sessionStorage.removeItem(SIGNUP_WAITING_KEY);
+            }}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>

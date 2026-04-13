@@ -3,7 +3,7 @@
 import { ResumeProfile } from '@/lib/types';
 
 function formatSalary(val: number): string {
-  return `${(val / 10000).toLocaleString()}M`;
+  return `$${val.toLocaleString()}`;
 }
 
 export function MarketValueCard({ resume }: { resume: ResumeProfile | null }) {
@@ -16,7 +16,7 @@ export function MarketValueCard({ resume }: { resume: ResumeProfile | null }) {
         <span className="text-3xl font-extrabold text-primary font-[var(--font-manrope)]">
           {formatSalary(resume.marketValueMin)} ~ {formatSalary(resume.marketValueMax!)}
         </span>
-        <span className="text-sm text-muted-foreground">KRW</span>
+        <span className="text-sm text-muted-foreground">/ year</span>
       </div>
       <p className="text-sm text-muted-foreground mb-4">Fair Salary Range</p>
       {resume.negotiationPoints && (

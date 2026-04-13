@@ -18,10 +18,7 @@ function stepIndex(status: ResumeProfile['status']): number {
 
 function formatCurrency(value: number | null): string {
   if (value === null) return '-';
-  if (value >= 100_000_000) {
-    return `${(value / 100_000_000).toFixed(1)}억`;
-  }
-  return `${(value / 10_000).toLocaleString()}만`;
+  return `$${value.toLocaleString()}`;
 }
 
 export default function ResumePage() {

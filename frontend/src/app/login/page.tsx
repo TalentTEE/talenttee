@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+const LOGIN_WAITING_KEY = 'login_waitingForWallet';
 
 export default function LoginPage() {
   const { loginByAccount } = useAuth();
@@ -13,12 +15,12 @@ export default function LoginPage() {
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const waitingForWallet = useRef(false);
 
-  // When wallet connects and we're waiting, auto-login
+  // When wallet connects (including after redirect), auto-login
   useEffect(() => {
-    if (!waitingForWallet.current || !signedAccountId) return;
-    waitingForWallet.current = false;
+    const waiting = sessionStorage.getItem(LOGIN_WAITING_KEY);
+    if (!waiting || !signedAccountId) return;
+    sessionStorage.removeItem(LOGIN_WAITING_KEY);
 
     (async () => {
       setIsLoggingIn(true);
@@ -41,7 +43,7 @@ export default function LoginPage() {
   const handleConnectWallet = async () => {
     if (!modal) return;
     await signOut();
-    waitingForWallet.current = true;
+    sessionStorage.setItem(LOGIN_WAITING_KEY, 'true');
     modal.show();
   };
 
