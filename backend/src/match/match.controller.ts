@@ -7,9 +7,9 @@ import { MatchService } from './match.service.js';
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
-  @Get('seeker/:seekerId')
-  async matchForSeeker(@Param('seekerId') seekerId: string) {
-    return this.matchService.matchForSeeker(seekerId);
+  @Get('me')
+  async matchForMe(@Req() req) {
+    return this.matchService.matchForSeeker(req.user.id);
   }
 
   @Get('job/:jobId')
@@ -19,8 +19,7 @@ export class MatchController {
 
   @Post(':matchId/agree')
   async agree(@Req() req: any, @Param('matchId') matchId: string) {
-    const userId = req.user.id ?? req.user.nearAccountId;
-    return this.matchService.agree(matchId, userId, req.user.role);
+    return this.matchService.agree(matchId, req.user.id, req.user.role);
   }
 
   @Get(':matchId/status')
