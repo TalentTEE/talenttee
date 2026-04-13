@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
@@ -33,9 +34,9 @@ export function Header({ onMenuToggle }: HeaderProps) {
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
           )}
-          <span className="text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
+          <Link href="/" className="text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)] hover:opacity-80 transition-opacity">
             Talent-Tee
-          </span>
+          </Link>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
             <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
               {user.role === 'SEEKER' ? 'person' : 'corporate_fare'}
