@@ -90,10 +90,10 @@ describe('API — Real mode', () => {
     const getCases: [string, () => Promise<unknown>, string][] = [
       ['getDatasourceStatus', () => api.getDatasourceStatus(), '/datasource/status'],
       // connectGithubOAuth moved to POST tests
-      ['getResume', () => api.getResume('u1'), '/resume/u1'],
-      ['getResumeStatus', () => api.getResumeStatus('u1'), '/resume/u1/status'],
+      ['getResume', () => api.getResume(), '/resume/me'],
+      ['getResumeStatus', () => api.getResumeStatus(), '/resume/me/status'],
       ['getJobs', () => api.getJobs(), '/jobs'],
-      ['getSeekerMatches', () => api.getSeekerMatches('s1'), '/match/seeker/s1'],
+      ['getSeekerMatches', () => api.getSeekerMatches(), '/match/me'],
       ['getEmployerMatches', () => api.getEmployerMatches('j1'), '/match/job/j1'],
       ['getNegotiationSessions', () => api.getNegotiationSessions(), '/negotiation/sessions'],
       ['getNegotiationSession', () => api.getNegotiationSession('sess1'), '/negotiation/sessions/sess1'],

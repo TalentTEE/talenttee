@@ -25,10 +25,10 @@ describe('AuthController', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('POST /auth/near/challenge', () => {
-    it('should return nonce and expiresAt', () => {
+    it('should return nonce and expiresAt', async () => {
       const expected = { nonce: 'abc123', expiresAt: '2026-04-12T00:00:00Z' };
       mockAuthService.generateChallenge.mockReturnValue(expected);
-      expect(controller.challenge()).toEqual(expected);
+      await expect(controller.challenge()).resolves.toEqual(expected);
     });
   });
 

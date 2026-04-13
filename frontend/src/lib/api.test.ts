@@ -66,7 +66,7 @@ describe('API — Dummy mode', () => {
 
   describe('getResume', () => {
     it('returns dummy resume with COMPLETED status', async () => {
-      const resume = await getResume('user-1');
+      const resume = await getResume();
       expect(resume.status).toBe('COMPLETE');
       expect(resume.skills).toContain('TypeScript');
       expect(resume.experience.length).toBeGreaterThan(0);
@@ -75,7 +75,7 @@ describe('API — Dummy mode', () => {
 
   describe('getResumeStatus', () => {
     it('returns COMPLETED status', async () => {
-      const result = await getResumeStatus('user-1');
+      const result = await getResumeStatus();
       expect(result.status).toBe('COMPLETE');
     });
   });
@@ -125,7 +125,7 @@ describe('API — Dummy mode', () => {
 
   describe('getSeekerMatches', () => {
     it('returns dummy seeker matches', async () => {
-      const matches = await getSeekerMatches('user-1');
+      const matches = await getSeekerMatches();
       expect(matches).toHaveLength(3);
       expect(matches[0].finalRank).toBe(1);
     });
