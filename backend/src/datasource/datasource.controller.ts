@@ -1,25 +1,27 @@
 import { Controller, Post, Get, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { DatasourceService } from './datasource.service.js';
 import { DataSourceProvider } from '../common/enums/index.js';
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL ?? 'http://localhost:3001/datasource/callback/github';
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:3001';
-
 @Controller('datasource')
 export class DatasourceController {
-  constructor(private readonly datasourceService: DatasourceService) {}
+  constructor(
+    private readonly datasourceService: DatasourceService,
+    private readonly config: ConfigService,
+  ) {}
 
   @Get('connect/github')
   @UseGuards(JwtGuard)
   async connectGithub(@Req() req, @Res() res: Response) {
     const userId = req.user.id;
+    const clientId = this.config.get('GITHUB_CLIENT_ID');
+    const callbackUrl = this.config.get('GITHUB_CALLBACK_URL', 'http://localhost:3001/datasource/callback/github');
     const githubAuthUrl =
       `https://github.com/login/oauth/authorize` +
-      `?client_id=${GITHUB_CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(GITHUB_CALLBACK_URL)}` +
+      `?client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
       `&scope=read:user,repo` +
       `&state=${userId}`;
     return res.redirect(githubAuthUrl);
@@ -29,7 +31,8 @@ export class DatasourceController {
   async callbackGithub(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
     const accessToken = await this.datasourceService.exchangeGithubCode(code);
     await this.datasourceService.connectGithub(state, accessToken);
-    return res.redirect(`${FRONTEND_URL}/datasource?github=connected`);
+    const frontendUrl = this.config.get('FRONTEND_URL', 'http://localhost:3000');
+    return res.redirect(`${frontendUrl}/datasource?github=connected`);
   }
 
   @Post('connect/mock')

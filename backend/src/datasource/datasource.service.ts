@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { readFileSync } from 'fs';
@@ -6,14 +7,12 @@ import { join } from 'path';
 import { DataSourceConnection } from '../entities/data-source-connection.entity.js';
 import { DataSourceProvider, DataSourceStatus } from '../common/enums/index.js';
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-
 @Injectable()
 export class DatasourceService {
   constructor(
     @InjectRepository(DataSourceConnection)
     private readonly dsRepo: Repository<DataSourceConnection>,
+    private readonly config: ConfigService,
   ) {}
 
   async exchangeGithubCode(code: string): Promise<string> {
@@ -24,8 +23,8 @@ export class DatasourceService {
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        client_id: GITHUB_CLIENT_ID,
-        client_secret: GITHUB_CLIENT_SECRET,
+        client_id: this.config.get('GITHUB_CLIENT_ID'),
+        client_secret: this.config.get('GITHUB_CLIENT_SECRET'),
         code,
       }),
     });
