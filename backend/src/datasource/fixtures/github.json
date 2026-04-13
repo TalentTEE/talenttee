@@ -1,0 +1,48 @@
+{
+  "profile": {
+    "login": "demo-developer",
+    "name": "김개발",
+    "bio": "Full-stack developer passionate about Web3",
+    "public_repos": 42,
+    "followers": 128
+  },
+  "languages": {
+    "TypeScript": 45000,
+    "JavaScript": 32000,
+    "Rust": 18000,
+    "Python": 12000,
+    "Solidity": 8000
+  },
+  "repositories": [
+    {
+      "name": "defi-swap-protocol",
+      "description": "Decentralized token swap on NEAR Protocol",
+      "language": "Rust",
+      "stars": 34,
+      "forks": 12,
+      "topics": ["near", "defi", "blockchain"]
+    },
+    {
+      "name": "ai-resume-builder",
+      "description": "AI-powered resume generation tool",
+      "language": "TypeScript",
+      "stars": 89,
+      "forks": 23,
+      "topics": ["ai", "nestjs", "openai"]
+    },
+    {
+      "name": "react-dashboard-kit",
+      "description": "Enterprise dashboard component library",
+      "language": "TypeScript",
+      "stars": 156,
+      "forks": 45,
+      "topics": ["react", "nextjs", "tailwindcss"]
+    }
+  ],
+  "contributions": {
+    "total_commits_last_year": 847,
+    "prs_merged": 123,
+    "issues_closed": 67,
+    "code_reviews": 89
+  }
+}
