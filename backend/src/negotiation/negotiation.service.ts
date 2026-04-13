@@ -94,10 +94,9 @@ export class NegotiationService {
     });
   }
 
-  async intervene(sessionId: string, nearAccountId: string, direction: string): Promise<void> {
+  async intervene(sessionId: string, userId: string, direction: string): Promise<void> {
     const session = await this.getSession(sessionId);
-    // 역할 판별: seeker인지 employer인지에 따라 별도 키로 저장
-    const role = session.seeker?.nearAccountId === nearAccountId ? 'SEEKER' : 'EMPLOYER';
+    const role = session.seekerId === userId ? 'SEEKER' : 'EMPLOYER';
     // NOTE: In-memory only — 서버 재시작 시 소실
     this.interventions.set(`${sessionId}:${role}`, direction);
   }

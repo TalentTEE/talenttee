@@ -28,7 +28,7 @@ export class AgreementService {
     return Buffer.from(key, 'base64');
   }
 
-  async approve(sessionId: string, nearAccountId: string): Promise<{ status: string; txParams?: any }> {
+  async approve(sessionId: string, userId: string): Promise<{ status: string; txParams?: any }> {
     return this.sessionRepo.manager.transaction(async (manager) => {
       const session = await manager.findOne(NegotiationSession, {
         where: { id: sessionId },
@@ -40,8 +40,8 @@ export class AgreementService {
         throw new ConflictException('Session is not in AGREED state');
       }
 
-      const isSeeker = session.seeker?.nearAccountId === nearAccountId;
-      const isEmployer = session.employer?.nearAccountId === nearAccountId;
+      const isSeeker = session.seekerId === userId;
+      const isEmployer = session.employerId === userId;
       if (!isSeeker && !isEmployer) throw new ForbiddenException('Not a participant');
 
       if (isSeeker) session.seekerApproved = true;

@@ -15,7 +15,7 @@ export class DatasourceController {
   @Get('connect/github')
   @UseGuards(JwtGuard)
   async connectGithub(@Req() req, @Res() res: Response) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     const githubAuthUrl =
       `https://github.com/login/oauth/authorize` +
       `?client_id=${GITHUB_CLIENT_ID}` +
@@ -35,7 +35,7 @@ export class DatasourceController {
   @Post('connect/mock')
   @UseGuards(JwtGuard)
   async connectMock(@Req() req, @Body() body: { provider: string }) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     const provider = body.provider.toUpperCase() as DataSourceProvider;
     return this.datasourceService.connectMock(userId, provider);
   }
@@ -43,14 +43,14 @@ export class DatasourceController {
   @Get('status')
   @UseGuards(JwtGuard)
   async getStatus(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     return this.datasourceService.getStatus(userId);
   }
 
   @Post('sync')
   @UseGuards(JwtGuard)
   async sync(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     const data = await this.datasourceService.collectAllData(userId);
     return { message: '동기화 완료', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
   }
