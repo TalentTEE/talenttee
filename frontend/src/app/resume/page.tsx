@@ -9,7 +9,7 @@ import { ResumeProfile } from '@/lib/types';
 const STEPS = [
   { key: 'COLLECTING', label: 'Collecting', icon: 'cloud_download' },
   { key: 'ANALYZING', label: 'Analyzing', icon: 'psychology' },
-  { key: 'COMPLETED', label: 'Complete', icon: 'check_circle' },
+  { key: 'COMPLETE', label: 'Complete', icon: 'check_circle' },
 ] as const;
 
 function stepIndex(status: ResumeProfile['status']): number {
@@ -52,7 +52,7 @@ export default function ResumePage() {
     if (USE_DUMMY) {
       setTimeout(() => setSimulatedStatus('ANALYZING'), 1500);
       setTimeout(() => {
-        setSimulatedStatus('COMPLETED');
+        setSimulatedStatus('COMPLETE');
         if (user) {
           getResume(user.id)
             .then((data) => {
@@ -76,7 +76,7 @@ export default function ResumePage() {
           const { status: currentStatus } = await getResumeStatus(resumeId);
           setSimulatedStatus(currentStatus as ResumeProfile['status']);
 
-          if (currentStatus === 'COMPLETED') {
+          if (currentStatus === 'COMPLETE') {
             clearInterval(pollInterval);
             if (user) {
               const fullResume = await getResume(user.id);
@@ -99,7 +99,7 @@ export default function ResumePage() {
 
   const currentStatus = simulatedStatus || resume?.status;
   const currentStepIdx = currentStatus ? stepIndex(currentStatus) : -1;
-  const isComplete = currentStatus === 'COMPLETED' && resume && !generating;
+  const isComplete = currentStatus === 'COMPLETE' && resume && !generating;
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -114,7 +114,7 @@ export default function ResumePage() {
             sources.
           </p>
         </div>
-        {(!resume || resume.status !== 'COMPLETED') && !generating && (
+        {(!resume || resume.status !== 'COMPLETE') && !generating && (
           <button
             onClick={handleGenerate}
             disabled={generating}
@@ -139,7 +139,7 @@ export default function ResumePage() {
             const isDone =
               idx < currentStepIdx ||
               (idx === currentStepIdx &&
-                currentStatus === 'COMPLETED' &&
+                currentStatus === 'COMPLETE' &&
                 !generating);
             const isPending = idx > currentStepIdx || currentStepIdx === -1;
 

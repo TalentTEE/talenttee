@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { getSeekerMatches, getEmployerMatches, accessProfile, agreeMatch } from '@/lib/api';
-import { MatchResult, ProfileReport } from '@/lib/types';
+import { MatchResultDisplay, ProfileReport } from '@/lib/types';
 
 function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
   const radius = (size - 8) / 2;
@@ -210,7 +210,7 @@ function ProfileModal({
 
 export default function MatchingPage() {
   const { user } = useAuth();
-  const [matches, setMatches] = useState<MatchResult[]>([]);
+  const [matches, setMatches] = useState<MatchResultDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileReport, setProfileReport] = useState<ProfileReport | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { NegotiationSession, MatchResult } from '@/lib/types';
+import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
 import Link from 'next/link';
 
 const stateInfo: Record<string, { label: string; icon: string; className: string }> = {
@@ -18,7 +18,7 @@ export function NegotiationList({
   matches = [],
 }: {
   sessions: NegotiationSession[];
-  matches?: MatchResult[];
+  matches?: MatchResultDisplay[];
 }) {
   const matchByJobId = new Map(matches.map((m) => [m.jobId, m]));
 

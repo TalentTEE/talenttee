@@ -16,17 +16,17 @@ vi.mock('@/lib/api', () => ({
 import DatasourcePage from './page';
 
 const MOCK_CONNECTIONS = [
-  { id: 'ds-1', userId: 'user-1', provider: 'github', status: 'CONNECTED', lastSyncAt: '2026-04-11T08:00:00Z' },
-  { id: 'ds-2', userId: 'user-1', provider: 'slack', status: 'MOCK', lastSyncAt: '2026-04-11T08:00:00Z' },
-  { id: 'ds-3', userId: 'user-1', provider: 'discord', status: 'DISCONNECTED', lastSyncAt: null },
-  { id: 'ds-4', userId: 'user-1', provider: 'gov24', status: 'DISCONNECTED', lastSyncAt: null },
+  { id: 'ds-1', userId: 'user-1', provider: 'GITHUB', status: 'CONNECTED', lastSyncedAt: '2026-04-11T08:00:00Z' },
+  { id: 'ds-2', userId: 'user-1', provider: 'SLACK', status: 'MOCK', lastSyncedAt: '2026-04-11T08:00:00Z' },
+  { id: 'ds-3', userId: 'user-1', provider: 'DISCORD', status: 'DISCONNECTED', lastSyncedAt: null },
+  { id: 'ds-4', userId: 'user-1', provider: 'GOV24', status: 'DISCONNECTED', lastSyncedAt: null },
 ];
 
 describe('DatasourcePage', () => {
   beforeEach(() => {
     mockGetDatasourceStatus.mockResolvedValue(MOCK_CONNECTIONS);
     mockConnectDatasourceMock.mockResolvedValue({
-      id: 'ds-new', userId: 'user-1', provider: 'discord', status: 'MOCK', lastSyncAt: new Date().toISOString(),
+      id: 'ds-new', userId: 'user-1', provider: 'DISCORD', status: 'MOCK', lastSyncedAt: new Date().toISOString(),
     });
   });
 

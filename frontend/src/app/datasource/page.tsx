@@ -13,28 +13,28 @@ const PROVIDERS: {
   description: string;
 }[] = [
   {
-    id: 'github',
+    id: 'GITHUB',
     name: 'GitHub',
     icon: 'code',
     description:
       'Analyze your repositories, contributions, and coding activity to assess technical skills.',
   },
   {
-    id: 'slack',
+    id: 'SLACK',
     name: 'Slack',
     icon: 'chat',
     description:
       'Evaluate communication patterns and collaboration style from workspace interactions.',
   },
   {
-    id: 'discord',
+    id: 'DISCORD',
     name: 'Discord',
     icon: 'forum',
     description:
       'Review community engagement and technical discussions across servers.',
   },
   {
-    id: 'gov24',
+    id: 'GOV24',
     name: 'Gov24',
     icon: 'assured_workload',
     description:
@@ -74,7 +74,7 @@ export default function DatasourcePage() {
   async function handleConnect(provider: string) {
     setConnecting(provider);
     try {
-      if (!USE_DUMMY && provider === 'github') {
+      if (!USE_DUMMY && provider === 'GITHUB') {
         const { redirectUrl } = await connectGithubOAuth();
         window.location.href = redirectUrl;
         return;
@@ -211,10 +211,10 @@ export default function DatasourcePage() {
                 </p>
 
                 {/* Last Synced */}
-                {isConnected && connection?.lastSyncAt && (
+                {isConnected && connection?.lastSyncedAt && (
                   <p className="text-xs text-muted-foreground/60">
                     Last synced:{' '}
-                    {new Date(connection.lastSyncAt).toLocaleDateString(
+                    {new Date(connection.lastSyncedAt).toLocaleDateString(
                       'en-US',
                       {
                         month: 'short',

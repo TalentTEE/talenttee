@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from './types';
 import { getDummyUser, requestChallenge, verifyNearAuth } from './api';
+import { useWallet } from './wallet-selector';
 
 const ACCOUNTS_KEY = 'registeredAccounts';
 
@@ -49,6 +50,7 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { selector } = useWallet();
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -61,15 +63,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const doLogin = async (nearAccountId: string, role: UserRole) => {
     const useDummy = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
     if (useDummy) {
-      const dummyUser = await getDummyUser(role);
+      const dummyUser = await getDummyUser(role, nearAccountId);
       const userData = { ...dummyUser, nearAccountId };
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('jwt', 'dummy-jwt-token');
       setUser(userData);
     } else {
       const { nonce } = await requestChallenge();
-      const signature = 'poc-signature-placeholder';
-      const publicKey = 'ed25519:placeholder';
+
+      // Use Wallet Selector signMessage (NEP-413)
+      if (!selector) throw new Error('Wallet not initialized');
+      const wallet = await selector.wallet();
+      if (!wallet.signMessage) {
+        throw new Error('This wallet does not support message signing (NEP-413). Please use a compatible wallet.');
+      }
+
+      const nonceBuffer = Buffer.from(nonce);
+      const signed = await wallet.signMessage({
+        message: nonce,
+        recipient: 'talent-tee',
+        nonce: nonceBuffer,
+      });
+      if (!signed) throw new Error('Signing cancelled');
+
+      const signature = typeof signed.signature === 'string'
+        ? signed.signature
+        : Buffer.from(signed.signature).toString('base64');
+      const publicKey = signed.publicKey;
 
       const { jwt, user: apiUser } = await verifyNearAuth({
         nearAccountId,

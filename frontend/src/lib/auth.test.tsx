@@ -3,6 +3,18 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from './auth';
 
+// Mock wallet-selector
+const mockSignMessage = vi.fn();
+const mockWalletFn = vi.fn().mockResolvedValue({ signMessage: mockSignMessage });
+vi.mock('./wallet-selector', () => ({
+  useWallet: () => ({
+    selector: { wallet: mockWalletFn },
+    modal: null,
+    signedAccountId: null,
+    signOut: vi.fn(),
+  }),
+}));
+
 // Mock api module
 vi.mock('./api', () => ({
   getDummyUser: vi.fn(),
@@ -71,9 +83,10 @@ describe('AuthProvider', () => {
     });
   });
 
-  it('loginWithNear() calls requestChallenge and verifyNearAuth', async () => {
+  it('loginWithNear() calls requestChallenge, signMessage, and verifyNearAuth', async () => {
     vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
     mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce', expiresAt: '2026-12-31' });
+    mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
     const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER', publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
     mockVerifyNearAuth.mockResolvedValue({ jwt: 'real-jwt', user: apiUser });
 
@@ -85,10 +98,16 @@ describe('AuthProvider', () => {
 
     await waitFor(() => {
       expect(mockRequestChallenge).toHaveBeenCalled();
+      expect(mockSignMessage).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'test-nonce',
+        recipient: 'talent-tee',
+      }));
       expect(mockVerifyNearAuth).toHaveBeenCalledWith(expect.objectContaining({
         nearAccountId: 'test.testnet',
         nonce: 'test-nonce',
         role: 'SEEKER',
+        signature: 'c2lnbmVk',
+        publicKey: 'ed25519:pk',
       }));
       expect(localStorage.getItem('jwt')).toBe('real-jwt');
     });
