@@ -79,12 +79,48 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5
 Phase 6 (프론트 연결) ──→ Phase 7 (검증/고도화) ──→ Phase 8 (제출)
 ```
 
-## 외부 의존 (인터페이스로 분리)
+## 외부 의존 격리 & 통합 전략
 
-| 의존 대상 | 인터페이스 | 통합 시점 |
-|-----------|-----------|-----------|
-| 성훈 Escrow | `EscrowPayment` (mock → 실제 EscrowService) | Phase 6 (Day 3-4) |
-| 승연 협상 | `NegotiationHandoff` (mock → 실제 NegotiationService) | Phase 6 (Day 3-4) |
+### 격리 원칙
+
+다른 팀원의 서비스를 직접 import하지 않고, **인터페이스만 정의 + Mock으로 독립 동작**시킨다.
+통합 시점에 각 Module의 `useClass: MockXxx` → `useClass: 실제Service`로 교체하면 끝.
+
+### 인터페이스 목록
+
+| 의존 대상 | 인터페이스 파일 | Mock 파일 | 사용 모듈 | 통합 시점 |
+|-----------|----------------|-----------|-----------|-----------|
+| 성훈 `EscrowService` | `common/interfaces/escrow-payment.interface.ts` | `common/mocks/mock-escrow-payment.ts` | ProfileModule (프로필 열람 결제) | Phase 6 (Day 3-4) |
+| 승연 `NegotiationService` | `common/interfaces/negotiation-handoff.interface.ts` | `common/mocks/mock-negotiation-handoff.ts` | MatchModule (양측 동의 → 협상 세션) | Phase 6 (Day 3-4) |
+
+### Mock 동작
+
+| Mock | 동작 |
+|------|------|
+| `MockEscrowPayment.checkBalance()` | 항상 `'10000000000000000000000000'` (10 NEAR) 반환 |
+| `MockEscrowPayment.payForProfile()` | 랜덤 txHash 반환 (실제 차감 없음) |
+| `MockNegotiationHandoff.createSession()` | 랜덤 UUID sessionId 반환 |
+
+### 기존 코드 보호 (승연 파트)
+
+승연의 `JobModule`/`NegotiationModule`은 `NEAR_AI_CLIENT`를 **로컬 provider**로 `MockNearAiClient`에 주입 중:
+
+```typescript
+// 승연의 NegotiationModule — 변경 없음
+{ provide: NEAR_AI_CLIENT, useClass: MockNearAiClient }
+```
+
+우리가 `AgentModule`을 `@Global()`로 등록했지만, **NestJS는 로컬 provider가 글로벌보다 우선**하므로 승연 코드는 계속 Mock 사용. 승연 쪽 코드를 한 줄도 수정하지 않았음.
+
+단, `NearAiClient` 인터페이스에 `embed()`/`rerank()` 추가 시, `MockNearAiClient`에도 stub을 추가하여 빌드 호환성 유지.
+
+### Phase 6 통합 체크리스트
+
+- [ ] `ProfileModule`: `useClass: MockEscrowPayment` → `useClass: EscrowService` (성훈)로 교체
+- [ ] `MatchModule`: `useClass: MockNegotiationHandoff` → `useClass: NegotiationService` (승연)로 교체
+- [ ] 승연 `JobModule`/`NegotiationModule`: 로컬 `MockNearAiClient` → 제거 (글로벌 `AgentModule` 사용)
+- [ ] `.env`에 `NEAR_AI_API_KEY` 실제 키 설정
+- [ ] E2E 테스트: 이력서 생성 → 매칭 → 프로필 열람 → 협상 핸드오프 풀 플로우 검증
 
 ## Phase Plans (개별 문서)
 
