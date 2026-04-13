@@ -1,0 +1,115 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, act, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { AuthProvider, useAuth } from './auth';
+
+// Mock api module
+vi.mock('./api', () => ({
+  getDummyUser: vi.fn(),
+  requestChallenge: vi.fn(),
+  verifyNearAuth: vi.fn(),
+}));
+
+const { getDummyUser, requestChallenge, verifyNearAuth } = await import('./api');
+const mockGetDummyUser = vi.mocked(getDummyUser);
+const mockRequestChallenge = vi.mocked(requestChallenge);
+const mockVerifyNearAuth = vi.mocked(verifyNearAuth);
+
+// Helper component that exposes auth context
+function AuthConsumer() {
+  const { user, login, loginWithNear, logout, isLoading } = useAuth();
+  return (
+    <div>
+      <span data-testid="loading">{String(isLoading)}</span>
+      <span data-testid="user">{user ? JSON.stringify(user) : 'null'}</span>
+      <button data-testid="login-seeker" onClick={() => login('SEEKER')}>Login Seeker</button>
+      <button data-testid="login-near" onClick={() => loginWithNear('test.testnet', 'SEEKER')}>Login NEAR</button>
+      <button data-testid="logout" onClick={logout}>Logout</button>
+    </div>
+  );
+}
+
+describe('AuthProvider', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'true');
+  });
+
+  it('starts with isLoading true then transitions to false', async () => {
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+    // After mount effect runs, isLoading should be false
+    await waitFor(() => {
+      expect(screen.getByTestId('loading').textContent).toBe('false');
+    });
+  });
+
+  it('restores user from localStorage on mount', async () => {
+    const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
+    localStorage.setItem('user', JSON.stringify(storedUser));
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await waitFor(() => {
+      const userText = screen.getByTestId('user').textContent!;
+      expect(JSON.parse(userText).id).toBe('user-1');
+    });
+  });
+
+  it('login() stores dummy user in localStorage', async () => {
+    const dummyUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:key', createdAt: '2026-01-01' };
+    mockGetDummyUser.mockResolvedValue(dummyUser);
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await act(async () => {
+      screen.getByTestId('login-seeker').click();
+    });
+
+    await waitFor(() => {
+      expect(localStorage.getItem('user')).toBeTruthy();
+      expect(localStorage.getItem('jwt')).toBe('dummy-jwt-token');
+      expect(JSON.parse(localStorage.getItem('user')!).id).toBe('user-1');
+    });
+  });
+
+  it('loginWithNear() calls requestChallenge and verifyNearAuth', async () => {
+    mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce', expiresAt: '2026-12-31' });
+    const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER', publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
+    mockVerifyNearAuth.mockResolvedValue({ jwt: 'real-jwt', user: apiUser });
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await act(async () => {
+      screen.getByTestId('login-near').click();
+    });
+
+    await waitFor(() => {
+      expect(mockRequestChallenge).toHaveBeenCalled();
+      expect(mockVerifyNearAuth).toHaveBeenCalledWith(expect.objectContaining({
+        nearAccountId: 'test.testnet',
+        nonce: 'test-nonce',
+        role: 'SEEKER',
+      }));
+      expect(localStorage.getItem('jwt')).toBe('real-jwt');
+    });
+  });
+
+  it('logout() clears localStorage and resets user', async () => {
+    const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
+    localStorage.setItem('user', JSON.stringify(storedUser));
+    localStorage.setItem('jwt', 'some-token');
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).not.toBe('null');
+    });
+
+    await act(async () => {
+      screen.getByTestId('logout').click();
+    });
+
+    expect(screen.getByTestId('user').textContent).toBe('null');
+    expect(localStorage.getItem('user')).toBeNull();
+    expect(localStorage.getItem('jwt')).toBeNull();
+  });
+});
