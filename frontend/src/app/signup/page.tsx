@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ export default function SignupPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const waitingForWallet = useRef(false);
+  const [walletReady, setWalletReady] = useState(false);
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
@@ -37,21 +37,22 @@ export default function SignupPage() {
     }
   }, [selectedRole, signup, router]);
 
-  // When wallet connects and we're waiting, auto-signup
+  // When wallet connects after modal, mark ready so user can click to proceed.
+  // Don't auto-signup from useEffect — wallet.signMessage() needs a direct user
+  // gesture or the browser blocks the popup.
   useEffect(() => {
-    if (!waitingForWallet.current || !signedAccountId || !selectedRole) return;
-    waitingForWallet.current = false;
-    doSignup(signedAccountId);
-  }, [signedAccountId, selectedRole, doSignup]);
+    if (signedAccountId) {
+      setWalletReady(true);
+    }
+  }, [signedAccountId]);
 
   const handleConnectWallet = async () => {
     if (!modal) return;
-    // If already signed in, signup directly without disconnecting
+    // Wallet already connected — signup directly from click handler
     if (signedAccountId) {
       doSignup(signedAccountId);
       return;
     }
-    waitingForWallet.current = true;
     modal.show();
   };
 
@@ -148,6 +149,11 @@ export default function SignupPage() {
                 <>
                   <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
                   Creating account...
+                </>
+              ) : walletReady && signedAccountId ? (
+                <>
+                  <span className="material-symbols-outlined text-base">login</span>
+                  Continue as {signedAccountId.split('.')[0]}
                 </>
               ) : (
                 <>

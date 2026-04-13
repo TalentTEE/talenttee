@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const waitingForWallet = useRef(false);
+  const [walletReady, setWalletReady] = useState(false);
 
   const doLogin = useCallback(async (accountId: string) => {
     setIsLoggingIn(true);
@@ -32,21 +32,22 @@ export default function LoginPage() {
     }
   }, [loginByAccount, router]);
 
-  // When wallet connects and we're waiting, auto-login
+  // When wallet connects after modal, mark ready so user can click to proceed.
+  // Don't auto-login from useEffect — wallet.signMessage() needs a direct user
+  // gesture or the browser blocks the popup.
   useEffect(() => {
-    if (!waitingForWallet.current || !signedAccountId) return;
-    waitingForWallet.current = false;
-    doLogin(signedAccountId);
-  }, [signedAccountId, doLogin]);
+    if (signedAccountId) {
+      setWalletReady(true);
+    }
+  }, [signedAccountId]);
 
   const handleConnectWallet = async () => {
     if (!modal) return;
-    // If already signed in, login directly without disconnecting
+    // Wallet already connected — login directly from click handler
     if (signedAccountId) {
       doLogin(signedAccountId);
       return;
     }
-    waitingForWallet.current = true;
     modal.show();
   };
 
@@ -88,6 +89,11 @@ export default function LoginPage() {
               <>
                 <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
                 Logging in...
+              </>
+            ) : walletReady && signedAccountId ? (
+              <>
+                <span className="material-symbols-outlined text-base">login</span>
+                Continue as {signedAccountId.split('.')[0]}
               </>
             ) : (
               <>
