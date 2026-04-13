@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/lib/auth";
-import { ToastProvider } from "@/components/ui/toast-provider";
+import { Providers } from "./providers";
 import { OfflineBanner } from "@/components/ui/offline-banner";
 
 const inter = Inter({
@@ -38,9 +37,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <OfflineBanner />
-        <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </AuthProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

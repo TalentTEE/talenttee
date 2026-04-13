@@ -1,13 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
+import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '@/lib/types';
 import Link from 'next/link';
 
+const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
+
 export default function SignupPage() {
   const { signup } = useAuth();
+  const { modal, signedAccountId, signOut } = useWallet();
   const router = useRouter();
 
   const [step, setStep] = useState<'role' | 'account'>('role');
@@ -15,13 +19,43 @@ export default function SignupPage() {
   const [accountId, setAccountId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Track whether user initiated wallet connect from this page
+  const waitingForWallet = useRef(false);
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
     setStep('account');
   };
 
-  const handleSignup = async () => {
+  // When wallet connects and we're waiting, auto-signup
+  useEffect(() => {
+    if (!waitingForWallet.current || !signedAccountId || !selectedRole) return;
+    waitingForWallet.current = false;
+
+    (async () => {
+      setIsSubmitting(true);
+      setError(null);
+      try {
+        await signup(signedAccountId, selectedRole);
+        router.push(selectedRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Signup failed');
+      } finally {
+        setIsSubmitting(false);
+      }
+    })();
+  }, [signedAccountId, selectedRole, signup, router]);
+
+  const handleConnectWallet = async () => {
+    if (!modal) return;
+    // Sign out any existing wallet session first
+    await signOut();
+    waitingForWallet.current = true;
+    modal.show();
+  };
+
+  // Dummy mode: text input signup
+  const handleDummySignup = async () => {
     if (!selectedRole || !accountId.trim()) return;
     setIsSubmitting(true);
     setError(null);
@@ -66,7 +100,7 @@ export default function SignupPage() {
         <p className="text-muted-foreground text-lg">
           {step === 'role'
             ? 'How will you use Talent-Tee?'
-            : 'Connect your NEAR wallet to get started.'}
+            : 'Connect your wallet to get started.'}
         </p>
       </div>
 
@@ -105,7 +139,7 @@ export default function SignupPage() {
         </div>
       )}
 
-      {/* Step 2: Account Creation */}
+      {/* Step 2: Wallet Connection / Account Input */}
       {step === 'account' && selectedRole && (
         <div className="w-full max-w-xl">
           <div className="rounded-2xl border border-border/10 bg-card p-8">
@@ -119,33 +153,54 @@ export default function SignupPage() {
               </span>
             </div>
 
-            <label className="block text-sm font-medium text-foreground mb-2">
-              NEAR Account ID
-            </label>
-            <input
-              type="text"
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
-              placeholder="your-account.testnet"
-              className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-6"
-              autoFocus
-            />
-
-            <button
-              onClick={handleSignup}
-              disabled={!accountId.trim() || isSubmitting}
-              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                  Creating account...
-                </>
-              ) : (
-                'Create Account'
-              )}
-            </button>
+            {USE_DUMMY ? (
+              <>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  NEAR Account ID
+                </label>
+                <input
+                  type="text"
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleDummySignup()}
+                  placeholder="your-account.testnet"
+                  className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-6"
+                  autoFocus
+                />
+                <button
+                  onClick={handleDummySignup}
+                  disabled={!accountId.trim() || isSubmitting}
+                  className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      Creating account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleConnectWallet}
+                disabled={isSubmitting || !modal}
+                className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-base">account_balance_wallet</span>
+                    Connect Wallet
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {error && (
