@@ -22,7 +22,7 @@ export class EscrowController {
   @UseGuards(JwtGuard)
   @Get('payments')
   async getPaymentHistory(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     return this.escrowService.getPaymentHistory(userId);
   }
 }

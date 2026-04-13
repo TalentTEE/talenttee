@@ -13,7 +13,7 @@ export class NegotiationController {
 
   @Get('sessions')
   async listSessions(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     return this.negotiationService.listSessions(userId);
   }
 
@@ -41,7 +41,7 @@ export class NegotiationController {
 
   @Post('sessions/:id/intervene')
   async intervene(@Param('id') id: string, @Req() req, @Body() dto: InterveneDto) {
-    await this.negotiationService.intervene(id, req.user.nearAccountId, dto.direction);
+    await this.negotiationService.intervene(id, req.user.id, dto.direction);
     return { message: 'Intervention registered', sessionId: id };
   }
 

@@ -14,14 +14,14 @@ export class JobController {
 
   @Get('jobs')
   async listJobs(@Req() req) {
-    const employerId = req.user.role === 'EMPLOYER' ? req.user.nearAccountId : undefined;
+    const employerId = req.user.role === 'EMPLOYER' ? req.user.id : undefined;
     return this.jobService.listJobs(employerId);
   }
 
   @Post('jobs')
   async createJob(@Req() req, @Body() dto: CreateJobDto) {
     this.ensureEmployer(req);
-    return this.jobService.createJob(req.user.nearAccountId, dto);
+    return this.jobService.createJob(req.user.id, dto);
   }
 
   @Get('jobs/:id')
@@ -32,13 +32,13 @@ export class JobController {
   @Post('jobs/chat')
   async chatCreateJob(@Req() req, @Body() dto: ChatMessageDto) {
     this.ensureEmployer(req);
-    return this.jobService.chatCreateJob(req.user.nearAccountId, dto.message, dto.sessionId);
+    return this.jobService.chatCreateJob(req.user.id, dto.message, dto.sessionId);
   }
 
   @Post('jobs/:id/boundary/chat')
   async chatSetBoundary(@Req() req, @Param('id') id: string, @Body() dto: ChatMessageDto) {
     this.ensureEmployer(req);
-    return this.jobService.chatSetBoundary(id, req.user.nearAccountId, dto.message, dto.sessionId);
+    return this.jobService.chatSetBoundary(id, req.user.id, dto.message, dto.sessionId);
   }
 
   @Get('jobs/:id/boundary')
