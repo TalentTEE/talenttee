@@ -40,3 +40,10 @@ export enum NegotiationDecision {
   ACCEPT = 'ACCEPT',
   REJECT = 'REJECT',
 }
+
+export enum ResumeStatus {
+  COLLECTING = 'COLLECTING',
+  ANALYZING = 'ANALYZING',
+  COMPLETE = 'COMPLETE',
+  ERROR = 'ERROR',
+}
