@@ -14,6 +14,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JwtPayload) {
-    return { nearAccountId: payload.sub, role: payload.role, publicKey: payload.publicKey };
+    return { id: payload.sub, nearAccountId: payload.nearAccountId, role: payload.role, publicKey: payload.publicKey };
   }
 }
