@@ -58,6 +58,19 @@ export class MockNearAiClient implements NearAiClient {
     };
   }
 
+  async embed(input: string | string[]): Promise<number[][]> {
+    const inputs = Array.isArray(input) ? input : [input];
+    return inputs.map(() => Array.from({ length: 1024 }, () => Math.random() * 2 - 1));
+  }
+
+  async rerank(query: string, documents: string[], topN?: number): Promise<{ index: number; score: number }[]> {
+    const limit = topN ?? documents.length;
+    return documents
+      .map((_, index) => ({ index, score: Math.random() }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+
   private seekerResponse(round: number) {
     const baseSalary = 75_000_000;
     const decrement = 3_000_000 * round;
