@@ -72,6 +72,7 @@ describe('AuthProvider', () => {
   });
 
   it('loginWithNear() calls requestChallenge and verifyNearAuth', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
     mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce', expiresAt: '2026-12-31' });
     const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER', publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
     mockVerifyNearAuth.mockResolvedValue({ jwt: 'real-jwt', user: apiUser });
