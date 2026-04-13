@@ -4,10 +4,10 @@ import { UserRole } from '../common/enums/index.js';
 
 @Controller('auth/near')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('challenge')
-  challenge() {
+  async challenge() {
     return this.authService.generateChallenge();
   }
 
