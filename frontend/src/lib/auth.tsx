@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { User, UserRole } from './types';
 import { getDummyUser, requestChallenge, verifyNearAuth } from './api';
 import { useWallet } from './wallet-selector';
@@ -52,12 +52,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { selector } = useWallet();
 
+  // Pre-fetch challenge nonce so wallet.signMessage() can fire immediately
+  // from user gesture without an async HTTP call breaking the popup chain.
+  const nonceRef = useRef<string | null>(null);
+  const fetchingRef = useRef(false);
+
+  const prefetchChallenge = () => {
+    if (process.env.NEXT_PUBLIC_USE_DUMMY === 'true' || fetchingRef.current) return;
+    fetchingRef.current = true;
+    requestChallenge()
+      .then(({ nonce }) => { nonceRef.current = nonce; })
+      .catch(() => { /* will fetch on-demand as fallback */ })
+      .finally(() => { fetchingRef.current = false; });
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
-    if (stored) {
-      setUser(JSON.parse(stored));
+    const jwt = localStorage.getItem('jwt');
+    if (stored && jwt) {
+      // Check if JWT is expired by decoding the payload
+      try {
+        const payload = JSON.parse(atob(jwt.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          // JWT expired — clear stale session
+          localStorage.removeItem('user');
+          localStorage.removeItem('jwt');
+        } else {
+          setUser(JSON.parse(stored));
+        }
+      } catch {
+        // Malformed JWT — clear it
+        localStorage.removeItem('user');
+        localStorage.removeItem('jwt');
+      }
+    } else if (stored && !jwt) {
+      // User without JWT — clear stale data
+      localStorage.removeItem('user');
     }
     setIsLoading(false);
+    prefetchChallenge();
   }, []);
 
   const doLogin = async (nearAccountId: string, role: UserRole) => {
@@ -69,7 +102,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('jwt', 'dummy-jwt-token');
       setUser(userData);
     } else {
-      const { nonce } = await requestChallenge();
+      // Use pre-fetched nonce if available; fallback to on-demand fetch
+      let nonce = nonceRef.current;
+      if (!nonce) {
+        const challenge = await requestChallenge();
+        nonce = challenge.nonce;
+      }
+      nonceRef.current = null;
 
       // Use Wallet Selector signMessage (NEP-413)
       if (!selector) throw new Error('Wallet not initialized');
@@ -78,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('This wallet does not support message signing (NEP-413). Please use a compatible wallet.');
       }
 
-      const nonceBuffer = Buffer.from(nonce);
+      const nonceBuffer = Buffer.from(nonce, 'hex');
       const signed = await wallet.signMessage({
         message: nonce,
         recipient: 'talent-tee',
@@ -109,6 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('jwt', jwt);
       setUser(userData);
+
+      // Pre-fetch next nonce for subsequent logins
+      prefetchChallenge();
     }
   };
 

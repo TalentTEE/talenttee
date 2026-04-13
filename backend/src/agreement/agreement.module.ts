@@ -4,9 +4,10 @@ import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { AgreementController } from './agreement.controller.js';
 import { AgreementService } from './agreement.service.js';
+import { CryptoModule } from '../crypto/crypto.module.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NegotiationSession, NegotiationRound])],
+  imports: [TypeOrmModule.forFeature([NegotiationSession, NegotiationRound]), CryptoModule],
   controllers: [AgreementController],
   providers: [AgreementService],
   exports: [AgreementService],

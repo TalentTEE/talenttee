@@ -12,11 +12,11 @@ export class NearAiCloudClient implements NearAiClient {
 
   constructor(private readonly config: ConfigService) {
     this.client = new OpenAI({
-      baseURL: config.get<string>('NEAR_AI_BASE_URL', 'https://api.near.ai/v1'),
+      baseURL: config.get<string>('NEAR_AI_BASE_URL', 'https://cloud-api.near.ai/v1'),
       apiKey: config.get<string>('NEAR_AI_API_KEY', ''),
     });
-    this.chatModel = config.get<string>('NEAR_AI_CHAT_MODEL', 'qwen3-235b-a22b');
-    this.embedModel = config.get<string>('NEAR_AI_EMBED_MODEL', 'qwen3-embedding');
+    this.chatModel = config.get<string>('NEAR_AI_CHAT_MODEL', 'Qwen/Qwen3.5-122B-A10B');
+    this.embedModel = config.get<string>('NEAR_AI_EMBED_MODEL', 'Qwen/Qwen3-Embedding-0.6B');
   }
 
   async chat(params: {

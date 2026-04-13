@@ -1,35 +1,59 @@
-import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { DatasourceService } from './datasource.service.js';
 import { DataSourceProvider } from '../common/enums/index.js';
 
 @Controller('datasource')
-@UseGuards(JwtGuard)
 export class DatasourceController {
-  constructor(private readonly datasourceService: DatasourceService) {}
+  constructor(
+    private readonly datasourceService: DatasourceService,
+    private readonly config: ConfigService,
+  ) {}
 
-  @Post('connect/github')
-  async connectGithub(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
-    return this.datasourceService.connectMock(userId, DataSourceProvider.GITHUB);
+  @Get('connect/github')
+  @UseGuards(JwtGuard)
+  async connectGithub(@Req() req, @Res() res: Response) {
+    const userId = req.user.id;
+    const clientId = this.config.get('GITHUB_CLIENT_ID');
+    const callbackUrl = this.config.get('GITHUB_CALLBACK_URL', 'http://localhost:3001/datasource/callback/github');
+    const githubAuthUrl =
+      `https://github.com/login/oauth/authorize` +
+      `?client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
+      `&scope=read:user,repo` +
+      `&state=${userId}`;
+    return res.redirect(githubAuthUrl);
+  }
+
+  @Get('callback/github')
+  async callbackGithub(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    const accessToken = await this.datasourceService.exchangeGithubCode(code);
+    await this.datasourceService.connectGithub(state, accessToken);
+    const frontendUrl = this.config.get('FRONTEND_URL', 'http://localhost:3000');
+    return res.redirect(`${frontendUrl}/datasource?github=connected`);
   }
 
   @Post('connect/mock')
+  @UseGuards(JwtGuard)
   async connectMock(@Req() req, @Body() body: { provider: string }) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     const provider = body.provider.toUpperCase() as DataSourceProvider;
     return this.datasourceService.connectMock(userId, provider);
   }
 
   @Get('status')
+  @UseGuards(JwtGuard)
   async getStatus(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     return this.datasourceService.getStatus(userId);
   }
 
   @Post('sync')
+  @UseGuards(JwtGuard)
   async sync(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     const data = await this.datasourceService.collectAllData(userId);
     return { message: '동기화 완료', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
   }

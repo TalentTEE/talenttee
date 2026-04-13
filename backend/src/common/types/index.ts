@@ -28,7 +28,8 @@ export interface AgentResponse {
 }
 
 export interface JwtPayload {
-  sub: string; // nearAccountId
+  sub: string; // user UUID
+  nearAccountId: string;
   role: 'SEEKER' | 'EMPLOYER';
   publicKey: string;
 }

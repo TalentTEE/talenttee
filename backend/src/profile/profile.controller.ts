@@ -10,21 +10,21 @@ export class ProfileController {
   @Post(':seekerId/access')
   async requestAccess(@Req() req, @Param('seekerId') seekerId: string) {
     this.ensureEmployer(req);
-    const employerId = req.user.id ?? req.user.nearAccountId;
+    const employerId = req.user.id;
     return this.profileService.requestAccess(employerId, seekerId, req.user.nearAccountId);
   }
 
   @Get(':seekerId/report')
   async getReport(@Req() req, @Param('seekerId') seekerId: string) {
     this.ensureEmployer(req);
-    const employerId = req.user.id ?? req.user.nearAccountId;
+    const employerId = req.user.id;
     return this.profileService.getReport(employerId, seekerId);
   }
 
   @Get('access/history')
   async getAccessHistory(@Req() req) {
     this.ensureEmployer(req);
-    const employerId = req.user.id ?? req.user.nearAccountId;
+    const employerId = req.user.id;
     return this.profileService.getAccessHistory(employerId);
   }
 

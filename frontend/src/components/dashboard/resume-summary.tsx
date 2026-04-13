@@ -33,18 +33,20 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
           {resume.status === 'COMPLETE' ? 'Complete' : resume.status === 'ANALYZING' ? 'Analyzing...' : 'Collecting...'}
         </div>
       </div>
-      <div className="flex gap-1.5 flex-wrap mb-3">
-        {resume.skills.slice(0, 6).map((s) => (
-          <span key={s} className="px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs font-medium border border-border/10">
-            {s}
-          </span>
-        ))}
-        {resume.skills.length > 6 && (
-          <span className="px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs">+{resume.skills.length - 6}</span>
-        )}
-      </div>
+      {resume.skills?.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap mb-3">
+          {resume.skills.slice(0, 6).map((s) => (
+            <span key={s} className="px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs font-medium border border-border/10">
+              {s}
+            </span>
+          ))}
+          {resume.skills.length > 6 && (
+            <span className="px-2 py-1 rounded-md bg-muted text-muted-foreground text-xs">+{resume.skills.length - 6}</span>
+          )}
+        </div>
+      )}
       <p className="text-sm text-muted-foreground mb-4">
-        Experience: {resume.experience.length > 0 ? resume.experience[0].period : '-'}
+        Experience: {resume.experience?.length > 0 ? resume.experience[0].period : '-'}
       </p>
       <div className="flex gap-2">
         <Link
