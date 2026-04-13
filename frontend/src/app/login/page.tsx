@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
@@ -8,39 +8,44 @@ import Link from 'next/link';
 
 export default function LoginPage() {
   const { loginByAccount } = useAuth();
-  const { modal, signedAccountId, signOut } = useWallet();
+  const { modal, signedAccountId } = useWallet();
   const router = useRouter();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const waitingForWallet = useRef(false);
 
+  const doLogin = useCallback(async (accountId: string) => {
+    setIsLoggingIn(true);
+    setError(null);
+    try {
+      await loginByAccount(accountId);
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const user = JSON.parse(stored);
+        router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }, [loginByAccount, router]);
+
   // When wallet connects and we're waiting, auto-login
   useEffect(() => {
     if (!waitingForWallet.current || !signedAccountId) return;
     waitingForWallet.current = false;
-
-    (async () => {
-      setIsLoggingIn(true);
-      setError(null);
-      try {
-        await loginByAccount(signedAccountId);
-        const stored = localStorage.getItem('user');
-        if (stored) {
-          const user = JSON.parse(stored);
-          router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Login failed');
-      } finally {
-        setIsLoggingIn(false);
-      }
-    })();
-  }, [signedAccountId, loginByAccount, router]);
+    doLogin(signedAccountId);
+  }, [signedAccountId, doLogin]);
 
   const handleConnectWallet = async () => {
     if (!modal) return;
-    await signOut();
+    // If already signed in, login directly without disconnecting
+    if (signedAccountId) {
+      doLogin(signedAccountId);
+      return;
+    }
     waitingForWallet.current = true;
     modal.show();
   };
