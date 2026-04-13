@@ -5,7 +5,7 @@ import {
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
 } from './types';
 import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
-import { DUMMY_DATASOURCES } from './dummy/datasources';
+import { getDummyDatasources, addDummyDatasource } from './dummy/datasources';
 import { DUMMY_RESUME } from './dummy/resume';
 import { DUMMY_JOBS } from './dummy/jobs';
 import { DUMMY_SEEKER_MATCHES, DUMMY_EMPLOYER_MATCHES } from './dummy/matches';
@@ -85,7 +85,7 @@ export async function updateJobSeekingStatus(active: boolean): Promise<void> {
 
 // === Datasource ===
 export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
-  if (USE_DUMMY) return DUMMY_DATASOURCES;
+  if (USE_DUMMY) return getDummyDatasources();
   return apiFetch('/datasource/status');
 }
 
@@ -97,7 +97,15 @@ export async function connectDatasourceMock(provider: string): Promise<DataSourc
   if (USE_DUMMY) {
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const uid = storedUser ? JSON.parse(storedUser).id : 'user-1';
-    return { id: `ds-new-${Date.now()}`, userId: uid, provider: provider as DataSourceConnection['provider'], status: 'MOCK', lastSyncedAt: new Date().toISOString() };
+    const conn: DataSourceConnection = {
+      id: `ds-new-${Date.now()}`,
+      userId: uid,
+      provider: provider as DataSourceConnection['provider'],
+      status: 'MOCK',
+      lastSyncedAt: new Date().toISOString(),
+    };
+    addDummyDatasource(conn);
+    return conn;
   }
   return apiFetch('/datasource/connect/mock', { method: 'POST', body: JSON.stringify({ provider }) });
 }

@@ -1,10 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
 import { DataSourceConnection } from '@/lib/types';
+
+type ConnectPhase = 'connecting' | 'syncing' | 'done';
+
+const SYNC_STATS: Record<string, string> = {
+  GITHUB: 'Analyzing 127 repositories, 2,340 commits...',
+  SLACK: 'Processing 15,000 messages across 8 channels...',
+  DISCORD: 'Reviewing 3,200 messages in 12 servers...',
+  GOV24: 'Verifying 4 certifications, 2 degrees...',
+};
 
 const PROVIDERS: {
   id: DataSourceConnection['provider'];
@@ -42,12 +51,35 @@ const PROVIDERS: {
   },
 ];
 
+function formatSyncTime(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function getNextSyncDate(lastSynced: string) {
+  const d = new Date(lastSynced);
+  d.setDate(d.getDate() + 1);
+  d.setHours(9, 0, 0, 0);
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export default function DatasourcePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [connections, setConnections] = useState<DataSourceConnection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState<string | null>(null);
+  const [connectPhases, setConnectPhases] = useState<Record<string, ConnectPhase>>({});
 
   useEffect(() => {
     if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
@@ -58,21 +90,15 @@ export default function DatasourcePage() {
       .then(setConnections)
       .finally(() => setLoading(false));
 
-    // Handle OAuth callback
     const params = new URLSearchParams(window.location.search);
     if (params.get('connected')) {
       getDatasourceStatus().then(setConnections);
     }
   }, []);
 
-  function getConnectionStatus(
-    provider: string
-  ): DataSourceConnection | undefined {
-    return connections.find((c) => c.provider === provider);
-  }
+  const handleConnect = useCallback(async (provider: string) => {
+    setConnectPhases((prev) => ({ ...prev, [provider]: 'connecting' }));
 
-  async function handleConnect(provider: string) {
-    setConnecting(provider);
     try {
       if (!USE_DUMMY && provider === 'GITHUB') {
         const { redirectUrl } = await connectGithubOAuth();
@@ -80,6 +106,14 @@ export default function DatasourcePage() {
         return;
       }
 
+      // Phase 1: Connecting (800ms)
+      await new Promise((r) => setTimeout(r, 800));
+
+      // Phase 2: Syncing data
+      setConnectPhases((prev) => ({ ...prev, [provider]: 'syncing' }));
+      await new Promise((r) => setTimeout(r, 1500));
+
+      // Phase 3: Actually connect
       const result = await connectDatasourceMock(provider);
       setConnections((prev) => {
         const existing = prev.findIndex((c) => c.provider === provider);
@@ -90,11 +124,23 @@ export default function DatasourcePage() {
         }
         return [...prev, result];
       });
+
+      // Phase 3: Show done briefly
+      setConnectPhases((prev) => ({ ...prev, [provider]: 'done' }));
+      await new Promise((r) => setTimeout(r, 1000));
     } catch (err) {
       console.error('Failed to connect datasource:', err);
     } finally {
-      setConnecting(null);
+      setConnectPhases((prev) => {
+        const next = { ...prev };
+        delete next[provider];
+        return next;
+      });
     }
+  }, []);
+
+  function getConnectionStatus(provider: string): DataSourceConnection | undefined {
+    return connections.find((c) => c.provider === provider);
   }
 
   const connectedCount = connections.filter(
@@ -113,6 +159,21 @@ export default function DatasourcePage() {
           {connectedCount} of {PROVIDERS.length} sources connected.
         </p>
       </div>
+
+      {/* Auto-sync banner */}
+      {connectedCount > 0 && (
+        <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-5 py-4">
+          <span
+            className="material-symbols-outlined text-primary text-xl shrink-0"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            autorenew
+          </span>
+          <p className="text-sm text-foreground/80">
+            Your data sources sync automatically every day. AI keeps your profile fresh without any manual work.
+          </p>
+        </div>
+      )}
 
       {/* Progress indicator */}
       <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-5">
@@ -149,32 +210,41 @@ export default function DatasourcePage() {
             const isConnected =
               connection?.status === 'CONNECTED' ||
               connection?.status === 'MOCK';
-            const isConnecting = connecting === provider.id;
+            const phase = connectPhases[provider.id];
+            const isConnecting = !!phase;
 
             return (
               <div
                 key={provider.id}
-                className="rounded-2xl border border-border/10 bg-[#1a1919] p-6 flex flex-col gap-4 transition-all duration-200 hover:border-border/20"
+                className={`rounded-2xl border bg-[#1a1919] p-6 flex flex-col gap-4 transition-all duration-300 ${
+                  phase === 'done'
+                    ? 'border-emerald-500/30'
+                    : isConnected
+                      ? 'border-border/10 hover:border-border/20'
+                      : 'border-border/10 hover:border-border/20'
+                }`}
               >
                 {/* Card Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        isConnected
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-[#262626] text-muted-foreground'
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300 ${
+                        phase === 'done'
+                          ? 'bg-emerald-500/10 text-emerald-400'
+                          : isConnected
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-[#262626] text-muted-foreground'
                       }`}
                     >
                       <span
                         className="material-symbols-outlined text-2xl"
                         style={
-                          isConnected
+                          isConnected || phase === 'done'
                             ? { fontVariationSettings: "'FILL' 1" }
                             : undefined
                         }
                       >
-                        {provider.icon}
+                        {phase === 'done' ? 'check_circle' : provider.icon}
                       </span>
                     </div>
                     <div>
@@ -183,47 +253,69 @@ export default function DatasourcePage() {
                       </h3>
                       <span
                         className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                          isConnected
+                          phase === 'done'
                             ? 'text-emerald-400'
-                            : 'text-muted-foreground'
+                            : isConnected
+                              ? 'text-emerald-400'
+                              : isConnecting
+                                ? 'text-amber-400'
+                                : 'text-muted-foreground'
                         }`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
-                            isConnected
+                            phase === 'done'
                               ? 'bg-emerald-400'
-                              : 'bg-muted-foreground/40'
+                              : isConnected
+                                ? 'bg-emerald-400'
+                                : isConnecting
+                                  ? 'bg-amber-400 animate-pulse'
+                                  : 'bg-muted-foreground/40'
                           }`}
                         />
-                        {isConnected
-                          ? connection?.status === 'MOCK'
-                            ? 'Mock Connected'
-                            : 'Connected'
-                          : 'Disconnected'}
+                        {phase === 'done'
+                          ? 'Connected!'
+                          : phase === 'syncing'
+                            ? 'Syncing data...'
+                            : phase === 'connecting'
+                              ? 'Connecting...'
+                              : isConnected
+                                ? 'Connected'
+                                : 'Disconnected'}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
-                  {provider.description}
-                </p>
-
-                {/* Last Synced */}
-                {isConnected && connection?.lastSyncedAt && (
-                  <p className="text-xs text-muted-foreground/60">
-                    Last synced:{' '}
-                    {new Date(connection.lastSyncedAt).toLocaleDateString(
-                      'en-US',
-                      {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      }
-                    )}
+                {/* Description or sync status */}
+                {phase === 'syncing' ? (
+                  <p className="text-sm text-amber-400/80 leading-relaxed flex-1 animate-pulse">
+                    {SYNC_STATS[provider.id]}
                   </p>
+                ) : phase === 'done' ? (
+                  <p className="text-sm text-emerald-400/80 leading-relaxed flex-1">
+                    Data collection complete. Your profile is being updated.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                    {provider.description}
+                  </p>
+                )}
+
+                {/* Auto-sync schedule (for connected sources) */}
+                {isConnected && !isConnecting && connection?.lastSyncedAt && (
+                  <div className="rounded-lg bg-[#141414] border border-border/5 px-4 py-3 space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                      <span className="material-symbols-outlined text-sm">schedule</span>
+                      Auto-sync: Daily at 9:00 AM KST
+                    </div>
+                    <p className="text-xs text-muted-foreground/50">
+                      Last synced: {formatSyncTime(connection.lastSyncedAt)}
+                    </p>
+                    <p className="text-xs text-muted-foreground/50">
+                      Next sync: {getNextSyncDate(connection.lastSyncedAt)}
+                    </p>
+                  </div>
                 )}
 
                 {/* Action Button */}
@@ -241,7 +333,11 @@ export default function DatasourcePage() {
                       <span className="material-symbols-outlined text-base animate-spin">
                         progress_activity
                       </span>
-                      Connecting...
+                      {phase === 'syncing'
+                        ? 'Syncing data...'
+                        : phase === 'done'
+                          ? 'Connected!'
+                          : 'Connecting...'}
                     </>
                   ) : isConnected ? (
                     <>

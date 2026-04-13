@@ -6,6 +6,7 @@ import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSession
 import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession } from '@/lib/types';
 import { JobSeekingToggle } from '@/components/dashboard/job-seeking-toggle';
 import { DatasourceStatus } from '@/components/dashboard/datasource-status';
+import { OnboardingCard } from '@/components/dashboard/onboarding-card';
 import { ResumeSummary } from '@/components/dashboard/resume-summary';
 import { MarketValueCard } from '@/components/dashboard/market-value-card';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
@@ -51,6 +52,7 @@ export default function SeekerDashboard() {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Your career overview at a glance</p>
       </div>
+      <OnboardingCard connectedCount={datasources.filter(c => c.status === 'CONNECTED' || c.status === 'MOCK').length} />
       <JobSeekingToggle onToggle={(active) => updateJobSeekingStatus(active)} />
       <DatasourceStatus connections={datasources} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
