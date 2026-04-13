@@ -1,66 +1,58 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 import { UserRole } from '@/lib/types';
 import Link from 'next/link';
 
-const SIGNUP_ROLE_KEY = 'signup_selectedRole';
-const SIGNUP_WAITING_KEY = 'signup_waiting';
-
 export default function SignupPage() {
   const { signup } = useAuth();
-  const { modal, signedAccountId, signOut } = useWallet();
+  const { modal, signedAccountId } = useWallet();
   const router = useRouter();
 
   const [step, setStep] = useState<'role' | 'account'>('role');
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Restore role from sessionStorage (survives redirect-based wallet flow)
-  useEffect(() => {
-    const savedRole = sessionStorage.getItem(SIGNUP_ROLE_KEY) as UserRole | null;
-    if (savedRole) {
-      setSelectedRole(savedRole);
-      setStep('account');
-    }
-  }, []);
+  const [walletReady, setWalletReady] = useState(false);
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
-    sessionStorage.setItem(SIGNUP_ROLE_KEY, role);
     setStep('account');
   };
 
-  // When wallet connects AND we're in a connect flow, auto-signup
+  const doSignup = useCallback(async (accountId: string) => {
+    if (!selectedRole) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await signup(accountId, selectedRole);
+      router.push(selectedRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Signup failed');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [selectedRole, signup, router]);
+
+  // When wallet connects after modal, mark ready so user can click to proceed.
+  // Don't auto-signup from useEffect — wallet.signMessage() needs a direct user
+  // gesture or the browser blocks the popup.
   useEffect(() => {
-    const waiting = sessionStorage.getItem(SIGNUP_WAITING_KEY);
-    if (!waiting || !signedAccountId || !selectedRole) return;
-
-    sessionStorage.removeItem(SIGNUP_WAITING_KEY);
-
-    (async () => {
-      setIsSubmitting(true);
-      setError(null);
-      try {
-        await signup(signedAccountId, selectedRole);
-        sessionStorage.removeItem(SIGNUP_ROLE_KEY);
-        router.push(selectedRole === 'SEEKER' ? '/datasource' : '/dashboard/employer');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Signup failed');
-      } finally {
-        setIsSubmitting(false);
-      }
-    })();
-  }, [signedAccountId, selectedRole, signup, router]);
+    if (signedAccountId) {
+      setWalletReady(true);
+    }
+  }, [signedAccountId]);
 
   const handleConnectWallet = async () => {
     if (!modal) return;
-    await signOut();
-    sessionStorage.setItem(SIGNUP_WAITING_KEY, 'true');
+    // Wallet already connected — signup directly from click handler
+    if (signedAccountId) {
+      doSignup(signedAccountId);
+      return;
+    }
     modal.show();
   };
 
@@ -81,8 +73,6 @@ export default function SignupPage() {
             onClick={() => {
               setStep('role');
               setError(null);
-              sessionStorage.removeItem(SIGNUP_ROLE_KEY);
-              sessionStorage.removeItem(SIGNUP_WAITING_KEY);
             }}
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -162,6 +152,11 @@ export default function SignupPage() {
                 <>
                   <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
                   Creating account...
+                </>
+              ) : walletReady && signedAccountId ? (
+                <>
+                  <span className="material-symbols-outlined text-base">login</span>
+                  Continue as {signedAccountId.split('.')[0]}
                 </>
               ) : (
                 <>

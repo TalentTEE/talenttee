@@ -41,6 +41,13 @@ function AuthConsumer() {
   );
 }
 
+// Build a fake JWT with an exp far in the future (for session-restore tests)
+function fakeJwt(exp = Math.floor(Date.now() / 1000) + 86400) {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({ sub: 'user-1', exp }));
+  return `${header}.${payload}.sig`;
+}
+
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'true');
@@ -54,9 +61,10 @@ describe('AuthProvider', () => {
     });
   });
 
-  it('restores user from localStorage on mount', async () => {
+  it('restores user from localStorage on mount when JWT is valid', async () => {
     const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
     localStorage.setItem('user', JSON.stringify(storedUser));
+    localStorage.setItem('jwt', fakeJwt());
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
 
@@ -66,8 +74,22 @@ describe('AuthProvider', () => {
     });
   });
 
+  it('clears stale session if JWT is expired on mount', async () => {
+    const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
+    localStorage.setItem('user', JSON.stringify(storedUser));
+    localStorage.setItem('jwt', fakeJwt(Math.floor(Date.now() / 1000) - 3600)); // expired 1h ago
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).toBe('null');
+      expect(localStorage.getItem('user')).toBeNull();
+      expect(localStorage.getItem('jwt')).toBeNull();
+    });
+  });
+
   it('login() stores dummy user in localStorage', async () => {
-    const dummyUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:key', createdAt: '2026-01-01' };
+    const dummyUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER' as const, publicKey: 'ed25519:key', createdAt: '2026-01-01' };
     mockGetDummyUser.mockResolvedValue(dummyUser);
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
@@ -87,7 +109,7 @@ describe('AuthProvider', () => {
     vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
     mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce', expiresAt: '2026-12-31' });
     mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
-    const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER', publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
+    const apiUser = { id: 'u-near', nearAccountId: 'test.testnet', role: 'SEEKER' as const, publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
     mockVerifyNearAuth.mockResolvedValue({ jwt: 'real-jwt', user: apiUser });
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
@@ -116,7 +138,7 @@ describe('AuthProvider', () => {
   it('logout() clears localStorage and resets user', async () => {
     const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
     localStorage.setItem('user', JSON.stringify(storedUser));
-    localStorage.setItem('jwt', 'some-token');
+    localStorage.setItem('jwt', fakeJwt());
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
 

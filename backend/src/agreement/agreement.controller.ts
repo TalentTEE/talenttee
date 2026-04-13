@@ -9,7 +9,7 @@ export class AgreementController {
 
   @Post('negotiation/sessions/:id/approve')
   async approve(@Param('id') id: string, @Req() req) {
-    return this.agreementService.approve(id, req.user.nearAccountId);
+    return this.agreementService.approve(id, req.user.id);
   }
 
   @Post('negotiation/sessions/:id/confirm-tx')

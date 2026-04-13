@@ -9,6 +9,7 @@ describe('AuthController', () => {
   const mockAuthService = {
     generateChallenge: jest.fn(),
     validateChallenge: jest.fn(),
+    verifyNearSignature: jest.fn(),
     findOrCreateUser: jest.fn(),
     generateJwt: jest.fn(),
   };
@@ -24,10 +25,10 @@ describe('AuthController', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('POST /auth/near/challenge', () => {
-    it('should return nonce and expiresAt', () => {
+    it('should return nonce and expiresAt', async () => {
       const expected = { nonce: 'abc123', expiresAt: '2026-04-12T00:00:00Z' };
       mockAuthService.generateChallenge.mockReturnValue(expected);
-      expect(controller.challenge()).toEqual(expected);
+      await expect(controller.challenge()).resolves.toEqual(expected);
     });
   });
 
@@ -35,6 +36,7 @@ describe('AuthController', () => {
     it('should return JWT and user on valid signature', async () => {
       const user = { id: 'uuid-1', nearAccountId: 'alice.testnet', role: 'SEEKER' };
       mockAuthService.validateChallenge.mockReturnValue(true);
+      mockAuthService.verifyNearSignature.mockReturnValue(true);
       mockAuthService.findOrCreateUser.mockResolvedValue(user);
       mockAuthService.generateJwt.mockReturnValue('jwt-token');
 

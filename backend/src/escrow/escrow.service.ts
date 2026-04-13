@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PaymentRecord } from '../entities/payment-record.entity.js';
 
 @Injectable()
 export class EscrowService {
+  constructor(
+    @InjectRepository(PaymentRecord)
+    private readonly paymentRepo: Repository<PaymentRecord>,
+  ) {}
+
   private readonly escrowContractId =
     process.env.ESCROW_CONTRACT_ID || 'escrow.testnet';
   private readonly nearNodeUrl =
@@ -45,5 +53,12 @@ export class EscrowService {
       args: {},
       deposit: amount,
     };
+  }
+
+  async getPaymentHistory(userId: string): Promise<PaymentRecord[]> {
+    return this.paymentRepo.find({
+      where: [{ employerId: userId }, { seekerId: userId }],
+      order: { createdAt: 'DESC' },
+    });
   }
 }

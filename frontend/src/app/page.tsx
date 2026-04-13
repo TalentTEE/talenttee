@@ -1,4 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth';
+import { useWallet } from '@/lib/wallet-selector';
+import { useRouter } from 'next/navigation';
 
 const features = [
   {
@@ -43,6 +48,18 @@ const steps = [
 ];
 
 export default function LandingPage() {
+  const { user, logout } = useAuth();
+  const { signOut } = useWallet();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut();
+    logout();
+    router.push('/');
+  };
+
+  const dashboardPath = user?.role === 'EMPLOYER' ? '/dashboard/employer' : '/dashboard/seeker';
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0e0e0e] selection:bg-primary selection:text-primary-foreground">
       {/* Nav Bar */}
@@ -51,20 +68,38 @@ export default function LandingPage() {
           <div className="text-2xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
             Talent-Tee
           </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
-              className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
-            >
-              Sign Up
-            </Link>
-          </div>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link
+                href={dashboardPath}
+                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+              >
+                <span className="material-symbols-outlined text-base">logout</span>
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/login"
+                className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
         </nav>
       </header>
 

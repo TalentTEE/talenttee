@@ -15,7 +15,7 @@ import { DUMMY_AGREEMENT } from './dummy/agreement';
 import { DUMMY_ESCROW, DUMMY_ESCROW_PAYMENTS } from './dummy/escrow';
 
 export const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 let apiErrorHandler: ((status: number) => void) | null = null;
 
@@ -89,8 +89,10 @@ export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
   return apiFetch('/datasource/status');
 }
 
-export async function connectGithubOAuth(): Promise<{ redirectUrl: string }> {
-  return apiFetch('/datasource/connect/github', { method: 'POST' });
+export function connectGithubOAuth(): void {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
+  // GET endpoint — browser redirect with JWT as query param for state passing
+  window.location.href = `${API_URL}/datasource/connect/github${token ? `?token=${token}` : ''}`;
 }
 
 export async function connectDatasourceMock(provider: string): Promise<DataSourceConnection> {
@@ -111,14 +113,14 @@ export async function connectDatasourceMock(provider: string): Promise<DataSourc
 }
 
 // === Resume ===
-export async function getResume(userId: string): Promise<ResumeProfile> {
-  if (USE_DUMMY) return { ...DUMMY_RESUME, userId };
-  return apiFetch(`/resume/${userId}`);
+export async function getResume(): Promise<ResumeProfile> {
+  if (USE_DUMMY) return { ...DUMMY_RESUME, userId: 'dummy-user' };
+  return apiFetch('/resume/me');
 }
 
-export async function getResumeStatus(userId: string): Promise<{ status: string }> {
+export async function getResumeStatus(): Promise<{ status: string }> {
   if (USE_DUMMY) return { status: 'COMPLETE' };
-  return apiFetch(`/resume/${userId}/status`);
+  return apiFetch('/resume/me/status');
 }
 
 export async function generateResume(): Promise<{ resumeId: string }> {
@@ -168,9 +170,9 @@ export async function createJob(jobData: Partial<JobPosting>): Promise<JobPostin
 }
 
 // === Matching ===
-export async function getSeekerMatches(seekerId: string): Promise<MatchResultDisplay[]> {
-  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES.map(m => ({ ...m, seekerId }));
-  return apiFetch(`/match/seeker/${seekerId}`);
+export async function getSeekerMatches(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me');
 }
 
 export async function getEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {

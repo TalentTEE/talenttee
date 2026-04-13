@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Stub env BEFORE importing — USE_DUMMY must be false for real API tests
 vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
-vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://localhost:3000');
+vi.stubEnv('NEXT_PUBLIC_API_URL', 'http://localhost:3001');
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -90,10 +90,10 @@ describe('API — Real mode', () => {
     const getCases: [string, () => Promise<unknown>, string][] = [
       ['getDatasourceStatus', () => api.getDatasourceStatus(), '/datasource/status'],
       // connectGithubOAuth moved to POST tests
-      ['getResume', () => api.getResume('u1'), '/resume/u1'],
-      ['getResumeStatus', () => api.getResumeStatus('u1'), '/resume/u1/status'],
+      ['getResume', () => api.getResume(), '/resume/me'],
+      ['getResumeStatus', () => api.getResumeStatus(), '/resume/me/status'],
       ['getJobs', () => api.getJobs(), '/jobs'],
-      ['getSeekerMatches', () => api.getSeekerMatches('s1'), '/match/seeker/s1'],
+      ['getSeekerMatches', () => api.getSeekerMatches(), '/match/me'],
       ['getEmployerMatches', () => api.getEmployerMatches('j1'), '/match/job/j1'],
       ['getNegotiationSessions', () => api.getNegotiationSessions(), '/negotiation/sessions'],
       ['getNegotiationSession', () => api.getNegotiationSession('sess1'), '/negotiation/sessions/sess1'],
@@ -108,7 +108,7 @@ describe('API — Real mode', () => {
       await fn();
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe(`http://localhost:3000${path}`);
+      expect(url).toBe(`http://localhost:3001${path}`);
       // GET requests: no explicit method set (defaults to GET) or undefined
       expect(opts?.method).toBeUndefined();
     });
@@ -122,7 +122,7 @@ describe('API — Real mode', () => {
       await api.requestChallenge();
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/auth/near/challenge');
+      expect(url).toBe('http://localhost:3001/auth/near/challenge');
       expect(opts.method).toBe('POST');
     });
 
@@ -138,7 +138,7 @@ describe('API — Real mode', () => {
       await api.verifyNearAuth(params);
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/auth/near/verify');
+      expect(url).toBe('http://localhost:3001/auth/near/verify');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual(params);
     });
@@ -148,7 +148,7 @@ describe('API — Real mode', () => {
       await api.updateJobSeekingStatus(true);
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/seeker/job-seeking-status');
+      expect(url).toBe('http://localhost:3001/seeker/job-seeking-status');
       expect(opts.method).toBe('PUT');
       expect(JSON.parse(opts.body)).toEqual({ active: true });
     });
@@ -158,7 +158,7 @@ describe('API — Real mode', () => {
       await api.connectDatasourceMock('GITHUB');
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/datasource/connect/mock');
+      expect(url).toBe('http://localhost:3001/datasource/connect/mock');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual({ provider: 'GITHUB' });
     });
@@ -168,7 +168,7 @@ describe('API — Real mode', () => {
       await api.generateResume();
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/resume/generate');
+      expect(url).toBe('http://localhost:3001/resume/generate');
       expect(opts.method).toBe('POST');
     });
 
@@ -178,18 +178,17 @@ describe('API — Real mode', () => {
       await api.chatCreateJob(messages);
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/jobs/chat');
+      expect(url).toBe('http://localhost:3001/jobs/chat');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual({ message: 'Hello' });
     });
 
-    it('connectGithubOAuth → POST /datasource/connect/github', async () => {
-      mockFetch.mockReturnValue(jsonRes({ redirectUrl: 'https://github.com/login' }));
-      await api.connectGithubOAuth();
-
-      const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/datasource/connect/github');
-      expect(opts.method).toBe('POST');
+    it('connectGithubOAuth → redirects to backend GitHub OAuth endpoint', () => {
+      // connectGithubOAuth now sets window.location.href directly (GET redirect)
+      const mockLocation = { href: '' };
+      Object.defineProperty(window, 'location', { value: mockLocation, writable: true });
+      api.connectGithubOAuth();
+      expect(mockLocation.href).toContain('/datasource/connect/github');
     });
 
     it('createJob → POST /jobs with jobData body', async () => {
@@ -198,7 +197,7 @@ describe('API — Real mode', () => {
       await api.createJob(jobData);
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/jobs');
+      expect(url).toBe('http://localhost:3001/jobs');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual(jobData);
     });
@@ -208,7 +207,7 @@ describe('API — Real mode', () => {
       await api.agreeMatch('m1');
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/match/m1/agree');
+      expect(url).toBe('http://localhost:3001/match/m1/agree');
       expect(opts.method).toBe('POST');
     });
 
@@ -217,7 +216,7 @@ describe('API — Real mode', () => {
       await api.accessProfile('s1');
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/profile/s1/access');
+      expect(url).toBe('http://localhost:3001/profile/s1/access');
       expect(opts.method).toBe('POST');
     });
 
@@ -226,7 +225,7 @@ describe('API — Real mode', () => {
       await api.sendIntervention('sess1', 'raise');
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/negotiation/sessions/sess1/intervene');
+      expect(url).toBe('http://localhost:3001/negotiation/sessions/sess1/intervene');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual({ direction: 'raise' });
     });
@@ -236,7 +235,7 @@ describe('API — Real mode', () => {
       await api.approveAgreement('sess2');
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/negotiation/sessions/sess2/approve');
+      expect(url).toBe('http://localhost:3001/negotiation/sessions/sess2/approve');
       expect(opts.method).toBe('POST');
     });
 
@@ -245,7 +244,7 @@ describe('API — Real mode', () => {
       await api.depositToEscrow('5.0');
 
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe('http://localhost:3000/escrow/deposit');
+      expect(url).toBe('http://localhost:3001/escrow/deposit');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual({ amount: '5.0' });
     });

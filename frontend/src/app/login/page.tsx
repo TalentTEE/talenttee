@@ -1,49 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const LOGIN_WAITING_KEY = 'login_waitingForWallet';
-
 export default function LoginPage() {
   const { loginByAccount } = useAuth();
-  const { modal, signedAccountId, signOut } = useWallet();
+  const { modal, signedAccountId } = useWallet();
   const router = useRouter();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [walletReady, setWalletReady] = useState(false);
 
-  // When wallet connects (including after redirect), auto-login
-  useEffect(() => {
-    const waiting = sessionStorage.getItem(LOGIN_WAITING_KEY);
-    if (!waiting || !signedAccountId) return;
-    sessionStorage.removeItem(LOGIN_WAITING_KEY);
-
-    (async () => {
-      setIsLoggingIn(true);
-      setError(null);
-      try {
-        await loginByAccount(signedAccountId);
-        const stored = localStorage.getItem('user');
-        if (stored) {
-          const user = JSON.parse(stored);
-          router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Login failed');
-      } finally {
-        setIsLoggingIn(false);
+  const doLogin = useCallback(async (accountId: string) => {
+    setIsLoggingIn(true);
+    setError(null);
+    try {
+      await loginByAccount(accountId);
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const user = JSON.parse(stored);
+        router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
       }
-    })();
-  }, [signedAccountId, loginByAccount, router]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }, [loginByAccount, router]);
+
+  // When wallet connects after modal, mark ready so user can click to proceed.
+  // Don't auto-login from useEffect — wallet.signMessage() needs a direct user
+  // gesture or the browser blocks the popup.
+  useEffect(() => {
+    if (signedAccountId) {
+      setWalletReady(true);
+    }
+  }, [signedAccountId]);
 
   const handleConnectWallet = async () => {
     if (!modal) return;
-    await signOut();
-    sessionStorage.setItem(LOGIN_WAITING_KEY, 'true');
+    // Wallet already connected — login directly from click handler
+    if (signedAccountId) {
+      doLogin(signedAccountId);
+      return;
+    }
     modal.show();
   };
 
@@ -85,6 +89,11 @@ export default function LoginPage() {
               <>
                 <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
                 Logging in...
+              </>
+            ) : walletReady && signedAccountId ? (
+              <>
+                <span className="material-symbols-outlined text-base">login</span>
+                Continue as {signedAccountId.split('.')[0]}
               </>
             ) : (
               <>

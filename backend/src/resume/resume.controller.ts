@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { ResumeService } from './resume.service.js';
 
@@ -10,23 +10,23 @@ export class ResumeController {
   @Post('generate')
   @HttpCode(HttpStatus.ACCEPTED)
   async generate(@Req() req) {
-    const userId = req.user.id ?? req.user.nearAccountId;
+    const userId = req.user.id;
     const resume = await this.resumeService.generate(userId);
     return { id: resume.id, status: resume.status, message: '이력서 생성이 시작되었습니다.' };
   }
 
-  @Get(':id')
-  async getResume(@Param('id') id: string) {
-    return this.resumeService.getResume(id);
+  @Get('me')
+  async getMyResume(@Req() req) {
+    return this.resumeService.getResumeByUserId(req.user.id);
   }
 
-  @Get(':id/status')
-  async getStatus(@Param('id') id: string) {
-    return this.resumeService.getStatus(id);
+  @Get('me/status')
+  async getMyStatus(@Req() req) {
+    return this.resumeService.getStatusByUserId(req.user.id);
   }
 
-  @Get(':id/market-value')
-  async getMarketValue(@Param('id') id: string) {
-    return this.resumeService.getMarketValue(id);
+  @Get('me/market-value')
+  async getMyMarketValue(@Req() req) {
+    return this.resumeService.getMarketValueByUserId(req.user.id);
   }
 }

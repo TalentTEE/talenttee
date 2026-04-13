@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { readFileSync } from 'fs';
@@ -11,7 +12,25 @@ export class DatasourceService {
   constructor(
     @InjectRepository(DataSourceConnection)
     private readonly dsRepo: Repository<DataSourceConnection>,
+    private readonly config: ConfigService,
   ) {}
+
+  async exchangeGithubCode(code: string): Promise<string> {
+    const response = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: this.config.get('GITHUB_CLIENT_ID'),
+        client_secret: this.config.get('GITHUB_CLIENT_SECRET'),
+        code,
+      }),
+    });
+    const data = await response.json();
+    return data.access_token;
+  }
 
   async connectMock(userId: string, provider: DataSourceProvider): Promise<DataSourceConnection> {
     const existing = await this.dsRepo.findOne({ where: { userId, provider } });

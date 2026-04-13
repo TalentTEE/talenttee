@@ -56,6 +56,28 @@ export class ResumeService {
     return this.resumeRepo.findOne({ where: { userId } });
   }
 
+  async getStatusByUserId(userId: string): Promise<{ id: string; status: ResumeStatus } | null> {
+    const resume = await this.resumeRepo.findOne({ where: { userId } });
+    if (!resume) return null;
+    return { id: resume.id, status: resume.status };
+  }
+
+  async getMarketValueByUserId(userId: string): Promise<{
+    marketValueMin: number;
+    marketValueMax: number;
+    reasoning: string;
+    negotiationPoints: Record<string, any>;
+  } | null> {
+    const resume = await this.resumeRepo.findOne({ where: { userId } });
+    if (!resume) return null;
+    return {
+      marketValueMin: resume.marketValueMin,
+      marketValueMax: resume.marketValueMax,
+      reasoning: resume.marketValueReasoning,
+      negotiationPoints: resume.negotiationPoints,
+    };
+  }
+
   async getStatus(id: string): Promise<{ id: string; status: ResumeStatus }> {
     const resume = await this.getResume(id);
     return { id: resume.id, status: resume.status };
