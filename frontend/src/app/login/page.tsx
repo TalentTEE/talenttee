@@ -1,35 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth';
+import { useWallet } from '@/lib/wallet-selector';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const { loginByAccount } = useAuth();
+  const { modal, signedAccountId, signOut } = useWallet();
   const router = useRouter();
 
-  const [accountId, setAccountId] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const waitingForWallet = useRef(false);
 
-  const handleLogin = async () => {
-    if (!accountId.trim()) return;
-    setIsLoggingIn(true);
-    setError(null);
-    try {
-      await loginByAccount(accountId.trim());
-      // Role is stored from signup — redirect based on it
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const user = JSON.parse(stored);
-        router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+  // When wallet connects and we're waiting, auto-login
+  useEffect(() => {
+    if (!waitingForWallet.current || !signedAccountId) return;
+    waitingForWallet.current = false;
+
+    (async () => {
+      setIsLoggingIn(true);
+      setError(null);
+      try {
+        await loginByAccount(signedAccountId);
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const user = JSON.parse(stored);
+          router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Login failed');
+      } finally {
+        setIsLoggingIn(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoggingIn(false);
-    }
+    })();
+  }, [signedAccountId, loginByAccount, router]);
+
+  const handleConnectWallet = async () => {
+    if (!modal) return;
+    await signOut();
+    waitingForWallet.current = true;
+    modal.show();
   };
 
   return (
@@ -54,29 +67,16 @@ export default function LoginPage() {
           Welcome back
         </h1>
         <p className="text-muted-foreground text-lg">
-          Log in with your NEAR account.
+          Connect your wallet to continue.
         </p>
       </div>
 
-      {/* Login Form */}
+      {/* Login - Connect Wallet */}
       <div className="w-full max-w-md">
         <div className="rounded-2xl border border-border/10 bg-card p-8">
-          <label className="block text-sm font-medium text-foreground mb-2">
-            NEAR Account ID
-          </label>
-          <input
-            type="text"
-            value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            placeholder="your-account.testnet"
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-6"
-            autoFocus
-          />
-
           <button
-            onClick={handleLogin}
-            disabled={!accountId.trim() || isLoggingIn}
+            onClick={handleConnectWallet}
+            disabled={isLoggingIn || !modal}
             className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoggingIn ? (
@@ -85,7 +85,10 @@ export default function LoginPage() {
                 Logging in...
               </>
             ) : (
-              'Log In'
+              <>
+                <span className="material-symbols-outlined text-base">account_balance_wallet</span>
+                Connect Wallet
+              </>
             )}
           </button>
         </div>

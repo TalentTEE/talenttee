@@ -89,7 +89,7 @@ describe('API — Real mode', () => {
   describe('GET endpoint mapping', () => {
     const getCases: [string, () => Promise<unknown>, string][] = [
       ['getDatasourceStatus', () => api.getDatasourceStatus(), '/datasource/status'],
-      ['connectGithubOAuth', () => api.connectGithubOAuth(), '/datasource/connect/github'],
+      // connectGithubOAuth moved to POST tests
       ['getResume', () => api.getResume('u1'), '/resume/u1'],
       ['getResumeStatus', () => api.getResumeStatus('u1'), '/resume/u1/status'],
       ['getJobs', () => api.getJobs(), '/jobs'],
@@ -154,13 +154,13 @@ describe('API — Real mode', () => {
     });
 
     it('connectDatasourceMock → POST /datasource/connect/mock', async () => {
-      mockFetch.mockReturnValue(jsonRes({ id: 'ds-1', provider: 'github' }));
-      await api.connectDatasourceMock('github');
+      mockFetch.mockReturnValue(jsonRes({ id: 'ds-1', provider: 'GITHUB' }));
+      await api.connectDatasourceMock('GITHUB');
 
       const [url, opts] = mockFetch.mock.calls[0];
       expect(url).toBe('http://localhost:3000/datasource/connect/mock');
       expect(opts.method).toBe('POST');
-      expect(JSON.parse(opts.body)).toEqual({ provider: 'github' });
+      expect(JSON.parse(opts.body)).toEqual({ provider: 'GITHUB' });
     });
 
     it('generateResume → POST /resume/generate', async () => {
@@ -180,7 +180,16 @@ describe('API — Real mode', () => {
       const [url, opts] = mockFetch.mock.calls[0];
       expect(url).toBe('http://localhost:3000/jobs/chat');
       expect(opts.method).toBe('POST');
-      expect(JSON.parse(opts.body)).toEqual({ messages });
+      expect(JSON.parse(opts.body)).toEqual({ message: 'Hello' });
+    });
+
+    it('connectGithubOAuth → POST /datasource/connect/github', async () => {
+      mockFetch.mockReturnValue(jsonRes({ redirectUrl: 'https://github.com/login' }));
+      await api.connectGithubOAuth();
+
+      const [url, opts] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:3000/datasource/connect/github');
+      expect(opts.method).toBe('POST');
     });
 
     it('createJob → POST /jobs with jobData body', async () => {
@@ -219,7 +228,7 @@ describe('API — Real mode', () => {
       const [url, opts] = mockFetch.mock.calls[0];
       expect(url).toBe('http://localhost:3000/negotiation/sessions/sess1/intervene');
       expect(opts.method).toBe('POST');
-      expect(JSON.parse(opts.body)).toEqual({ direction: 'raise', applyFromRound: 'next' });
+      expect(JSON.parse(opts.body)).toEqual({ direction: 'raise' });
     });
 
     it('approveAgreement → POST /negotiation/sessions/{id}/approve', async () => {

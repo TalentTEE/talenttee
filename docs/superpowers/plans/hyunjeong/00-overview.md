@@ -80,6 +80,8 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 | 7 | [phase-7-ecdh-escrow-wallet.md](./phase-7-ecdh-escrow-wallet.md) | 완료 | ~3h |
 | 8 | [phase-8-ux-polishing-demo.md](./phase-8-ux-polishing-demo.md) | 완료 | ~3h |
 | 9 | [phase-9-landing-wallet-selector.md](./phase-9-landing-wallet-selector.md) | 진행 중 | ~4h |
+| 10 | [phase-10-interface-alignment.md](./phase-10-interface-alignment.md) | 미시작 | ~2h |
+| 11 | [phase-11-onboarding-ux.md](./phase-11-onboarding-ux.md) | 미시작 | ~3h |
 
 ## 전체 수락 기준
 

@@ -98,7 +98,7 @@ describe('CreateJobPage', () => {
           salaryMax: 80000000,
           remotePolicy: '3 days office',
           workingHours: '09:00-18:00',
-          benefits: [],
+          benefits: '',
           status: 'ACTIVE',
           negotiationBoundary: null,
         },

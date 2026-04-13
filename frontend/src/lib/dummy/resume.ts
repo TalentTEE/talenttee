@@ -3,7 +3,7 @@ import { ResumeProfile } from '../types';
 export const DUMMY_RESUME: ResumeProfile = {
   id: 'resume-1',
   userId: 'user-1',
-  status: 'COMPLETED',
+  status: 'COMPLETE',
   skills: ['TypeScript', 'React', 'Next.js', 'NestJS', 'Node.js', 'PostgreSQL', 'Docker', 'AWS'],
   experience: [
     {
