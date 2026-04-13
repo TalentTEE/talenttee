@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { getNegotiationSession, getNegotiationRounds } from '@/lib/api';
 import { NegotiationSession, NegotiationRound } from '@/lib/types';
 
@@ -48,13 +49,25 @@ export default function NegotiationMonitorPage() {
 
   const [session, setSession] = useState<NegotiationSession | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
-  useEffect(() => {
-    if (!sessionId) return;
-    getNegotiationSession(sessionId).then(setSession);
-    getNegotiationRounds(sessionId).then(setRounds);
-  }, [sessionId]);
 
   const isTerminal = session?.state === 'AGREED' || session?.state === 'FAILED' || session?.state === 'MAX_ROUNDS';
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadData = () => {
+      getNegotiationSession(sessionId).then(setSession);
+      getNegotiationRounds(sessionId).then(setRounds);
+    };
+
+    loadData();
+
+    const interval = setInterval(() => {
+      if (!isTerminal) loadData();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, isTerminal]);
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -261,6 +274,19 @@ export default function NegotiationMonitorPage() {
             Negotiation {session?.state === 'FAILED' ? 'Failed' : 'Reached Maximum Rounds'}
           </p>
           <p className="text-xs text-muted-foreground mt-1">This negotiation session has ended without agreement.</p>
+        </div>
+      )}
+
+      {/* Encrypted History Link */}
+      {isTerminal && (
+        <div className="text-center">
+          <Link
+            href={`/negotiation/${sessionId}/history`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border/10 bg-card text-sm font-medium text-foreground hover:bg-accent/50 transition-all"
+          >
+            <span className="material-symbols-outlined text-lg">encrypted</span>
+            View Encrypted History
+          </Link>
         </div>
       )}
     </div>

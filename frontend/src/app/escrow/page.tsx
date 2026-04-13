@@ -1,16 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getEscrowBalance, getEscrowPayments, depositToEscrow } from '@/lib/api';
+import { depositViaWallet, addAgentKey, getEscrowBalanceOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 
 export default function EscrowPage() {
   const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && user.role !== 'EMPLOYER') router.replace('/dashboard/seeker');
+  }, [user, router]);
+
   const [escrow, setEscrow] = useState<EscrowAccount | null>(null);
   const [payments, setPayments] = useState<EscrowPayment[]>([]);
   const [depositAmount, setDepositAmount] = useState('');
+  const [agentPubKey, setAgentPubKey] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [isSettingKey, setIsSettingKey] = useState(false);
+  const [txStatus, setTxStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -25,23 +37,79 @@ export default function EscrowPage() {
 
   const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
 
+  const refreshBalance = async () => {
+    if (!user) return;
+    try {
+      const balance = await getEscrowBalance(user.nearAccountId);
+      setEscrow(balance);
+    } catch {
+      // Fallback to on-chain RPC query
+      try {
+        const rpcBalance = await getEscrowBalanceOnChain(user.nearAccountId);
+        setEscrow(prev => prev ? { ...prev, balance: Number(BigInt(rpcBalance)) / 1e24 } : prev);
+      } catch { /* ignore */ }
+    }
+  };
+
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount.');
-      return;
-    }
+    if (isNaN(amount) || amount <= 0) return;
 
-    if (USE_DUMMY) {
-      alert(`Deposit of ${amount} NEAR initiated (mock).`);
-    } else {
-      const nearAmount = (amount * 1e24).toLocaleString('fullwide', { useGrouping: false });
-      const txParams = await depositToEscrow(nearAmount);
-      alert(
-        `Transaction prepared:\nContract: ${txParams.contractId}\nMethod: ${txParams.methodName}\nDeposit: ${amount} NEAR\n\nWallet signing will be available in Stage 7.`
-      );
+    setIsDepositing(true);
+    setTxStatus(null);
+
+    try {
+      if (USE_DUMMY) {
+        setTxStatus(`Deposit of ${amount} NEAR initiated (mock).`);
+      } else {
+        const nearKey = typeof window !== 'undefined' ? localStorage.getItem('nearPrivateKey') : null;
+        if (nearKey && user) {
+          await depositViaWallet(user.nearAccountId, nearKey, depositAmount);
+          setTxStatus(`Successfully deposited ${amount} NEAR.`);
+          await refreshBalance();
+        } else {
+          // Fallback: prepare transaction params via backend
+          const nearAmount = (amount * 1e24).toLocaleString('fullwide', { useGrouping: false });
+          const txParams = await depositToEscrow(nearAmount);
+          setTxStatus(
+            `Transaction prepared — Contract: ${txParams.contractId}, Method: ${txParams.methodName}, Deposit: ${amount} NEAR. Sign with your wallet to complete.`
+          );
+        }
+      }
+    } catch (e) {
+      setTxStatus(`Deposit failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    } finally {
+      setIsDepositing(false);
+      setDepositAmount('');
     }
-    setDepositAmount('');
+  };
+
+  const handleAddAgentKey = async () => {
+    if (!agentPubKey.trim() || !user) return;
+
+    setIsSettingKey(true);
+    setTxStatus(null);
+
+    try {
+      if (USE_DUMMY) {
+        setTxStatus('Agent key configured (mock).');
+        setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
+      } else {
+        const nearKey = typeof window !== 'undefined' ? localStorage.getItem('nearPrivateKey') : null;
+        if (nearKey) {
+          await addAgentKey(user.nearAccountId, nearKey, agentPubKey.trim());
+          setTxStatus('Agent key added successfully.');
+          setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
+        } else {
+          setTxStatus('No NEAR private key found in localStorage. Please set "nearPrivateKey" first.');
+        }
+      }
+    } catch (e) {
+      setTxStatus(`Failed to add agent key: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    } finally {
+      setIsSettingKey(false);
+      setAgentPubKey('');
+    }
   };
 
   if (isLoading) {
@@ -146,16 +214,72 @@ export default function EscrowPage() {
             </div>
             <button
               onClick={handleDeposit}
-              disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+              disabled={!depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
               className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
-              Deposit
+              {isDepositing ? (
+                <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-lg">account_balance_wallet</span>
+              )}
+              {isDepositing ? 'Processing...' : 'Deposit'}
             </button>
           </div>
           <p className="text-xs text-muted-foreground">
             Funds are held in a NEAR smart contract and released upon agreement completion.
           </p>
+        </div>
+      </div>
+
+      {/* Status Message */}
+      {txStatus && (
+        <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
+          txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
+            ? 'bg-red-500/10 border-red-500/20'
+            : 'bg-primary/10 border-primary/20'
+        }`}>
+          <span className={`material-symbols-outlined text-lg shrink-0 ${
+            txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
+              ? 'text-red-400' : 'text-primary'
+          }`}>
+            {txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR') ? 'error' : 'check_circle'}
+          </span>
+          <p className={`text-sm ${
+            txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
+              ? 'text-red-400' : 'text-primary'
+          }`}>{txStatus}</p>
+        </div>
+      )}
+
+      {/* Agent Key Setup */}
+      <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <span className="material-symbols-outlined text-lg">vpn_key</span>
+          <span className="text-sm font-medium">Agent Key Setup</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Add your AI agent&apos;s public key to authorize automated escrow operations.
+        </p>
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={agentPubKey}
+            onChange={(e) => setAgentPubKey(e.target.value)}
+            placeholder="ed25519:..."
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono"
+          />
+          <button
+            onClick={handleAddAgentKey}
+            disabled={!agentPubKey.trim() || isSettingKey}
+            className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isSettingKey ? (
+              <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-lg">vpn_key</span>
+            )}
+            {isSettingKey ? 'Setting Key...' : 'Add Agent Key'}
+          </button>
         </div>
       </div>
 

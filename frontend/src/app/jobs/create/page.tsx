@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { chatCreateJob } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { chatCreateJob, createJob } from '@/lib/api';
 import { ChatMessage, JobPosting, JobChatResponse } from '@/lib/types';
 
 type Tab = 'chat' | 'form';
@@ -16,7 +18,13 @@ interface FormData {
 }
 
 export default function CreateJobPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('chat');
+
+  useEffect(() => {
+    if (user && user.role !== 'EMPLOYER') router.replace('/dashboard/seeker');
+  }, [user, router]);
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -246,18 +254,15 @@ function FormMode() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Build a ChatMessage array from the form data for the API
-    const formMessages: ChatMessage[] = [
-      { role: 'user', content: `Title: ${form.title}` },
-      { role: 'user', content: `Description: ${form.description}` },
-      { role: 'user', content: `Required Skills: ${form.skills}` },
-      { role: 'user', content: `Salary Range: ${form.salaryMin} - ${form.salaryMax}` },
-      { role: 'user', content: `Remote Policy: ${form.remotePolicy}` },
-      { role: 'user', content: 'Please create the job posting.' },
-    ];
-
     try {
-      await chatCreateJob(formMessages);
+      await createJob({
+        title: form.title,
+        description: form.description,
+        requiredSkills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
+        salaryMin: Number(form.salaryMin),
+        salaryMax: Number(form.salaryMax),
+        remotePolicy: form.remotePolicy,
+      });
       setSubmitted(true);
     } catch {
       alert('Failed to create job posting. Please try again.');

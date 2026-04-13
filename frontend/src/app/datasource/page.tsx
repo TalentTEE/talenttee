@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getDatasourceStatus, connectDatasourceMock } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
+import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
 import { DataSourceConnection } from '@/lib/types';
 
 const PROVIDERS: {
@@ -41,14 +43,26 @@ const PROVIDERS: {
 ];
 
 export default function DatasourcePage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [connections, setConnections] = useState<DataSourceConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
 
   useEffect(() => {
+    if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
+  }, [user, router]);
+
+  useEffect(() => {
     getDatasourceStatus()
       .then(setConnections)
       .finally(() => setLoading(false));
+
+    // Handle OAuth callback
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connected')) {
+      getDatasourceStatus().then(setConnections);
+    }
   }, []);
 
   function getConnectionStatus(
@@ -60,6 +74,12 @@ export default function DatasourcePage() {
   async function handleConnect(provider: string) {
     setConnecting(provider);
     try {
+      if (!USE_DUMMY && provider === 'github') {
+        const { redirectUrl } = await connectGithubOAuth();
+        window.location.href = redirectUrl;
+        return;
+      }
+
       const result = await connectDatasourceMock(provider);
       setConnections((prev) => {
         const existing = prev.findIndex((c) => c.provider === provider);
