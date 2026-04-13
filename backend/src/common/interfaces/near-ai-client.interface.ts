@@ -7,4 +7,8 @@ export interface NearAiClient {
     userMessage: string;
     conversationHistory?: { role: string; content: string }[];
   }): Promise<{ content: string }>;
+
+  embed(input: string | string[]): Promise<number[][]>;
+
+  rerank(query: string, documents: string[], topN?: number): Promise<{ index: number; score: number }[]>;
 }
