@@ -4,3 +4,4 @@ node_modules/
 dist/
 .planning/
 target/
+package-lock.json
