@@ -12,6 +12,7 @@ import { AgentModule } from './agent/agent.module.js';
 import { DatasourceModule } from './datasource/datasource.module.js';
 import { ResumeModule } from './resume/resume.module.js';
 import { MatchModule } from './match/match.module.js';
+import { ProfileModule } from './profile/profile.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -29,6 +30,7 @@ import { AppService } from './app.service.js';
     NegotiationModule,
     AgreementModule,
     MatchModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
