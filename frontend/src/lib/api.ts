@@ -1,6 +1,7 @@
 import {
   User, DataSourceConnection, ResumeProfile, JobPosting,
   MatchResult, ProfileReport, NegotiationSession, NegotiationRound,
+  EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
 } from './types';
 import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
@@ -16,6 +17,12 @@ import { DUMMY_ESCROW, DUMMY_ESCROW_PAYMENTS } from './dummy/escrow';
 export const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
+let apiErrorHandler: ((status: number) => void) | null = null;
+
+export function setApiErrorHandler(handler: (status: number) => void) {
+  apiErrorHandler = handler;
+}
+
 function authHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
   return token
@@ -28,7 +35,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
     headers: { ...authHeaders(), ...options?.headers },
   });
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  if (!res.ok) {
+    apiErrorHandler?.(res.status);
+    throw new Error(`API Error: ${res.status}`);
+  }
   return res.json();
 }
 
@@ -216,4 +226,13 @@ export async function depositToEscrow(amount: string): Promise<{
     method: 'POST',
     body: JSON.stringify({ amount }),
   });
+}
+
+// === Encrypted Negotiation History ===
+export async function getEncryptedHistory(sessionId: string): Promise<EncryptedNegotiationRound[]> {
+  return apiFetch(`/negotiation/sessions/${sessionId}/rounds`);
+}
+
+export function getServerPublicKey(): string {
+  return process.env.NEXT_PUBLIC_SERVER_PUBLIC_KEY || '';
 }

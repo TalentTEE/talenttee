@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 import { chatCreateJob, createJob } from '@/lib/api';
 import { ChatMessage, JobPosting, JobChatResponse } from '@/lib/types';
 
@@ -16,7 +18,13 @@ interface FormData {
 }
 
 export default function CreateJobPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('chat');
+
+  useEffect(() => {
+    if (user && user.role !== 'EMPLOYER') router.replace('/dashboard/seeker');
+  }, [user, router]);
 
   return (
     <div className="max-w-4xl space-y-6">

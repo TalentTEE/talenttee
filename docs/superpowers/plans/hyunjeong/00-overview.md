@@ -73,21 +73,21 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 | 3 | [phase-3-resume-jobs-escrow.md](./phase-3-resume-jobs-escrow.md) | 완료 | ~1.5h |
 | 4 | [phase-4-negotiation-agreement.md](./phase-4-negotiation-agreement.md) | 완료 | ~1.5h |
 | 5 | [phase-5-backend-api-connection.md](./phase-5-backend-api-connection.md) | 완료 | ~1h |
-| 6 | [phase-6-backend-api-remaining.md](./phase-6-backend-api-remaining.md) | ⬜ 미구현 | ~2h |
-| 7 | [phase-7-ecdh-escrow-wallet.md](./phase-7-ecdh-escrow-wallet.md) | ⬜ 미구현 | ~3h |
-| 8 | [phase-8-ux-polishing-demo.md](./phase-8-ux-polishing-demo.md) | ⬜ 미구현 | ~3h |
+| 6 | [phase-6-backend-api-remaining.md](./phase-6-backend-api-remaining.md) | 완료 | ~2h |
+| 7 | [phase-7-ecdh-escrow-wallet.md](./phase-7-ecdh-escrow-wallet.md) | 완료 | ~3h |
+| 8 | [phase-8-ux-polishing-demo.md](./phase-8-ux-polishing-demo.md) | 완료 | ~3h |
 
 ## 전체 수락 기준
 
-- [ ] `npm run dev` → Next.js 개발 서버 정상 기동
-- [ ] Alice/Bob 로그인 → 역할별 대시보드 정상 표시
-- [ ] 더미 데이터 기반 전체 페이지 렌더링 정상
-- [ ] `NEXT_PUBLIC_USE_DUMMY=false` 시 Auth + Escrow 실제 API 호출 동작
-- [ ] `NEXT_PUBLIC_USE_DUMMY=false` 시 전체 API (이력서/데이터소스/공고/매칭/협상/합의) 실제 호출 동작
-- [ ] 모든 페이지 네비게이션 정상 (사이드바 + 헤더)
-- [ ] 협상 모니터링 → 합의 확인 → 온체인 기록 플로우 완성
-- [ ] ECDH 복호화로 암호화된 협상 히스토리 평문 표시
-- [ ] NEAR 지갑 팝업 통한 에스크로 deposit 트랜잭션 서명
-- [ ] 에러 핸들링 (toast 알림) + 로딩 상태 (Skeleton/Spinner) 전체 적용
-- [ ] 반응형 레이아웃 (모바일/태블릿/데스크톱) 정상 표시
-- [ ] 전체 E2E 데모 시나리오 1회 이상 리허설 완료
+- [x] `npm run dev` → Next.js 개발 서버 정상 기동
+- [x] Alice/Bob 로그인 → 역할별 대시보드 정상 표시
+- [x] 더미 데이터 기반 전체 페이지 렌더링 정상
+- [x] `NEXT_PUBLIC_USE_DUMMY=false` 시 Auth + Escrow 실제 API 호출 동작
+- [x] `NEXT_PUBLIC_USE_DUMMY=false` 시 전체 API (이력서/데이터소스/공고/매칭/협상/합의) 실제 호출 동작
+- [x] 모든 페이지 네비게이션 정상 (사이드바 + 헤더)
+- [x] 협상 모니터링 → 합의 확인 → 온체인 기록 플로우 완성
+- [x] ECDH 복호화로 암호화된 협상 히스토리 평문 표시
+- [x] NEAR 지갑 팝업 통한 에스크로 deposit 트랜잭션 서명
+- [x] 에러 핸들링 (toast 알림) + 로딩 상태 (Skeleton/Spinner) 전체 적용
+- [x] 반응형 레이아웃 (모바일/태블릿/데스크톱) 정상 표시
+- [x] 전체 E2E 데모 시나리오 1회 이상 리허설 완료

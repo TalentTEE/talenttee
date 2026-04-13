@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
 import { DataSourceConnection } from '@/lib/types';
 
@@ -41,9 +43,15 @@ const PROVIDERS: {
 ];
 
 export default function DatasourcePage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [connections, setConnections] = useState<DataSourceConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
+  }, [user, router]);
 
   useEffect(() => {
     getDatasourceStatus()

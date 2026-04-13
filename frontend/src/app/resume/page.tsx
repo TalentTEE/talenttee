@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getResume, generateResume, getResumeStatus, USE_DUMMY } from '@/lib/api';
 import { ResumeProfile } from '@/lib/types';
@@ -25,9 +26,14 @@ function formatCurrency(value: number | null): string {
 
 export default function ResumePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [resume, setResume] = useState<ResumeProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
+  }, [user, router]);
   const [simulatedStatus, setSimulatedStatus] =
     useState<ResumeProfile['status'] | null>(null);
 

@@ -170,6 +170,16 @@ export interface EscrowPayment {
   txHash: string;
 }
 
+export interface EncryptedNegotiationRound {
+  id: string;
+  sessionId: string;
+  round: number;
+  actor: 'SEEKER_AGENT' | 'EMPLOYER_AGENT';
+  encryptedData: string;
+  decision: 'COUNTER' | 'ACCEPT' | 'REJECT';
+  timestamp: string;
+}
+
 export interface ChatMessage {
   role: 'user' | 'agent';
   content: string;
