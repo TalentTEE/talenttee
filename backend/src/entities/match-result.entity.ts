@@ -33,6 +33,15 @@ export class MatchResult {
   @Column({ name: 'final_rank', type: 'integer', nullable: true })
   finalRank: number;
 
+  @Column({ name: 'seeker_agreed', type: 'boolean', default: false })
+  seekerAgreed: boolean;
+
+  @Column({ name: 'employer_agreed', type: 'boolean', default: false })
+  employerAgreed: boolean;
+
+  @Column({ name: 'negotiation_session_id', type: 'uuid', nullable: true })
+  negotiationSessionId: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }
