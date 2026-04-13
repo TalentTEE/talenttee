@@ -45,8 +45,7 @@ describe('DatasourcePage', () => {
     render(<DatasourcePage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Connected')).toBeInTheDocument();
-      expect(screen.getByText('Mock Connected')).toBeInTheDocument();
+      expect(screen.getAllByText('Connected')).toHaveLength(2);
       expect(screen.getAllByText('Disconnected')).toHaveLength(2);
     });
   });
@@ -86,8 +85,14 @@ describe('DatasourcePage', () => {
     const connectButtons = screen.getAllByText('Connect');
     await user.click(connectButtons[0]);
 
+    // Shows connecting state (text appears in both status badge and button)
+    await waitFor(() => {
+      expect(screen.getAllByText(/Connecting/).length).toBeGreaterThan(0);
+    });
+
+    // The connect flow has deliberate animation timeouts (800ms + 1500ms) before calling the mock
     await waitFor(() => {
       expect(mockConnectDatasourceMock).toHaveBeenCalled();
-    });
+    }, { timeout: 5000 });
   });
 });

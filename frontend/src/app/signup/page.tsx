@@ -33,7 +33,7 @@ export default function SignupPage() {
       setError(null);
       try {
         await signup(signedAccountId, selectedRole);
-        router.push(selectedRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+        router.push(selectedRole === 'SEEKER' ? '/datasource' : '/dashboard/employer');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Signup failed');
       } finally {
