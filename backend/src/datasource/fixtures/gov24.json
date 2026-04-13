@@ -1,0 +1,24 @@
+{
+  "certificates": [
+    {
+      "name": "정보처리기사",
+      "issuer": "한국산업인력공단",
+      "issued_date": "2022-06-15",
+      "status": "유효"
+    },
+    {
+      "name": "SQLD (SQL Developer)",
+      "issuer": "한국데이터산업진흥원",
+      "issued_date": "2021-09-20",
+      "status": "유효"
+    }
+  ],
+  "education": [
+    {
+      "institution": "서울대학교",
+      "degree": "컴퓨터공학 학사",
+      "graduation_year": 2021,
+      "status": "졸업"
+    }
+  ]
+}
