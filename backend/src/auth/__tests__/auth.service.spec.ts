@@ -74,12 +74,13 @@ describe('AuthService', () => {
 
   describe('generateJwt', () => {
     it('should sign JWT with correct payload', () => {
-      const user = { nearAccountId: 'alice.testnet', role: UserRole.SEEKER, publicKey: 'ed25519:key' } as User;
+      const user = { id: 'uuid-123', nearAccountId: 'alice.testnet', role: UserRole.SEEKER, publicKey: 'ed25519:key' } as User;
       const token = service.generateJwt(user);
 
       expect(token).toBe('mock-jwt-token');
       expect(mockJwtService.sign).toHaveBeenCalledWith({
-        sub: 'alice.testnet',
+        sub: 'uuid-123',
+        nearAccountId: 'alice.testnet',
         role: UserRole.SEEKER,
         publicKey: 'ed25519:key',
       });
