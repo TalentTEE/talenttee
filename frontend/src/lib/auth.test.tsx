@@ -41,6 +41,13 @@ function AuthConsumer() {
   );
 }
 
+// Build a fake JWT with an exp far in the future (for session-restore tests)
+function fakeJwt(exp = Math.floor(Date.now() / 1000) + 86400) {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({ sub: 'user-1', exp }));
+  return `${header}.${payload}.sig`;
+}
+
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'true');
@@ -54,15 +61,30 @@ describe('AuthProvider', () => {
     });
   });
 
-  it('restores user from localStorage on mount', async () => {
+  it('restores user from localStorage on mount when JWT is valid', async () => {
     const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
     localStorage.setItem('user', JSON.stringify(storedUser));
+    localStorage.setItem('jwt', fakeJwt());
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
 
     await waitFor(() => {
       const userText = screen.getByTestId('user').textContent!;
       expect(JSON.parse(userText).id).toBe('user-1');
+    });
+  });
+
+  it('clears stale session if JWT is expired on mount', async () => {
+    const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
+    localStorage.setItem('user', JSON.stringify(storedUser));
+    localStorage.setItem('jwt', fakeJwt(Math.floor(Date.now() / 1000) - 3600)); // expired 1h ago
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).toBe('null');
+      expect(localStorage.getItem('user')).toBeNull();
+      expect(localStorage.getItem('jwt')).toBeNull();
     });
   });
 
@@ -116,7 +138,7 @@ describe('AuthProvider', () => {
   it('logout() clears localStorage and resets user', async () => {
     const storedUser = { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:test', createdAt: '2026-01-01' };
     localStorage.setItem('user', JSON.stringify(storedUser));
-    localStorage.setItem('jwt', 'some-token');
+    localStorage.setItem('jwt', fakeJwt());
 
     render(<AuthProvider><AuthConsumer /></AuthProvider>);
 
