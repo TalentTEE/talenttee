@@ -9,6 +9,7 @@ import { JobModule } from './job/job.module.js';
 import { NegotiationModule } from './negotiation/negotiation.module.js';
 import { AgreementModule } from './agreement/agreement.module.js';
 import { AgentModule } from './agent/agent.module.js';
+import { DatasourceModule } from './datasource/datasource.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -17,6 +18,7 @@ import { AppService } from './app.service.js';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot(databaseConfig()),
     AgentModule,
+    DatasourceModule,
     AuthModule,
     EscrowModule,
     CryptoModule,
