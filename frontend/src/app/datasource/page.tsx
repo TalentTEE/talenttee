@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth, generateResume, USE_DUMMY, getGithubRepos, toggleGithubRepo, startGithubSync, getGithubSyncStatus } from '@/lib/api';
@@ -614,6 +614,7 @@ export default function DatasourcePage() {
   const [githubRepos, setGithubRepos] = useState<GithubRepository[]>([]);
   const [syncStatus, setSyncStatus] = useState<GithubSyncStatus | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
@@ -637,6 +638,14 @@ export default function DatasourcePage() {
       getGithubRepos().then(setGithubRepos).catch(console.error);
     }
   }, [connections]);
+
+  useEffect(() => {
+    return () => {
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+      }
+    };
+  }, []);
 
   /* Auto-load detail data for connected providers (for AbilitySummary) */
   useEffect(() => {
@@ -726,11 +735,12 @@ export default function DatasourcePage() {
     setSyncing(true);
     try {
       await startGithubSync(forceResume);
-      const interval = setInterval(async () => {
+      syncIntervalRef.current = setInterval(async () => {
         const status = await getGithubSyncStatus();
         setSyncStatus(status);
         if (status.status === 'COMPLETED' || status.status === 'FAILED') {
-          clearInterval(interval);
+          clearInterval(syncIntervalRef.current!);
+          syncIntervalRef.current = null;
           setSyncing(false);
           const repos = await getGithubRepos();
           setGithubRepos(repos);

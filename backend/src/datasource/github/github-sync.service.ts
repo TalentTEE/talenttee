@@ -17,6 +17,7 @@ import { ResumeService } from '../../resume/resume.service.js';
 @Injectable()
 export class GithubSyncService {
   private readonly logger = new Logger(GithubSyncService.name);
+  private syncInProgress = new Map<string, { startedAt: Date; totalRepos: number; completedRepos: number }>();
 
   constructor(
     @InjectRepository(GithubRepository)
@@ -69,9 +70,19 @@ export class GithubSyncService {
   }
 
   async getSyncStatus(userId: string): Promise<SyncStatusResponse> {
+    const progress = this.syncInProgress.get(userId);
+    if (progress) {
+      return {
+        status: GithubSyncStatus.IN_PROGRESS,
+        totalRepos: progress.totalRepos,
+        completedRepos: progress.completedRepos,
+        failedRepos: 0,
+        startedAt: progress.startedAt.toISOString(),
+      };
+    }
+
     const repos = await this.githubRepositoryRepo.find({ where: { userId, isActive: true } });
     const syncedRepos = repos.filter((r) => r.syncedAt !== null);
-
     return {
       status: GithubSyncStatus.COMPLETED,
       totalRepos: repos.length,
@@ -370,16 +381,25 @@ export class GithubSyncService {
       globalSince = sinceDate.toISOString();
     }
 
-    for (const repo of activeRepos) {
-      try {
-        await this.syncRepo(repo, token, globalSince);
-      } catch (err) {
-        this.logger.error(`Failed to sync repo ${repo.fullName}: ${err}`);
+    this.syncInProgress.set(userId, { startedAt: new Date(), totalRepos: activeRepos.length, completedRepos: 0 });
+    try {
+      for (const repo of activeRepos) {
+        try {
+          await this.syncRepo(repo, token, globalSince);
+          const current = this.syncInProgress.get(userId);
+          if (current) {
+            this.syncInProgress.set(userId, { ...current, completedRepos: current.completedRepos + 1 });
+          }
+        } catch (err) {
+          this.logger.error(`Failed to sync repo ${repo.fullName}: ${err}`);
+        }
       }
-    }
 
-    // 4. Check thresholds
-    await this.checkThresholdsAndUpdate(userId, forceResume);
+      // 4. Check thresholds
+      await this.checkThresholdsAndUpdate(userId, forceResume);
+    } finally {
+      this.syncInProgress.delete(userId);
+    }
   }
 
   private async syncRepo(repo: GithubRepository, token: string, globalSince: string | null): Promise<void> {

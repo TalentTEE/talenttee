@@ -81,7 +81,10 @@ export class DatasourceService {
   }
 
   async getStatus(userId: string): Promise<DataSourceConnection[]> {
-    return this.dsRepo.find({ where: { userId } });
+    return this.dsRepo.find({
+      where: { userId },
+      select: ['id', 'userId', 'provider', 'status', 'lastSyncedAt'],
+    });
   }
 
   async getConnectionByProvider(userId: string, provider: DataSourceProvider): Promise<DataSourceConnection | null> {
