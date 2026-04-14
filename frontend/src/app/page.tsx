@@ -11,18 +11,21 @@ const features = [
     title: 'AI-Powered Matching',
     description:
       'ANN + rerank algorithms find the perfect match between talent and opportunity with precision.',
+    neon: { text: 'text-[#00F0FF]', bg: 'bg-[#00F0FF]/10', hoverBg: 'group-hover:bg-[#00F0FF]/20', border: 'hover:border-[#00F0FF]/30', hoverShadow: '0 0 15px rgba(0,240,255,0.2), inset 0 0 20px rgba(0,240,255,0.04)' },
   },
   {
     icon: 'forum',
     title: 'Autonomous Negotiation',
     description:
       'Your personal AI agent negotiates salary, benefits, and contract terms on your behalf.',
+    neon: { text: 'text-[#FF2DF1]', bg: 'bg-[#FF2DF1]/10', hoverBg: 'group-hover:bg-[#FF2DF1]/20', border: 'hover:border-[#FF2DF1]/30', hoverShadow: '0 0 15px rgba(255,45,241,0.2), inset 0 0 20px rgba(255,45,241,0.04)' },
   },
   {
     icon: 'account_balance',
     title: 'Blockchain Escrow',
     description:
       'NEAR Protocol-based escrow ensures safe, transparent, and verifiable transactions.',
+    neon: { text: 'text-[#39FF14]', bg: 'bg-[#39FF14]/10', hoverBg: 'group-hover:bg-[#39FF14]/20', border: 'hover:border-[#39FF14]/30', hoverShadow: '0 0 15px rgba(57,255,20,0.2), inset 0 0 20px rgba(57,255,20,0.04)' },
   },
 ];
 
@@ -32,18 +35,21 @@ const steps = [
     icon: 'cloud_upload',
     title: 'Connect Your Data',
     description: 'Upload your experience and preferences. AI generates an optimized resume automatically.',
+    neon: { text: 'text-[#00E5FF]', bg: 'bg-[#00E5FF]/10', border: 'border-[#00E5FF]/20', numBg: 'bg-[#00E5FF]', numText: 'text-[#001519]' },
   },
   {
     num: '02',
     icon: 'psychology',
     title: 'AI Finds Matches',
     description: 'Our AI agents find the best matches and begin autonomous negotiation on your behalf.',
+    neon: { text: 'text-[#BF5AF2]', bg: 'bg-[#BF5AF2]/10', border: 'border-[#BF5AF2]/20', numBg: 'bg-[#BF5AF2]', numText: 'text-white' },
   },
   {
     num: '03',
     icon: 'handshake',
     title: 'Review & Accept',
     description: 'Review encrypted negotiation results and finalize agreements on the blockchain.',
+    neon: { text: 'text-[#39FF14]', bg: 'bg-[#39FF14]/10', border: 'border-[#39FF14]/20', numBg: 'bg-[#39FF14]', numText: 'text-[#0A0A12]' },
   },
 ];
 
@@ -61,9 +67,9 @@ export default function LandingPage() {
   const dashboardPath = user?.role === 'EMPLOYER' ? '/dashboard/employer' : '/dashboard/seeker';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0e0e0e] selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen flex flex-col bg-background selection:bg-primary selection:text-primary-foreground">
       {/* Nav Bar */}
-      <header className="fixed top-0 w-full z-50 bg-[#0e0e0e]/80 backdrop-blur-xl border-b border-border/5">
+      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/5">
         <nav className="flex justify-between items-center px-6 md:px-8 py-5 max-w-[1200px] mx-auto">
           <div className="text-2xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
             Talent-Tee
@@ -72,13 +78,13 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <Link
                 href={dashboardPath}
-                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
+                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
               >
                 Dashboard
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-base text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
               >
                 <span className="material-symbols-outlined text-base">logout</span>
                 <span className="hidden sm:inline">Logout</span>
@@ -88,13 +94,13 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <Link
                 href="/login"
-                className="text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
+                className="text-base text-muted-foreground hover:text-foreground font-medium transition-colors"
               >
                 Log In
               </Link>
               <Link
                 href="/signup"
-                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
+                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo"
               >
                 Sign Up
               </Link>
@@ -109,7 +115,7 @@ export default function LandingPage() {
           <div className="max-w-[1200px] mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-primary font-semibold tracking-wide uppercase">
+              <span className="text-sm text-primary font-semibold tracking-wide uppercase">
                 Powered by NEAR Protocol
               </span>
             </div>
@@ -125,7 +131,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/signup"
-                className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo shadow-[0_0_40px_rgba(255,168,79,0.2)] hover:shadow-[0_0_60px_rgba(255,168,79,0.3)] flex items-center gap-2"
+                className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo neon-glow-cyan hover:shadow-[0_0_30px_rgba(0,240,255,0.5),0_0_80px_rgba(0,240,255,0.2)] flex items-center gap-2"
               >
                 Get Started
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
@@ -153,17 +159,18 @@ export default function LandingPage() {
               {features.map((f) => (
                 <div
                   key={f.icon}
-                  className="group relative bg-card rounded-2xl p-8 border border-border/10 hover:border-primary/20 transition-all duration-500 ease-out-expo"
+                  className={`group relative bg-card rounded-2xl p-8 border border-border/10 ${f.neon.border} transition-all duration-500 ease-out-expo`}
+                  style={{ ['--neon-hover' as string]: f.neon.hoverShadow }}
                 >
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors duration-500">
-                    <span className="material-symbols-outlined text-primary text-2xl">
+                  <div className={`w-14 h-14 rounded-xl ${f.neon.bg} flex items-center justify-center mb-6 ${f.neon.hoverBg} transition-colors duration-500`}>
+                    <span className={`material-symbols-outlined ${f.neon.text} text-2xl`}>
                       {f.icon}
                     </span>
                   </div>
                   <h3 className="font-[var(--font-manrope)] text-xl font-bold text-foreground mb-3">
                     {f.title}
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <p className="text-muted-foreground text-base leading-relaxed">
                     {f.description}
                   </p>
                 </div>
@@ -173,7 +180,7 @@ export default function LandingPage() {
         </section>
 
         {/* How it Works */}
-        <section className="py-24 px-6 bg-[#131313]">
+        <section className="py-24 px-6 bg-card">
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-16">
               <h2 className="font-[var(--font-manrope)] text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-4">
@@ -190,18 +197,18 @@ export default function LandingPage() {
                   {i < steps.length - 1 && (
                     <div className="hidden md:block absolute top-10 left-[calc(50%+40px)] w-[calc(100%-80px)] h-px bg-border/20" />
                   )}
-                  <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 relative">
-                    <span className="material-symbols-outlined text-primary text-3xl">
+                  <div className={`w-20 h-20 rounded-2xl ${s.neon.bg} border ${s.neon.border} flex items-center justify-center mb-6 relative`}>
+                    <span className={`material-symbols-outlined ${s.neon.text} text-3xl`}>
                       {s.icon}
                     </span>
-                    <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                    <span className={`absolute -top-2 -right-2 w-7 h-7 rounded-full ${s.neon.numBg} ${s.neon.numText} text-sm font-bold flex items-center justify-center`}>
                       {s.num}
                     </span>
                   </div>
                   <h3 className="font-[var(--font-manrope)] text-lg font-bold text-foreground mb-2">
                     {s.title}
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
+                  <p className="text-muted-foreground text-base leading-relaxed max-w-xs">
                     {s.description}
                   </p>
                 </div>
@@ -221,7 +228,7 @@ export default function LandingPage() {
             </p>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo shadow-[0_0_40px_rgba(255,168,79,0.2)]"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo neon-glow-cyan"
             >
               Get Started Now
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
@@ -231,21 +238,21 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-12 bg-[#131313]">
+      <footer className="w-full py-12 bg-card">
         <div className="flex flex-col md:flex-row justify-between items-center px-6 md:px-12 border-t border-border/10 pt-12 max-w-[1200px] mx-auto gap-8">
           <div className="text-lg font-bold text-secondary-foreground">Talent-Tee</div>
           <div className="flex flex-wrap justify-center gap-8">
-            <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-sm font-medium tracking-wide cursor-pointer">
+            <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-base font-medium tracking-wide cursor-pointer">
               Privacy Policy
             </span>
-            <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-sm font-medium tracking-wide cursor-pointer">
+            <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-base font-medium tracking-wide cursor-pointer">
               Terms of Service
             </span>
-            <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-sm font-medium tracking-wide cursor-pointer">
+            <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-base font-medium tracking-wide cursor-pointer">
               Security Architecture
             </span>
           </div>
-          <div className="text-muted-foreground text-xs font-medium tracking-wide opacity-60">
+          <div className="text-muted-foreground text-sm font-medium tracking-wide opacity-60">
             &copy; 2024 Talent-Tee. Securely anchored on the Blockchain.
           </div>
         </div>

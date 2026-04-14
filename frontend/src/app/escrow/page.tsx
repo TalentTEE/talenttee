@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { getEscrowBalance, getEscrowPayments, depositToEscrow } from '@/lib/api';
 import { depositViaWallet, addAgentKey, getEscrowBalanceOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
+import { AINudge } from '@/components/ui/AINudge';
 
 export default function EscrowPage() {
   const { user } = useAuth();
@@ -119,7 +120,7 @@ export default function EscrowPage() {
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
             Escrow Account
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-base text-muted-foreground mt-1">
             Manage your escrow funds on NEAR Protocol
           </p>
         </div>
@@ -139,10 +140,18 @@ export default function EscrowPage() {
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
           Escrow Account
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-base text-muted-foreground mt-1">
           Manage your escrow funds on NEAR Protocol
         </p>
       </div>
+
+      {/* AI Nudge */}
+      {escrow && escrow.balance === 0 && (
+        <AINudge id="escrow-zero" message="Deposit NEAR to start matching with candidates. Agent key setup is required for autonomous negotiation." ctaLabel="Learn More" ctaHref="/escrow" />
+      )}
+      {escrow && !escrow.agentKeySet && escrow.balance > 0 && (
+        <AINudge id="escrow-nokey" message="Add an agent key to let AI negotiate on your behalf without manual approval each round." />
+      )}
 
       {/* Balance + Deposit Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -150,7 +159,7 @@ export default function EscrowPage() {
         <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="material-symbols-outlined text-lg">account_balance</span>
-            <span className="text-sm font-medium">Available Balance</span>
+            <span className="text-base font-medium">Available Balance</span>
           </div>
           <div className="flex items-baseline gap-3">
             <span className="font-[var(--font-manrope)] text-4xl font-extrabold text-foreground tracking-tight">
@@ -163,7 +172,7 @@ export default function EscrowPage() {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-primary"
+                className="text-[#39FF14]"
               >
                 <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2" />
                 <text
@@ -185,7 +194,7 @@ export default function EscrowPage() {
             <span
               className={`w-2 h-2 rounded-full ${escrow?.agentKeySet ? 'bg-green-500' : 'bg-red-500'}`}
             />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               Agent Key: {escrow?.agentKeySet ? 'Configured' : 'Not Set'}
             </span>
           </div>
@@ -195,7 +204,7 @@ export default function EscrowPage() {
         <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="material-symbols-outlined text-lg">add_circle</span>
-            <span className="text-sm font-medium">Deposit Funds</span>
+            <span className="text-base font-medium">Deposit Funds</span>
           </div>
           <div className="space-y-3">
             <div className="relative">
@@ -206,16 +215,16 @@ export default function EscrowPage() {
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                className="w-full bg-muted rounded-xl px-4 py-3 pr-16 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                className="w-full bg-muted rounded-xl px-4 py-3 pr-16 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#39FF14]/30 transition-all"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
                 NEAR
               </span>
             </div>
             <button
               onClick={handleDeposit}
               disabled={!depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
-              className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-[#39FF14] text-[#0a0a0a] text-base font-semibold hover:bg-[#39FF14]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isDepositing ? (
                 <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -225,7 +234,7 @@ export default function EscrowPage() {
               {isDepositing ? 'Processing...' : 'Deposit'}
             </button>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Funds are held in a NEAR smart contract and released upon agreement completion.
           </p>
         </div>
@@ -236,17 +245,17 @@ export default function EscrowPage() {
         <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
           txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
             ? 'bg-red-500/10 border-red-500/20'
-            : 'bg-primary/10 border-primary/20'
+            : 'bg-[#39FF14]/10 border-[#39FF14]/20'
         }`}>
           <span className={`material-symbols-outlined text-lg shrink-0 ${
             txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
-              ? 'text-red-400' : 'text-primary'
+              ? 'text-red-400' : 'text-[#39FF14]'
           }`}>
             {txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR') ? 'error' : 'check_circle'}
           </span>
-          <p className={`text-sm ${
+          <p className={`text-base ${
             txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
-              ? 'text-red-400' : 'text-primary'
+              ? 'text-red-400' : 'text-[#39FF14]'
           }`}>{txStatus}</p>
         </div>
       )}
@@ -255,9 +264,9 @@ export default function EscrowPage() {
       <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="material-symbols-outlined text-lg">vpn_key</span>
-          <span className="text-sm font-medium">Agent Key Setup</span>
+          <span className="text-base font-medium">Agent Key Setup</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Add your AI agent&apos;s public key to authorize automated escrow operations.
         </p>
         <div className="space-y-3">
@@ -266,12 +275,12 @@ export default function EscrowPage() {
             value={agentPubKey}
             onChange={(e) => setAgentPubKey(e.target.value)}
             placeholder="ed25519:..."
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono"
+            className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#39FF14]/30 transition-all font-mono"
           />
           <button
             onClick={handleAddAgentKey}
             disabled={!agentPubKey.trim() || isSettingKey}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl bg-[#39FF14] text-[#0a0a0a] text-base font-semibold hover:bg-[#39FF14]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSettingKey ? (
               <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -290,7 +299,7 @@ export default function EscrowPage() {
           <h2 className="font-[var(--font-manrope)] text-base font-bold text-foreground">
             Payment History
           </h2>
-          <span className="ml-auto px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+          <span className="ml-auto px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground text-sm font-medium">
             {payments.length} transactions
           </span>
         </div>
@@ -300,26 +309,26 @@ export default function EscrowPage() {
             <span className="material-symbols-outlined text-4xl text-muted-foreground/50 mb-2">
               receipt_long
             </span>
-            <p className="text-sm text-muted-foreground">No payment history yet</p>
+            <p className="text-base text-muted-foreground">No payment history yet</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/10">
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="text-right px-6 py-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     TX Hash
                   </th>
                 </tr>
@@ -372,7 +381,7 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
     },
     RELEASE: {
       label: 'Release',
-      color: 'bg-primary/10 text-primary border-primary/20',
+      color: 'bg-[#39FF14]/10 text-[#39FF14] border-[#39FF14]/20',
       icon: 'arrow_upward',
     },
     REFUND: {
@@ -388,36 +397,36 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
     <tr className="border-b border-border/5 hover:bg-accent/30 transition-colors">
       <td className="px-6 py-4">
         <div>
-          <p className="text-sm text-foreground">{formatDate(payment.timestamp)}</p>
-          <p className="text-xs text-muted-foreground">{formatTime(payment.timestamp)}</p>
+          <p className="text-base text-foreground">{formatDate(payment.timestamp)}</p>
+          <p className="text-sm text-muted-foreground">{formatTime(payment.timestamp)}</p>
         </div>
       </td>
       <td className="px-6 py-4">
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${config.color}`}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-sm font-medium ${config.color}`}
         >
-          <span className="material-symbols-outlined text-sm">{config.icon}</span>
+          <span className="material-symbols-outlined text-base">{config.icon}</span>
           {config.label}
         </span>
       </td>
       <td className="px-6 py-4 text-right">
-        <span className="text-sm font-semibold text-foreground">
+        <span className="text-base font-semibold text-foreground">
           {payment.amount.toFixed(2)} NEAR
         </span>
       </td>
       <td className="px-6 py-4">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400 text-xs font-medium">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400 text-sm font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
           Completed
         </span>
       </td>
       <td className="px-6 py-4">
         {payment.txHash ? (
-          <span className="text-xs text-muted-foreground font-mono">
+          <span className="text-sm text-muted-foreground font-mono">
             {payment.txHash}
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground/50">{'\u2014'}</span>
+          <span className="text-sm text-muted-foreground/50">{'\u2014'}</span>
         )}
       </td>
     </tr>

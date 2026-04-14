@@ -123,7 +123,7 @@ export default function EncryptedHistoryPage() {
             Encrypted History
           </h1>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Session #{sessionId} — Decrypt negotiation rounds with your private key
         </p>
       </div>
@@ -135,8 +135,8 @@ export default function EncryptedHistoryPage() {
             <span className="material-symbols-outlined text-lg text-yellow-400">encrypted</span>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">End-to-End Encrypted</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-base font-semibold text-foreground">End-to-End Encrypted</p>
+            <p className="text-sm text-muted-foreground mt-1">
               Negotiation data is encrypted with ECDH (X25519) + XChaCha20-Poly1305.
               Only participants with the correct private key can decrypt the history.
               Decryption happens entirely in your browser.
@@ -149,13 +149,13 @@ export default function EncryptedHistoryPage() {
       {!fetched && (
         <div className="bg-card rounded-2xl border border-border/10 p-6 text-center space-y-4">
           <span className="material-symbols-outlined text-4xl text-muted-foreground">history</span>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Fetch the encrypted negotiation rounds from the server.
           </p>
           <button
             onClick={handleFetchHistory}
             disabled={isLoading}
-            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 flex items-center gap-2 mx-auto"
+            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 flex items-center gap-2 mx-auto"
           >
             {isLoading ? (
               <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -172,12 +172,12 @@ export default function EncryptedHistoryPage() {
         <div className="bg-card rounded-2xl border border-border/10 p-6 space-y-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="material-symbols-outlined text-lg">key</span>
-            <span className="text-sm font-medium">
+            <span className="text-base font-medium">
               {encryptedRounds.length} encrypted round{encryptedRounds.length !== 1 ? 's' : ''} loaded
             </span>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-2">
+            <label className="text-sm font-medium text-muted-foreground block mb-2">
               Your Ed25519 Secret Key (base64)
             </label>
             <input
@@ -185,13 +185,13 @@ export default function EncryptedHistoryPage() {
               value={secretKey}
               onChange={(e) => setSecretKey(e.target.value)}
               placeholder="Enter your base64-encoded secret key..."
-              className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono"
+              className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono"
             />
           </div>
           <button
             onClick={handleDecrypt}
             disabled={isDecrypting || !secretKey.trim()}
-            className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isDecrypting ? (
               <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -207,7 +207,7 @@ export default function EncryptedHistoryPage() {
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3">
           <span className="material-symbols-outlined text-lg text-red-400 shrink-0">error</span>
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-base text-red-400">{error}</p>
         </div>
       )}
 
@@ -216,7 +216,7 @@ export default function EncryptedHistoryPage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-2">
             <span className="material-symbols-outlined text-lg text-primary">lock_open</span>
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-base font-semibold text-foreground">
               {decryptedRounds.length} round{decryptedRounds.length !== 1 ? 's' : ''} decrypted
             </span>
           </div>
@@ -225,14 +225,14 @@ export default function EncryptedHistoryPage() {
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-sm text-primary">corporate_fare</span>
+                <span className="material-symbols-outlined text-base text-primary">corporate_fare</span>
               </div>
-              <span className="text-xs font-semibold text-muted-foreground">Employer Agent</span>
+              <span className="text-sm font-semibold text-muted-foreground">Employer Agent</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-muted-foreground">Seeker Agent</span>
+              <span className="text-sm font-semibold text-muted-foreground">Seeker Agent</span>
               <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-sm text-blue-400">person</span>
+                <span className="material-symbols-outlined text-base text-blue-400">person</span>
               </div>
             </div>
           </div>
@@ -247,7 +247,7 @@ export default function EncryptedHistoryPage() {
                 {/* Round Divider */}
                 <div className="flex items-center gap-3 py-1">
                   <div className="flex-1 h-px bg-border/10" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                  <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">
                     Round {round.round}
                   </span>
                   <div className="flex-1 h-px bg-border/10" />
@@ -262,7 +262,7 @@ export default function EncryptedHistoryPage() {
                         ? 'bg-blue-500/10 border border-blue-500/10 rounded-br-md'
                         : 'bg-card border border-border/10 rounded-bl-md'
                     }`}>
-                      <p className="text-sm text-foreground/90 leading-relaxed">
+                      <p className="text-base text-foreground/90 leading-relaxed">
                         &ldquo;{round.reasoning}&rdquo;
                       </p>
                     </div>
@@ -272,27 +272,27 @@ export default function EncryptedHistoryPage() {
                       isSeeker ? 'bg-blue-500/5' : 'bg-accent/30'
                     }`}>
                       <div className="flex flex-wrap gap-2 mb-2">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-xs font-bold text-foreground">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-sm font-bold text-foreground">
                           {formatSalary(round.proposal.salary)}
                           {salaryDelta !== null && salaryDelta !== 0 && (
-                            <span className={`text-[10px] font-semibold ${salaryDelta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <span className={`text-sm font-semibold ${salaryDelta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                               {salaryDelta > 0 ? '+' : ''}{formatSalary(salaryDelta)}
                             </span>
                           )}
                         </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-lg bg-background/50 text-xs text-foreground/80">
+                        <span className="inline-flex items-center px-2 py-1 rounded-lg bg-background/50 text-sm text-foreground/80">
                           {round.proposal.remotePolicy}
                         </span>
-                        <span className="inline-flex items-center px-2 py-1 rounded-lg bg-background/50 text-xs text-foreground/80">
+                        <span className="inline-flex items-center px-2 py-1 rounded-lg bg-background/50 text-sm text-foreground/80">
                           {round.proposal.workingHours}
                         </span>
                         {round.proposal.signingBonus && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-xs text-foreground/80">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-sm text-foreground/80">
                             Bonus {formatSalary(round.proposal.signingBonus)}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>{round.proposal.title}</span>
                         <span>·</span>
                         <span>Start {round.proposal.startDate}</span>
@@ -301,9 +301,9 @@ export default function EncryptedHistoryPage() {
 
                     {/* Decision Badge */}
                     <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'}`}>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${decisionStyle(round.decision)}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-bold ${decisionStyle(round.decision)}`}>
                         <span
-                          className="material-symbols-outlined text-[10px]"
+                          className="material-symbols-outlined text-sm"
                           style={round.decision === 'ACCEPT' ? { fontVariationSettings: "'FILL' 1" } : undefined}
                         >
                           {round.decision === 'ACCEPT' ? 'task_alt' : round.decision === 'REJECT' ? 'cancel' : 'swap_horiz'}

@@ -21,7 +21,7 @@ export function OfflineBanner() {
   if (!isOffline) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[110] bg-yellow-500/90 text-yellow-950 text-center py-2 text-sm font-medium flex items-center justify-center gap-2">
+    <div className="fixed top-0 left-0 right-0 z-[110] bg-yellow-500/90 text-yellow-950 text-center py-2 text-base font-medium flex items-center justify-center gap-2">
       <span className="material-symbols-outlined text-base">wifi_off</span>
       You are offline. Some features may not work.
     </div>

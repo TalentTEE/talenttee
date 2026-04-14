@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
 import { DataSourceConnection } from '@/lib/types';
+import { AINudge } from '@/components/ui/AINudge';
 
 /* ── Brand SVG Icons ── */
 function GitHubIcon({ className }: { className?: string }) {
@@ -236,7 +237,7 @@ export default function DatasourcePage() {
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
             Data Sources
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-base text-muted-foreground mt-1">
             Connect your accounts to let AI analyze your professional profile.{' '}
             {connectedCount} of {PROVIDERS.length} sources connected.
           </p>
@@ -246,7 +247,7 @@ export default function DatasourcePage() {
           <button
             onClick={handleSyncAll}
             disabled={syncingAll}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             <span className={`material-symbols-outlined text-base ${syncingAll ? 'animate-spin' : ''}`}>
               {syncingAll ? 'progress_activity' : 'sync'}
@@ -255,6 +256,20 @@ export default function DatasourcePage() {
           </button>
         )}
       </div>
+
+      {/* AI Nudge */}
+      {connectedCount === 0 && (
+        <AINudge id="ds-zero" message="Start with GitHub — it gives the most comprehensive technical profile." />
+      )}
+      {connectedCount === 1 && (
+        <AINudge id="ds-one" message="Great start! Adding Slack reveals your collaboration style." ctaLabel="Connect Slack" ctaHref="/datasource" />
+      )}
+      {connectedCount === 3 && (
+        <AINudge id="ds-three" message="One more source to go. Gov24 verifies your credentials on-chain." />
+      )}
+      {connectedCount >= 4 && (
+        <AINudge id="ds-all" message="All sources connected. Your AI profile updates automatically every day." />
+      )}
 
       {/* Auto-sync banner */}
       {connectedCount > 0 && (
@@ -265,23 +280,23 @@ export default function DatasourcePage() {
           >
             autorenew
           </span>
-          <p className="text-sm text-foreground/80">
+          <p className="text-base text-foreground/80">
             Your data sources sync automatically every day. AI keeps your profile fresh without any manual work.
           </p>
         </div>
       )}
 
       {/* Progress indicator */}
-      <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-5">
+      <div className="rounded-2xl border border-border/10 bg-card p-5">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-semibold text-foreground">
+          <span className="text-base font-semibold text-foreground">
             Connection Progress
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {connectedCount}/{PROVIDERS.length}
           </span>
         </div>
-        <div className="w-full h-2 rounded-full bg-[#262626]">
+        <div className="w-full h-2 rounded-full bg-muted">
           <div
             className="h-2 rounded-full bg-primary transition-all duration-500"
             style={{ width: `${(connectedCount / PROVIDERS.length) * 100}%` }}
@@ -295,7 +310,7 @@ export default function DatasourcePage() {
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-border/10 bg-[#1a1919] p-6 h-52 animate-pulse"
+              className="rounded-2xl border border-border/10 bg-card p-6 h-52 animate-pulse"
             />
           ))}
         </div>
@@ -313,7 +328,7 @@ export default function DatasourcePage() {
             return (
               <div
                 key={provider.id}
-                className={`rounded-2xl border bg-[#1a1919] transition-all duration-300 ${
+                className={`rounded-2xl border bg-card transition-all duration-300 ${
                   phase === 'done'
                     ? 'border-emerald-500/30'
                     : isConnected
@@ -331,7 +346,7 @@ export default function DatasourcePage() {
                             ? 'bg-emerald-500/10 text-emerald-400'
                             : isConnected
                               ? 'bg-primary/10 text-primary'
-                              : 'bg-[#262626] text-muted-foreground'
+                              : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {phase === 'done' ? (
@@ -361,7 +376,7 @@ export default function DatasourcePage() {
                           {provider.name}
                         </h3>
                         <span
-                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                          className={`inline-flex items-center gap-1.5 text-sm font-medium ${
                             phase === 'done'
                               ? 'text-emerald-400'
                               : isConnected
@@ -399,7 +414,7 @@ export default function DatasourcePage() {
                     {isConnected && !isConnecting && (
                       <button
                         onClick={() => toggleExpand(provider.id)}
-                        className="p-1 rounded-lg hover:bg-[#262626] transition-colors"
+                        className="p-1 rounded-lg hover:bg-muted transition-colors"
                       >
                         <span
                           className="material-symbols-outlined text-xl text-muted-foreground transition-transform duration-300"
@@ -413,27 +428,27 @@ export default function DatasourcePage() {
 
                   {/* Description or sync status */}
                   {phase === 'syncing' ? (
-                    <p className="text-sm text-amber-400/80 leading-relaxed flex-1 animate-pulse">
+                    <p className="text-base text-amber-400/80 leading-relaxed flex-1 animate-pulse">
                       {SYNC_STATS[provider.id]}
                     </p>
                   ) : phase === 'done' ? (
-                    <p className="text-sm text-emerald-400/80 leading-relaxed flex-1">
+                    <p className="text-base text-emerald-400/80 leading-relaxed flex-1">
                       Data collection complete. Your profile is being updated.
                     </p>
                   ) : (
-                    <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                    <p className="text-base text-muted-foreground leading-relaxed flex-1">
                       {provider.description}
                     </p>
                   )}
 
                   {/* Auto-sync schedule (for connected sources) */}
                   {isConnected && !isConnecting && connection?.lastSyncedAt && !isExpanded && (
-                    <div className="rounded-lg bg-[#141414] border border-border/5 px-4 py-3 space-y-1">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
-                        <span className="material-symbols-outlined text-sm">schedule</span>
+                    <div className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3 space-y-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
+                        <span className="material-symbols-outlined text-base">schedule</span>
                         Auto-sync: Daily at 9:00 AM KST
                       </div>
-                      <p className="text-xs text-muted-foreground/50">
+                      <p className="text-sm text-muted-foreground/50">
                         Last synced: {formatSyncTime(connection.lastSyncedAt)}
                       </p>
                     </div>
@@ -444,7 +459,7 @@ export default function DatasourcePage() {
                     <button
                       onClick={() => handleConnect(provider.id)}
                       disabled={isConnecting}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-base font-semibold transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isConnecting ? (
                         <>
@@ -472,24 +487,24 @@ export default function DatasourcePage() {
                 {/* Expandable Panel — collected data details */}
                 {isConnected && isExpanded && (
                   <div className="border-t border-border/10 px-6 py-5">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                       Collected Data
                     </h4>
                     <div className="grid grid-cols-2 gap-3">
                       {COLLECTED_DATA[provider.id]?.map((item) => (
-                        <div key={item.label} className="flex items-center gap-3 rounded-lg bg-[#141414] border border-border/5 px-3 py-2.5">
+                        <div key={item.label} className="flex items-center gap-3 rounded-lg bg-[#060610] border border-border/5 px-3 py-2.5">
                           <span className="material-symbols-outlined text-base text-primary/70">
                             {item.icon}
                           </span>
                           <div className="min-w-0">
-                            <p className="text-xs text-muted-foreground truncate">{item.label}</p>
-                            <p className="text-sm font-semibold text-foreground">{item.value}</p>
+                            <p className="text-sm text-muted-foreground truncate">{item.label}</p>
+                            <p className="text-base font-semibold text-foreground">{item.value}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                     {connection?.lastSyncedAt && (
-                      <div className="mt-4 pt-3 border-t border-border/5 flex items-center justify-between text-xs text-muted-foreground/50">
+                      <div className="mt-4 pt-3 border-t border-border/5 flex items-center justify-between text-sm text-muted-foreground/50">
                         <span>Last synced: {formatSyncTime(connection.lastSyncedAt)}</span>
                         <span>Next sync: {getNextSyncDate(connection.lastSyncedAt)}</span>
                       </div>

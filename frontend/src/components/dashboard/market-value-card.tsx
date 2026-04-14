@@ -13,16 +13,16 @@ export function MarketValueCard({ resume }: { resume: ResumeProfile | null }) {
         <span className="text-3xl font-extrabold text-[#39FF14] font-[var(--font-manrope)]">
           <CountUp end={resume.marketValueMin} prefix="$" duration={800} /> ~ <CountUp end={resume.marketValueMax!} prefix="$" duration={1000} />
         </span>
-        <span className="text-sm text-muted-foreground">/ year</span>
+        <span className="text-base text-muted-foreground">/ year</span>
       </div>
-      <p className="text-sm text-muted-foreground mb-4">Fair Salary Range</p>
+      <p className="text-base text-muted-foreground mb-4">Fair Salary Range</p>
       {resume.negotiationPoints && (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Strengths</p>
+          <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Strengths</p>
           <div className="flex gap-2 flex-wrap">
             {resume.negotiationPoints.strengths.map((s, i) => (
-              <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#39FF14]/5 border border-[#39FF14]/10 text-xs text-[#39FF14] font-medium">
-                <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
+              <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#39FF14]/5 border border-[#39FF14]/10 text-sm text-[#39FF14] font-medium">
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
                 {s}
               </span>
             ))}

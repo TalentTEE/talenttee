@@ -5,7 +5,7 @@ export function Spinner({ size = 'md', text }: { size?: 'sm' | 'md' | 'lg'; text
       <span className={`material-symbols-outlined ${sizeMap[size]} text-muted-foreground animate-spin`}>
         progress_activity
       </span>
-      {text && <span className="text-sm text-muted-foreground">{text}</span>}
+      {text && <span className="text-base text-muted-foreground">{text}</span>}
     </div>
   );
 }
@@ -16,7 +16,7 @@ export function FullPageSpinner({ text = 'Loading...' }: { text?: string }) {
       <span className="material-symbols-outlined text-5xl text-muted-foreground animate-spin">
         progress_activity
       </span>
-      <p className="text-sm text-muted-foreground">{text}</p>
+      <p className="text-base text-muted-foreground">{text}</p>
     </div>
   );
 }

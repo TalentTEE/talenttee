@@ -62,7 +62,7 @@ export default function AgreementPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin">progress_activity</span>
-          <p className="text-sm text-muted-foreground mt-2">Loading agreement...</p>
+          <p className="text-base text-muted-foreground mt-2">Loading agreement...</p>
         </div>
       </div>
     );
@@ -75,7 +75,7 @@ export default function AgreementPage() {
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
           Agreement Review
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-base text-muted-foreground mt-1">
           Session #{sessionId}
         </p>
       </div>
@@ -93,7 +93,7 @@ export default function AgreementPage() {
         <h2 className="font-[var(--font-manrope)] text-xl font-extrabold text-primary">
           Agreement Reached
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-base text-muted-foreground mt-1">
           Both AI agents have reached a consensus on the terms below.
         </p>
       </div>
@@ -104,15 +104,15 @@ export default function AgreementPage() {
           <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
             description
           </span>
-          <h3 className="text-sm font-bold text-foreground">Agreement Details</h3>
+          <h3 className="text-base font-bold text-foreground">Agreement Details</h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Position */}
           <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">badge</span>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Position</p>
+              <span className="material-symbols-outlined text-base text-muted-foreground">badge</span>
+              <p className="text-sm uppercase tracking-wider text-muted-foreground">Position</p>
             </div>
             <p className="text-base font-bold text-foreground">{agreement.summary.positionTitle}</p>
           </div>
@@ -120,8 +120,8 @@ export default function AgreementPage() {
           {/* Salary */}
           <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">payments</span>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Annual Salary</p>
+              <span className="material-symbols-outlined text-base text-muted-foreground">payments</span>
+              <p className="text-sm uppercase tracking-wider text-muted-foreground">Annual Salary</p>
             </div>
             <p className="text-base font-bold text-primary">{formatSalary(agreement.summary.agreedSalary)}</p>
           </div>
@@ -129,8 +129,8 @@ export default function AgreementPage() {
           {/* Work Type */}
           <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">home_work</span>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Work Type</p>
+              <span className="material-symbols-outlined text-base text-muted-foreground">home_work</span>
+              <p className="text-sm uppercase tracking-wider text-muted-foreground">Work Type</p>
             </div>
             <p className="text-base font-bold text-foreground">{agreement.summary.remotePolicy}</p>
           </div>
@@ -138,8 +138,8 @@ export default function AgreementPage() {
           {/* Start Date */}
           <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">calendar_month</span>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Start Date</p>
+              <span className="material-symbols-outlined text-base text-muted-foreground">calendar_month</span>
+              <p className="text-sm uppercase tracking-wider text-muted-foreground">Start Date</p>
             </div>
             <p className="text-base font-bold text-foreground">{agreement.summary.startDate}</p>
           </div>
@@ -147,8 +147,8 @@ export default function AgreementPage() {
           {/* Probation */}
           <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">schedule</span>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Probation Period</p>
+              <span className="material-symbols-outlined text-base text-muted-foreground">schedule</span>
+              <p className="text-sm uppercase tracking-wider text-muted-foreground">Probation Period</p>
             </div>
             <p className="text-base font-bold text-foreground">{agreement.summary.probationMonths} months</p>
           </div>
@@ -156,8 +156,8 @@ export default function AgreementPage() {
           {/* Total Rounds */}
           <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">repeat</span>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Rounds</p>
+              <span className="material-symbols-outlined text-base text-muted-foreground">repeat</span>
+              <p className="text-sm uppercase tracking-wider text-muted-foreground">Total Rounds</p>
             </div>
             <p className="text-base font-bold text-foreground">{agreement.summary.negotiationRounds} rounds</p>
           </div>
@@ -165,8 +165,8 @@ export default function AgreementPage() {
 
         {/* Agreement Hash */}
         <div className="mt-4 rounded-xl bg-muted/50 border border-border/5 p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Agreement Hash</p>
-          <p className="text-xs font-mono text-foreground/70 break-all">{agreement.agreementHash}</p>
+          <p className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Agreement Hash</p>
+          <p className="text-sm font-mono text-foreground/70 break-all">{agreement.agreementHash}</p>
         </div>
       </div>
 
@@ -177,8 +177,8 @@ export default function AgreementPage() {
             <span className="material-symbols-outlined text-base text-amber-400">warning</span>
           </div>
           <div>
-            <p className="text-sm font-bold text-foreground mb-1">On-Chain Recording</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-base font-bold text-foreground mb-1">On-Chain Recording</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               By approving this agreement, the final terms will be permanently recorded on the NEAR blockchain.
               This action is irreversible. Both parties must approve for the transaction to be finalized.
             </p>
@@ -192,14 +192,14 @@ export default function AgreementPage() {
           <button
             onClick={handleApprove}
             disabled={approving}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
+            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
           >
             <span className="material-symbols-outlined text-base">check_circle</span>
             {approving ? 'Approving...' : 'Approve & Record On-Chain'}
           </button>
           <button
             onClick={handleReject}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-sm font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300"
+            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300"
           >
             <span className="material-symbols-outlined text-base">cancel</span>
             Reject
@@ -214,11 +214,11 @@ export default function AgreementPage() {
             <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
               verified
             </span>
-            <p className="text-sm font-bold text-primary">On-Chain Transaction Confirmed</p>
+            <p className="text-base font-bold text-primary">On-Chain Transaction Confirmed</p>
           </div>
           <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Transaction Hash</p>
-            <p className="text-xs font-mono text-foreground break-all">{txHash}</p>
+            <p className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Transaction Hash</p>
+            <p className="text-sm font-mono text-foreground break-all">{txHash}</p>
           </div>
         </div>
       )}
@@ -227,8 +227,8 @@ export default function AgreementPage() {
       {rejected && (
         <div className="bg-red-500/5 rounded-2xl border border-red-500/10 p-5 text-center">
           <span className="material-symbols-outlined text-3xl text-red-400 mb-2">cancel</span>
-          <p className="text-sm font-semibold text-red-400">Agreement Rejected</p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-base font-semibold text-red-400">Agreement Rejected</p>
+          <p className="text-sm text-muted-foreground mt-1">
             The negotiation will continue or be terminated based on remaining rounds.
           </p>
         </div>
