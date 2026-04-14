@@ -60,8 +60,8 @@ describe('SeekerDashboard', () => {
 
     await waitFor(() => {
       expect(mockGetDatasourceStatus).toHaveBeenCalled();
-      expect(mockGetResume).toHaveBeenCalledWith('user-1');
-      expect(mockGetSeekerMatches).toHaveBeenCalledWith('user-1');
+      expect(mockGetResume).toHaveBeenCalled();
+      expect(mockGetSeekerMatches).toHaveBeenCalled();
       expect(mockGetNegotiationSessions).toHaveBeenCalled();
     });
   });

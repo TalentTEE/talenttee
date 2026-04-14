@@ -58,11 +58,11 @@ describe('DatasourcePage', () => {
     });
   });
 
-  it('shows Re-sync button for connected providers', async () => {
+  it('shows Sync All button when sources are connected', async () => {
     render(<DatasourcePage />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Re-sync Data').length).toBeGreaterThan(0);
+      expect(screen.getByText('Sync All Connected Sources')).toBeInTheDocument();
     });
   });
 
