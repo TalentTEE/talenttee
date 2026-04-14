@@ -3,8 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth, generateResume, USE_DUMMY } from '@/lib/api';
+import { getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth, generateResume, USE_DUMMY, getGithubRepos, toggleGithubRepo, startGithubSync, getGithubSyncStatus } from '@/lib/api';
 import { DataSourceConnection, DatasourceDetail, GitHubData, SlackData, DiscordData, Gov24Data } from '@/lib/types';
+import type { GithubRepository, GithubSyncStatus } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
 import { GitHubConnectDialog } from '@/components/datasource/github-connect-dialog';
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
@@ -610,6 +611,9 @@ export default function DatasourcePage() {
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
   const [syncAllProgress, setSyncAllProgress] = useState('');
+  const [githubRepos, setGithubRepos] = useState<GithubRepository[]>([]);
+  const [syncStatus, setSyncStatus] = useState<GithubSyncStatus | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
@@ -625,6 +629,14 @@ export default function DatasourcePage() {
       getDatasourceStatus().then(setConnections);
     }
   }, []);
+
+  /* Load GitHub repos for sync UI */
+  useEffect(() => {
+    const githubConn = connections.find((c) => c.provider === 'GITHUB');
+    if (githubConn && (githubConn.status === 'CONNECTED' || githubConn.status === 'MOCK')) {
+      getGithubRepos().then(setGithubRepos).catch(console.error);
+    }
+  }, [connections]);
 
   /* Auto-load detail data for connected providers (for AbilitySummary) */
   useEffect(() => {
@@ -708,6 +720,35 @@ export default function DatasourcePage() {
 
   function getConnectionStatus(provider: string): DataSourceConnection | undefined {
     return connections.find((c) => c.provider === provider);
+  }
+
+  async function handleGithubSync(forceResume = false) {
+    setSyncing(true);
+    try {
+      await startGithubSync(forceResume);
+      const interval = setInterval(async () => {
+        const status = await getGithubSyncStatus();
+        setSyncStatus(status);
+        if (status.status === 'COMPLETED' || status.status === 'FAILED') {
+          clearInterval(interval);
+          setSyncing(false);
+          const repos = await getGithubRepos();
+          setGithubRepos(repos);
+        }
+      }, 3000);
+    } catch (err) {
+      console.error('Sync failed:', err);
+      setSyncing(false);
+    }
+  }
+
+  async function handleToggleRepo(repoId: string, isActive: boolean) {
+    try {
+      const updated = await toggleGithubRepo(repoId, isActive);
+      setGithubRepos((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    } catch (err) {
+      console.error('Toggle failed:', err);
+    }
   }
 
   const connectedCount = connections.filter(
@@ -907,6 +948,113 @@ export default function DatasourcePage() {
           })}
         </div>
       )}
+
+      {/* GitHub Repo Management */}
+      {connections.some(
+        (c) => c.provider === 'GITHUB' && (c.status === 'CONNECTED' || c.status === 'MOCK'),
+      ) &&
+        githubRepos.length > 0 && (
+          <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-[var(--font-manrope)] text-lg font-bold text-foreground">
+                  GitHub Repositories
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select which repositories to include in your resume analysis.
+                </p>
+              </div>
+              <button
+                onClick={() => handleGithubSync(false)}
+                disabled={syncing}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {syncing ? (
+                  <>
+                    <span className="material-symbols-outlined text-base animate-spin">
+                      progress_activity
+                    </span>
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-base">sync</span>
+                    Sync Activity
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Sync Progress */}
+            {syncing && syncStatus && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Syncing repositories...</span>
+                  <span>
+                    {syncStatus.completedRepos}/{syncStatus.totalRepos}
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-[#262626]">
+                  <div
+                    className="h-2 rounded-full bg-primary transition-all duration-500"
+                    style={{
+                      width: `${syncStatus.totalRepos > 0 ? (syncStatus.completedRepos / syncStatus.totalRepos) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Repo List */}
+            <div className="space-y-2">
+              {githubRepos.map((repo) => (
+                <div
+                  key={repo.id}
+                  className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#201f1f] hover:bg-[#262626] transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <button
+                      onClick={() => handleToggleRepo(repo.id, !repo.isActive)}
+                      className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
+                        repo.isActive
+                          ? 'bg-primary border-primary'
+                          : 'border-border/30 hover:border-border/60'
+                      }`}
+                    >
+                      {repo.isActive && (
+                        <span className="material-symbols-outlined text-sm text-primary-foreground">
+                          check
+                        </span>
+                      )}
+                    </button>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {repo.fullName}
+                      </p>
+                      {repo.description && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {repo.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 ml-4">
+                    {repo.language && (
+                      <span className="text-xs text-muted-foreground px-2 py-0.5 rounded bg-[#1a1919]">
+                        {repo.language}
+                      </span>
+                    )}
+                    {repo.isPrivate && (
+                      <span className="material-symbols-outlined text-sm text-muted-foreground/60">
+                        lock
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       {/* Connect Dialogs */}
       <GitHubConnectDialog
