@@ -42,29 +42,6 @@ export interface GitHubActivityForAI {
   };
 }
 
-export interface OrchestratorJobData {
-  userId: string;
-  forceResume: boolean;
-}
-
-export interface RepoSyncJobData {
-  userId: string;
-  repositoryId: string;
-  fullName: string;
-  accessToken: string;
-  since: string | null;
-  forceResume: boolean;
-}
-
-export interface ThresholdCheckJobData {
-  userId: string;
-  forceResume: boolean;
-}
-
-export interface ResumeIncrementalJobData {
-  userId: string;
-}
-
 export interface SyncStatusResponse {
   status: GithubSyncStatus;
   totalRepos: number;

@@ -1,6 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BullModule } from '@nestjs/bullmq';
 import { DataSourceConnection } from '../entities/data-source-connection.entity.js';
 import { GithubRepository } from './entities/github-repository.entity.js';
 import { GithubCommit } from './entities/github-commit.entity.js';
@@ -12,11 +11,6 @@ import { DatasourceController } from './datasource.controller.js';
 import { DatasourceService } from './datasource.service.js';
 import { GitHubApiClient } from './github/github-api.client.js';
 import { GithubSyncService } from './github/github-sync.service.js';
-import {
-  GithubSyncOrchestratorProcessor,
-  GithubRepoSyncProcessor,
-  ResumeUpdateProcessor,
-} from './github/github-sync.processor.js';
 import { ResumeModule } from '../resume/resume.module.js';
 
 @Module({
@@ -30,11 +24,6 @@ import { ResumeModule } from '../resume/resume.module.js';
       GithubSyncCursor,
       ResumeSyncCheckpoint,
     ]),
-    BullModule.registerQueue(
-      { name: 'github-sync-orchestrator' },
-      { name: 'github-sync' },
-      { name: 'resume-update' },
-    ),
     forwardRef(() => ResumeModule),
   ],
   controllers: [DatasourceController],
@@ -42,9 +31,6 @@ import { ResumeModule } from '../resume/resume.module.js';
     DatasourceService,
     GitHubApiClient,
     GithubSyncService,
-    GithubSyncOrchestratorProcessor,
-    GithubRepoSyncProcessor,
-    ResumeUpdateProcessor,
   ],
   exports: [DatasourceService, GithubSyncService],
 })

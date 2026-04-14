@@ -22,7 +22,6 @@
     "seed:demo": "nest build && node dist/seed.js --demo-only"
   },
   "dependencies": {
-    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -37,10 +36,8 @@
     "@noble/hashes": "^2.0.1",
     "borsh": "^2.0.0",
     "bs58": "^6.0.0",
-    "bullmq": "^5.73.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",
     "near-api-js": "^7.2.0",
     "openai": "^6.34.0",
