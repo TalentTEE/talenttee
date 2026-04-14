@@ -8,7 +8,7 @@ const stateInfo: Record<string, { label: string; icon: string; className: string
   EMPLOYER_OFFER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
   SEEKER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
   EMPLOYER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  AGREED: { label: 'Agreed', icon: 'task_alt', className: 'text-primary' },
+  AGREED: { label: 'Agreed', icon: 'task_alt', className: 'text-[#FF2DF1]' },
   FAILED: { label: 'Failed', icon: 'cancel', className: 'text-red-400' },
   MAX_ROUNDS: { label: 'Max Rounds', icon: 'warning', className: 'text-orange-400' },
 };
@@ -42,16 +42,16 @@ export function NegotiationList({
                       <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted" />
                       <circle
                         cx="20" cy="20" r="16" fill="none" strokeWidth="2.5"
-                        className="text-primary"
+                        className="text-[#FF2DF1]"
                         strokeDasharray={`${score * 1.005} 999`}
                         strokeLinecap="round"
                       />
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary">{score}%</span>
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[#FF2DF1]">{score}%</span>
                   </div>
                 ) : (
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isAgreed ? 'bg-primary/10' : 'bg-muted'
+                    isAgreed ? 'bg-[#FF2DF1]/10' : 'bg-muted'
                   }`}>
                     <span className={`material-symbols-outlined text-lg ${info.className}`} style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
                       {info.icon}

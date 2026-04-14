@@ -10,7 +10,7 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Job Postings</h3>
         <Link
           href="/jobs/create"
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FFE600] text-[#0a0a0a] text-xs font-bold hover:bg-[#FFE600]/90 transition-all"
         >
           <span className="material-symbols-outlined text-sm">add</span>
           New Posting
@@ -20,14 +20,14 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
         {jobs.map((j) => (
           <div key={j.id} className="flex items-center justify-between p-3 rounded-xl bg-accent/50 border border-border/5 hover:bg-accent transition-all">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-lg">work</span>
+              <div className="w-10 h-10 rounded-lg bg-[#FFE600]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#FFE600] text-lg">work</span>
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">{j.title}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className={`inline-flex items-center gap-1 text-xs font-medium ${
-                    j.status === 'ACTIVE' ? 'text-primary' : 'text-muted-foreground'
+                    j.status === 'ACTIVE' ? 'text-[#FFE600]' : 'text-muted-foreground'
                   }`}>
                     <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                     {j.status}

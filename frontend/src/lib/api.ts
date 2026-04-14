@@ -147,12 +147,11 @@ export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatRes
       return { complete: true, jobPosting: DUMMY_JOBS[0] };
     }
     const questions = [
-      'What position are you hiring for?',
-      'What are the required tech skills?',
-      'What experience level is needed?',
-      'What is the salary range?',
-      'Is remote work possible?',
-      'Any other benefits?',
+      'What position are you hiring for? (e.g. Senior Backend Developer)',
+      'Can you describe the role and responsibilities?',
+      'What are the required tech skills? (e.g. TypeScript, React, Node.js)',
+      "What's your maximum salary budget? This will be your negotiation ceiling — candidates won't see this number.",
+      'What is the remote work policy? (Full Office / Hybrid / Full Remote)',
     ];
     return { complete: false, question: questions[Math.min(messages.length, questions.length - 1)] };
   }

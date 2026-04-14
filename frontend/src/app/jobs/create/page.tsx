@@ -12,7 +12,6 @@ interface FormData {
   title: string;
   description: string;
   skills: string;
-  salaryMin: string;
   salaryMax: string;
   remotePolicy: string;
 }
@@ -43,18 +42,18 @@ export default function CreateJobPage() {
           onClick={() => setActiveTab('chat')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             activeTab === 'chat'
-              ? 'bg-primary text-primary-foreground'
+              ? 'bg-[#FFE600] text-[#0a0a0a]'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <span className="material-symbols-outlined text-lg">chat</span>
-          Chat Mode
+          AI Chat Mode
         </button>
         <button
           onClick={() => setActiveTab('form')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
             activeTab === 'form'
-              ? 'bg-primary text-primary-foreground'
+              ? 'bg-[#FFE600] text-[#0a0a0a]'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -160,7 +159,7 @@ function ChatMode() {
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     msg.role === 'agent'
-                      ? 'bg-primary/15 text-primary'
+                      ? 'bg-[#FFE600]/15 text-[#FFE600]'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -172,7 +171,7 @@ function ChatMode() {
                 <div
                   className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-md'
+                      ? 'bg-[#FFE600] text-[#0a0a0a] rounded-br-md'
                       : 'bg-accent text-foreground rounded-bl-md'
                   }`}
                 >
@@ -210,12 +209,12 @@ function ChatMode() {
               onKeyDown={handleKeyDown}
               placeholder="Type your answer..."
               disabled={isLoading || !!createdJob}
-              className="flex-1 bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+              className="flex-1 bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all disabled:opacity-50"
             />
             <button
               onClick={handleSend}
               disabled={isLoading || !input.trim() || !!createdJob}
-              className="px-4 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-3 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-lg">send</span>
               Send
@@ -237,7 +236,6 @@ function FormMode() {
     title: '',
     description: '',
     skills: '',
-    salaryMin: '',
     salaryMax: '',
     remotePolicy: 'office',
   });
@@ -259,7 +257,7 @@ function FormMode() {
         title: form.title,
         description: form.description,
         requiredSkills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
-        salaryMin: Number(form.salaryMin),
+        salaryMin: 0,
         salaryMax: Number(form.salaryMax),
         remotePolicy: form.remotePolicy,
       });
@@ -274,9 +272,9 @@ function FormMode() {
   if (submitted) {
     return (
       <div className="rounded-2xl border border-border/10 bg-card p-8 text-center space-y-4">
-        <div className="w-16 h-16 mx-auto rounded-full bg-primary/15 flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto rounded-full bg-[#FFE600]/15 flex items-center justify-center">
           <span
-            className="material-symbols-outlined text-primary text-3xl"
+            className="material-symbols-outlined text-[#FFE600] text-3xl"
             style={{ fontVariationSettings: "'FILL' 1" }}
           >
             check_circle
@@ -291,9 +289,9 @@ function FormMode() {
         <button
           onClick={() => {
             setSubmitted(false);
-            setForm({ title: '', description: '', skills: '', salaryMin: '', salaryMax: '', remotePolicy: 'office' });
+            setForm({ title: '', description: '', skills: '', salaryMax: '', remotePolicy: 'office' });
           }}
-          className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all"
+          className="px-6 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all"
         >
           Create Another
         </button>
@@ -313,7 +311,7 @@ function FormMode() {
           onChange={handleChange}
           required
           placeholder="e.g. Senior Backend Developer"
-          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all"
         />
       </div>
 
@@ -327,7 +325,7 @@ function FormMode() {
           required
           rows={4}
           placeholder="Describe the role, responsibilities, and team..."
-          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
+          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all resize-none"
         />
       </div>
 
@@ -341,7 +339,7 @@ function FormMode() {
           onChange={handleChange}
           required
           placeholder="TypeScript, React, Node.js (comma-separated)"
-          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all"
         />
         {form.skills && (
           <div className="flex flex-wrap gap-2 pt-1">
@@ -351,7 +349,7 @@ function FormMode() {
               return (
                 <span
                   key={i}
-                  className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium"
+                  className="px-2.5 py-1 rounded-lg bg-[#FFE600]/10 text-[#FFE600] text-xs font-medium"
                 >
                   {trimmed}
                 </span>
@@ -361,29 +359,21 @@ function FormMode() {
         )}
       </div>
 
-      {/* Salary Range */}
+      {/* Maximum Salary Budget */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Salary Range (KRW / year)</label>
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="number"
-            name="salaryMin"
-            value={form.salaryMin}
-            onChange={handleChange}
-            required
-            placeholder="Minimum"
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-          />
-          <input
-            type="number"
-            name="salaryMax"
-            value={form.salaryMax}
-            onChange={handleChange}
-            required
-            placeholder="Maximum"
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-          />
-        </div>
+        <label className="text-sm font-medium text-foreground">
+          Maximum Salary Budget <span className="text-[#FFE600] text-xs font-medium">(Negotiation Ceiling)</span>
+        </label>
+        <span className="block text-xs text-muted-foreground">AI will negotiate up to this amount on your behalf. Candidates won't see this number.</span>
+        <input
+          type="number"
+          name="salaryMax"
+          value={form.salaryMax}
+          onChange={handleChange}
+          required
+          placeholder="e.g. 80,000,000 KRW/year"
+          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all"
+        />
       </div>
 
       {/* Remote Policy */}
@@ -393,7 +383,7 @@ function FormMode() {
           name="remotePolicy"
           value={form.remotePolicy}
           onChange={handleChange}
-          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all appearance-none cursor-pointer"
+          className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all appearance-none cursor-pointer"
         >
           <option value="office">Full Office</option>
           <option value="hybrid-3">Hybrid (3 days office)</option>
@@ -407,7 +397,7 @@ function FormMode() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
@@ -437,11 +427,11 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
   };
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-card p-6 space-y-5">
+    <div className="rounded-2xl border border-[#FFE600]/20 bg-card p-6 space-y-5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-[#FFE600]/15 flex items-center justify-center">
           <span
-            className="material-symbols-outlined text-primary text-xl"
+            className="material-symbols-outlined text-[#FFE600] text-xl"
             style={{ fontVariationSettings: "'FILL' 1" }}
           >
             work
@@ -453,7 +443,7 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
           </h3>
           <p className="text-xs text-muted-foreground">Job Preview</p>
         </div>
-        <span className="ml-auto px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+        <span className="ml-auto px-3 py-1 rounded-full bg-[#FFE600]/10 text-[#FFE600] text-xs font-semibold">
           {job.status}
         </span>
       </div>
@@ -467,7 +457,7 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
             {job.requiredSkills.map((skill) => (
               <span
                 key={skill}
-                className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-medium"
+                className="px-2 py-0.5 rounded-md bg-[#FFE600]/10 text-[#FFE600] text-xs font-medium"
               >
                 {skill}
               </span>
@@ -475,9 +465,9 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
           </div>
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Salary Range</p>
+          <p className="text-xs text-muted-foreground">Max Salary Budget</p>
           <p className="text-sm font-semibold text-foreground">
-            {formatSalary(job.salaryMin)} ~ {formatSalary(job.salaryMax)} KRW
+            Up to {formatSalary(job.salaryMax)} KRW
           </p>
         </div>
       </div>
@@ -490,7 +480,7 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
       )}
 
       <div className="flex gap-3 pt-2">
-        <button className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
+        <button className="flex-1 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all flex items-center justify-center gap-2">
           <span className="material-symbols-outlined text-lg">check</span>
           Publish Job
         </button>
