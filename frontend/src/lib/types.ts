@@ -269,3 +269,27 @@ export interface JobChatResponse {
   question?: string;
   jobPosting?: JobPosting;
 }
+
+export interface GithubRepository {
+  id: string;
+  userId: string;
+  fullName: string;
+  name: string;
+  description: string | null;
+  language: string | null;
+  isPrivate: boolean;
+  starsCount: number;
+  forksCount: number;
+  topics: string[];
+  isActive: boolean;
+  syncedAt: string | null;
+  createdAt: string;
+}
+
+export interface GithubSyncStatus {
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  totalRepos: number;
+  completedRepos: number;
+  failedRepos: number;
+  startedAt: string | null;
+}
