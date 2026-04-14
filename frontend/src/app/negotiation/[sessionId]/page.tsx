@@ -28,13 +28,13 @@ function stateLabel(state: string): string {
 }
 
 function stateColor(state: string): string {
-  if (state === 'AGREED') return 'bg-primary/10 text-primary border-primary/20';
+  if (state === 'AGREED') return 'bg-[#FF2DF1]/10 text-[#FF2DF1] border-[#FF2DF1]/20';
   if (state === 'FAILED' || state === 'MAX_ROUNDS') return 'bg-red-500/10 text-red-400 border-red-500/20';
   return 'bg-muted text-muted-foreground border-border/10';
 }
 
 function decisionStyle(decision: string) {
-  if (decision === 'ACCEPT') return 'bg-primary/10 text-primary';
+  if (decision === 'ACCEPT') return 'bg-[#FF2DF1]/10 text-[#FF2DF1]';
   if (decision === 'REJECT') return 'bg-red-500/10 text-red-400';
   return 'bg-yellow-500/10 text-yellow-400';
 }
@@ -88,9 +88,9 @@ export default function NegotiationMonitorPage() {
         <div className="bg-card rounded-2xl border border-border/10 p-5">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-[#FF2DF1]/10 flex items-center justify-center">
                 <span
-                  className="material-symbols-outlined text-lg text-primary"
+                  className="material-symbols-outlined text-lg text-[#FF2DF1]"
                   style={session.state === 'AGREED' ? { fontVariationSettings: "'FILL' 1" } : undefined}
                 >
                   {session.state === 'AGREED' ? 'task_alt' : session.state === 'FAILED' || session.state === 'MAX_ROUNDS' ? 'cancel' : 'sync'}
@@ -112,7 +112,7 @@ export default function NegotiationMonitorPage() {
               </div>
               <div className="w-32 h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  className="h-full rounded-full bg-[#FF2DF1] transition-all duration-500"
                   style={{ width: `${(session.currentRound / session.maxRounds) * 100}%` }}
                 />
               </div>
@@ -125,8 +125,8 @@ export default function NegotiationMonitorPage() {
       {rounds.length > 0 && (
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-base text-primary">corporate_fare</span>
+            <div className="w-8 h-8 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-base text-[#FF2DF1]">corporate_fare</span>
             </div>
             <span className="text-sm font-semibold text-muted-foreground">Employer Agent</span>
           </div>
@@ -252,7 +252,7 @@ export default function NegotiationMonitorPage() {
 
       {/* Terminal State Banner — Agreement */}
       {isTerminal && session?.state === 'AGREED' && (
-        <div className="relative bg-card rounded-2xl border border-primary/20 p-6 text-center overflow-hidden animate-[fadeSlideUp_500ms_ease-out]">
+        <div className="relative bg-card rounded-2xl border border-[#FF2DF1]/20 p-6 text-center overflow-hidden animate-[fadeSlideUp_500ms_ease-out]">
           {/* Confetti particles (CSS only) */}
           <div className="absolute inset-0 pointer-events-none">
             {[...Array(8)].map((_, i) => (
@@ -269,10 +269,10 @@ export default function NegotiationMonitorPage() {
             ))}
           </div>
           <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-lg text-primary">corporate_fare</span>
+            <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-lg text-[#FF2DF1]">corporate_fare</span>
             </div>
-            <span className="material-symbols-outlined text-3xl text-primary animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+            <span className="material-symbols-outlined text-3xl text-[#FF2DF1] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
             <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-lg text-[#FF2DF1]">person</span>
             </div>
@@ -288,8 +288,8 @@ export default function NegotiationMonitorPage() {
       {isTerminal && session?.state !== 'AGREED' && (
         <div className="bg-card rounded-2xl border border-red-500/10 p-6 text-center animate-[fadeSlideUp_500ms_ease-out]" style={{ boxShadow: 'inset 0 0 60px rgba(0,0,0,0.3)' }}>
           <div className="flex items-center justify-center gap-6 mb-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center -translate-x-2 transition-transform">
-              <span className="material-symbols-outlined text-lg text-primary">corporate_fare</span>
+            <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center -translate-x-2 transition-transform">
+              <span className="material-symbols-outlined text-lg text-[#FF2DF1]">corporate_fare</span>
             </div>
             <span className="material-symbols-outlined text-3xl text-red-400">warning</span>
             <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center translate-x-2 transition-transform">
