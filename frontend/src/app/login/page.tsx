@@ -7,8 +7,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const { loginByAccount } = useAuth();
+  const { loginByAccount, login } = useAuth();
   const { modal, signedAccountId } = useWallet();
+  const useDummy = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
   const router = useRouter();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -52,12 +53,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0e0e0e] px-6 py-12 selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-12 selection:bg-primary selection:text-primary-foreground">
       {/* Back link */}
       <div className="w-full max-w-md mb-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground transition-colors"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Back to Home
@@ -83,7 +84,7 @@ export default function LoginPage() {
           <button
             onClick={handleConnectWallet}
             disabled={isLoggingIn || !modal}
-            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoggingIn ? (
               <>
@@ -105,14 +106,59 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+          <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-base text-center">
             {error}
+          </div>
+        )}
+
+        {/* Demo Quick Login (dummy mode only) */}
+        {useDummy && (
+          <div className="mt-6 rounded-2xl border border-border/10 bg-card p-6">
+            <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold mb-4 text-center">Demo Login</p>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  setIsLoggingIn(true);
+                  try {
+                    await login('SEEKER');
+                    router.push('/dashboard/seeker');
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Login failed');
+                  } finally {
+                    setIsLoggingIn(false);
+                  }
+                }}
+                disabled={isLoggingIn}
+                className="flex-1 py-3 rounded-xl border border-border/10 bg-accent/50 text-base font-semibold text-foreground hover:bg-accent transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-base text-blue-400">person</span>
+                Seeker (Alice)
+              </button>
+              <button
+                onClick={async () => {
+                  setIsLoggingIn(true);
+                  try {
+                    await login('EMPLOYER');
+                    router.push('/dashboard/employer');
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Login failed');
+                  } finally {
+                    setIsLoggingIn(false);
+                  }
+                }}
+                disabled={isLoggingIn}
+                className="flex-1 py-3 rounded-xl border border-border/10 bg-accent/50 text-base font-semibold text-foreground hover:bg-accent transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-base text-primary">corporate_fare</span>
+                Employer (Bob)
+              </button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Footer link */}
-      <p className="mt-8 text-sm text-muted-foreground">
+      <p className="mt-8 text-base text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link href="/signup" className="text-primary hover:underline font-medium">
           Sign up

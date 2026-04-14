@@ -6,15 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { getNegotiationSessions, getSeekerMatches, getEmployerMatches } from '@/lib/api';
 import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
 
-const stateInfo: Record<string, { label: string; icon: string; className: string }> = {
-  INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-yellow-400' },
-  EMPLOYER_OFFER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  SEEKER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  EMPLOYER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  AGREED: { label: 'Agreed', icon: 'task_alt', className: 'text-primary' },
-  FAILED: { label: 'Failed', icon: 'cancel', className: 'text-red-400' },
-  MAX_ROUNDS: { label: 'Max Rounds', icon: 'warning', className: 'text-orange-400' },
-};
+const NEON_PINK = '#FF2DF1';
 
 export default function NegotiationsPage() {
   const { user } = useAuth();
@@ -46,12 +38,8 @@ export default function NegotiationsPage() {
     );
   }
 
-  const inProgress = sessions.filter(
-    (s) => s.state !== 'AGREED' && s.state !== 'FAILED' && s.state !== 'MAX_ROUNDS'
-  );
-  const completed = sessions.filter(
-    (s) => s.state === 'AGREED' || s.state === 'FAILED' || s.state === 'MAX_ROUNDS'
-  );
+  const agreed = sessions.filter((s) => s.state === 'AGREED');
+  const failed = sessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS');
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -59,35 +47,49 @@ export default function NegotiationsPage() {
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
           Negotiations
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Track and monitor all your negotiation sessions.
+        <p className="text-base text-muted-foreground mt-1">
+          AI negotiation results — review and decide.
         </p>
       </div>
 
-      {/* In Progress */}
-      {inProgress.length > 0 && (
-        <Section title="In Progress" count={inProgress.length}>
-          {inProgress.map((s) => (
-            <SessionRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} />
-          ))}
-        </Section>
+      {/* Agreed — needs your decision */}
+      {agreed.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/10 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-lg" style={{ color: NEON_PINK, fontVariationSettings: "'FILL' 1" }}>task_alt</span>
+            <h2 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Agreement Reached</h2>
+            <span className="px-2 py-0.5 rounded-full text-sm font-bold" style={{ backgroundColor: `color-mix(in srgb, ${NEON_PINK} 15%, transparent)`, color: NEON_PINK }}>{agreed.length}</span>
+          </div>
+          <div className="space-y-3">
+            {agreed.map((s) => (
+              <AgreedRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} />
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Completed */}
-      {completed.length > 0 && (
-        <Section title="Completed" count={completed.length}>
-          {completed.map((s) => (
-            <SessionRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} />
-          ))}
-        </Section>
+      {/* Failed */}
+      {failed.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/10 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-lg text-red-400">cancel</span>
+            <h2 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Failed</h2>
+            <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-sm font-bold">{failed.length}</span>
+          </div>
+          <div className="space-y-3">
+            {failed.map((s) => (
+              <FailedRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} />
+            ))}
+          </div>
+        </div>
       )}
 
       {sessions.length === 0 && (
         <div className="bg-card rounded-2xl border border-border/10 p-12 text-center">
-          <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">handshake</span>
-          <p className="text-sm font-semibold text-foreground mb-1">No negotiations yet</p>
-          <p className="text-xs text-muted-foreground">
-            Negotiations will appear here once you and an employer both agree on a match.
+          <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+          <p className="text-base font-semibold text-foreground mb-1">No negotiations yet</p>
+          <p className="text-base text-muted-foreground">
+            AI negotiations happen automatically and complete in seconds. Results will appear here.
           </p>
         </div>
       )}
@@ -95,83 +97,84 @@ export default function NegotiationsPage() {
   );
 }
 
-function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
-  return (
-    <div className="bg-card rounded-2xl border border-border/10 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <h2 className="font-[var(--font-manrope)] text-base font-bold text-foreground">{title}</h2>
-        <span className="px-2 py-0.5 rounded-full bg-muted text-[11px] font-bold text-muted-foreground">{count}</span>
-      </div>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
+/* ── Agreed Row: accept or reject ── */
 
-function SessionRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
-  const isAgreed = s.state === 'AGREED';
-  const isTerminal = isAgreed || s.state === 'FAILED' || s.state === 'MAX_ROUNDS';
+function AgreedRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
   const score = match ? Math.round(match.rerankScore * 100) : null;
-  const info = stateInfo[s.state] || stateInfo.INITIATED;
 
   return (
-    <Link
-      href={isAgreed ? `/negotiation/${s.id}/agree` : `/negotiation/${s.id}`}
-      className="flex items-center justify-between p-3 rounded-xl bg-accent/50 border border-border/5 hover:bg-accent transition-all group"
-    >
+    <div className="flex items-center justify-between p-4 rounded-xl bg-accent/50 border border-border/5">
       <div className="flex items-center gap-3">
-        {/* Score Ring */}
         {score !== null ? (
           <div className="relative w-10 h-10 shrink-0">
             <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
               <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted" />
               <circle
                 cx="20" cy="20" r="16" fill="none" strokeWidth="2.5"
-                className="text-primary"
+                style={{ stroke: NEON_PINK }}
                 strokeDasharray={`${score * 1.005} 999`}
                 strokeLinecap="round"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-primary">{score}%</span>
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold" style={{ color: NEON_PINK }}>{score}%</span>
           </div>
         ) : (
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-            isAgreed ? 'bg-primary/10' : 'bg-muted'
-          }`}>
-            <span
-              className={`material-symbols-outlined text-lg ${info.className}`}
-              style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}
-            >
-              {info.icon}
-            </span>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${NEON_PINK} 10%, transparent)` }}>
+            <span className="material-symbols-outlined text-lg" style={{ color: NEON_PINK, fontVariationSettings: "'FILL' 1" }}>task_alt</span>
           </div>
         )}
-
         <div>
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-base font-semibold text-foreground">
             {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${s.id}`}
           </p>
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1 text-xs font-medium ${info.className}`}>
-              <span
-                className="material-symbols-outlined text-xs"
-                style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}
-              >
-                {info.icon}
-              </span>
-              {info.label}
-            </span>
-            {!isTerminal && (
-              <span className="text-xs text-muted-foreground">
-                R{s.currentRound}/{s.maxRounds}
-              </span>
-            )}
-          </div>
+          <p className="text-sm" style={{ color: NEON_PINK }}>
+            Agreement reached — review the terms
+          </p>
         </div>
       </div>
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/negotiation/${s.id}/agree`}
+          className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-90"
+          style={{ backgroundColor: NEON_PINK, color: '#0a0a0a' }}
+        >
+          <span className="material-symbols-outlined text-base">visibility</span>
+          Review & Decide
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-      <span className="material-symbols-outlined text-base text-muted-foreground group-hover:text-foreground transition-colors">
-        arrow_forward
-      </span>
-    </Link>
+/* ── Failed Row ── */
+
+function FailedRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
+  const isMaxRounds = s.state === 'MAX_ROUNDS';
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-accent/50 border border-border/5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-lg text-red-400">{isMaxRounds ? 'timer_off' : 'cancel'}</span>
+        </div>
+        <div>
+          <p className="text-base font-semibold text-foreground">
+            {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${s.id}`}
+          </p>
+          <p className="text-sm text-red-400">
+            {isMaxRounds
+              ? `No agreement after ${s.maxRounds} rounds`
+              : 'Negotiation failed — parties could not agree'}
+          </p>
+        </div>
+      </div>
+      <Link
+        href={`/negotiation/${s.id}/history`}
+        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-accent transition-all"
+      >
+        <span className="material-symbols-outlined text-base">history</span>
+        View History
+      </Link>
+    </div>
   );
 }

@@ -17,9 +17,9 @@ export function DatasourceStatus({ connections }: { connections: DataSourceConne
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Data Sources</h3>
         <Link
           href="/datasource"
-          className="flex items-center gap-1 text-sm text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors font-medium"
+          className="flex items-center gap-1 text-base text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors font-medium"
         >
-          <span className="material-symbols-outlined text-sm">add_circle</span>
+          <span className="material-symbols-outlined text-base">add_circle</span>
           Add Source
         </Link>
       </div>
@@ -37,17 +37,17 @@ export function DatasourceStatus({ connections }: { connections: DataSourceConne
               }`}
             >
               <span className="material-symbols-outlined text-base">{meta.icon}</span>
-              <span className="text-sm font-medium">{meta.label}</span>
+              <span className="text-base font-medium">{meta.label}</span>
               {connected ? (
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               ) : (
-                <span className="material-symbols-outlined text-sm">cancel</span>
+                <span className="material-symbols-outlined text-base">cancel</span>
               )}
             </div>
           );
         })}
         {connections.length === 0 && (
-          <p className="text-sm text-muted-foreground">No connected data sources.</p>
+          <p className="text-base text-muted-foreground">No connected data sources.</p>
         )}
       </div>
     </div>

@@ -44,11 +44,11 @@ export function PipelineProgress({ currentStage }: PipelineProgressProps) {
                 }
               >
                 {isComplete ? (
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
+                  <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
                 ) : (
                   <span
                     className={cn(
-                      'material-symbols-outlined text-sm',
+                      'material-symbols-outlined text-base',
                       isCurrent && 'animate-pulse',
                       isFuture && 'text-muted-foreground/40',
                     )}
@@ -60,7 +60,7 @@ export function PipelineProgress({ currentStage }: PipelineProgressProps) {
               </div>
               <span
                 className={cn(
-                  'text-[10px] font-medium transition-colors',
+                  'text-sm font-medium transition-colors',
                   isCurrent && 'font-semibold',
                   isFuture && 'text-muted-foreground/40',
                 )}

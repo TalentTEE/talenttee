@@ -33,7 +33,7 @@ function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary">
+      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-primary">
         {score}%
       </span>
     </div>
@@ -75,16 +75,16 @@ function ProfileModal({
         {/* Market Value */}
         <div className="rounded-xl bg-primary/5 border border-primary/10 p-4 mb-5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="material-symbols-outlined text-sm text-primary">trending_up</span>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Market Value Range</p>
+            <span className="material-symbols-outlined text-base text-primary">trending_up</span>
+            <p className="text-sm uppercase tracking-wider text-muted-foreground">Market Value Range</p>
           </div>
           <p className="text-lg font-bold text-primary">{report.marketValueRange}</p>
         </div>
 
         {/* Technical Skills */}
         <div className="mb-5">
-          <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm text-muted-foreground">code</span>
+          <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base text-muted-foreground">code</span>
             Technical Skills
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -93,10 +93,10 @@ function ProfileModal({
                 key={skill.skill}
                 className="flex items-center justify-between rounded-xl bg-accent/50 border border-border/5 px-3 py-2"
               >
-                <span className="text-sm font-semibold text-foreground">{skill.skill}</span>
+                <span className="text-base font-semibold text-foreground">{skill.skill}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{skill.experience}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                  <span className="text-sm text-muted-foreground">{skill.experience}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-sm font-bold ${
                     skill.level === 'Expert'
                       ? 'bg-primary/10 text-primary'
                       : skill.level === 'Advanced'
@@ -113,8 +113,8 @@ function ProfileModal({
 
         {/* Projects */}
         <div className="mb-5">
-          <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm text-muted-foreground">folder_open</span>
+          <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base text-muted-foreground">folder_open</span>
             Key Projects
           </h3>
           <div className="space-y-2">
@@ -124,12 +124,12 @@ function ProfileModal({
                 className="rounded-xl bg-accent/50 border border-border/5 p-3"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-bold text-foreground">{project.name}</p>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  <p className="text-base font-bold text-foreground">{project.name}</p>
+                  <span className="text-sm text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                     {project.role}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">{project.impact}</p>
+                <p className="text-sm text-muted-foreground">{project.impact}</p>
               </div>
             ))}
           </div>
@@ -137,8 +137,8 @@ function ProfileModal({
 
         {/* Collaboration */}
         <div className="mb-5">
-          <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm text-muted-foreground">groups</span>
+          <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base text-muted-foreground">groups</span>
             Collaboration Metrics
           </h3>
           <div className="grid grid-cols-3 gap-2">
@@ -148,7 +148,7 @@ function ProfileModal({
                 className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center"
               >
                 <p className="text-lg font-bold text-primary">{col.value}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{col.metric}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{col.metric}</p>
               </div>
             ))}
           </div>
@@ -156,8 +156,8 @@ function ProfileModal({
 
         {/* Growth Curve */}
         <div className="mb-5">
-          <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-sm text-muted-foreground">show_chart</span>
+          <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base text-muted-foreground">show_chart</span>
             Growth Curve
           </h3>
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -166,10 +166,10 @@ function ProfileModal({
                 key={period.period}
                 className="rounded-xl bg-accent/50 border border-border/5 p-3 min-w-[140px] shrink-0"
               >
-                <p className="text-xs font-bold text-foreground mb-1.5">{period.period}</p>
+                <p className="text-sm font-bold text-foreground mb-1.5">{period.period}</p>
                 <div className="flex flex-wrap gap-1">
                   {period.skills.map((s) => (
-                    <span key={s} className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground font-medium">
+                    <span key={s} className="px-1.5 py-0.5 rounded text-sm bg-muted text-muted-foreground font-medium">
                       {s}
                     </span>
                   ))}
@@ -182,8 +182,8 @@ function ProfileModal({
         {/* Certifications */}
         {report.certifications.length > 0 && (
           <div>
-            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
                 verified
               </span>
               Verified Certifications
@@ -192,9 +192,9 @@ function ProfileModal({
               {report.certifications.map((cert) => (
                 <span
                   key={cert}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-sm font-semibold text-primary"
                 >
-                  <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
                     workspace_premium
                   </span>
                   {cert}
@@ -254,7 +254,7 @@ export default function MatchingPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin">progress_activity</span>
-          <p className="text-sm text-muted-foreground mt-2">Loading matches...</p>
+          <p className="text-base text-muted-foreground mt-2">Loading matches...</p>
         </div>
       </div>
     );
@@ -267,7 +267,7 @@ export default function MatchingPage() {
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
           {isEmployer ? 'Candidate Matches' : 'Job Matches'}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-base text-muted-foreground mt-1">
           {isEmployer
             ? 'AI-ranked candidates for your job posting'
             : 'AI-ranked job opportunities matching your profile'}
@@ -276,7 +276,7 @@ export default function MatchingPage() {
 
       {/* Results Count */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+        <span className="text-sm text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
           {matches.length} {matches.length === 1 ? 'result' : 'results'}
         </span>
       </div>
@@ -299,17 +299,17 @@ export default function MatchingPage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                       #{match.finalRank}
                     </span>
                     <h3 className="text-base font-bold text-foreground truncate">
                       {match.jobTitle}
                     </h3>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-base text-muted-foreground mb-3">
                     {match.companyName}
                     {match.seekerExperienceYears && (
-                      <span className="ml-2 text-xs text-muted-foreground/70">
+                      <span className="ml-2 text-sm text-muted-foreground/70">
                         {match.seekerExperienceYears} experience
                       </span>
                     )}
@@ -320,7 +320,7 @@ export default function MatchingPage() {
                     {match.seekerSkills.map((skill) => (
                       <span
                         key={skill}
-                        className="px-2 py-0.5 rounded-md text-xs bg-muted text-muted-foreground font-medium"
+                        className="px-2 py-0.5 rounded-md text-sm bg-muted text-muted-foreground font-medium"
                       >
                         {skill}
                       </span>
@@ -328,7 +328,7 @@ export default function MatchingPage() {
                   </div>
 
                   {/* Score Breakdown */}
-                  <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>ANN Score: <span className="font-semibold text-foreground">{(match.annScore * 100).toFixed(0)}%</span></span>
                     <span>Rerank Score: <span className="font-semibold text-foreground">{(match.rerankScore * 100).toFixed(0)}%</span></span>
                   </div>
@@ -337,14 +337,14 @@ export default function MatchingPage() {
                 {/* Actions */}
                 <div className="flex flex-col gap-2 shrink-0">
                   {isAgreed ? (
-                    <div className="flex items-center gap-1 px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-bold">
+                    <div className="flex items-center gap-1 px-4 py-2 rounded-xl bg-primary/10 text-primary text-base font-bold">
                       <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                       Agreed
                     </div>
                   ) : (
                     <button
                       onClick={() => handleAgree(match.id)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all duration-300"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all duration-300"
                     >
                       <span className="material-symbols-outlined text-base">handshake</span>
                       Agree
@@ -355,14 +355,14 @@ export default function MatchingPage() {
                     <button
                       onClick={() => handleViewProfile(match.seekerId)}
                       disabled={profileLoading}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-accent transition-all duration-300 disabled:opacity-40"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted text-foreground text-base font-semibold hover:bg-accent transition-all duration-300 disabled:opacity-40"
                     >
                       <span className="material-symbols-outlined text-base">person_search</span>
                       View Profile
                     </button>
                   )}
 
-                  <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300">
+                  <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-base text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300">
                     <span className="material-symbols-outlined text-base">close</span>
                     Decline
                   </button>
@@ -375,7 +375,7 @@ export default function MatchingPage() {
         {matches.length === 0 && (
           <div className="bg-card rounded-2xl border border-border/10 p-8 text-center">
             <span className="material-symbols-outlined text-3xl text-muted-foreground mb-2">search_off</span>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               {isEmployer
                 ? 'No candidate matches found. Try adjusting your job posting.'
                 : 'No job matches found. Make sure your profile is complete.'}

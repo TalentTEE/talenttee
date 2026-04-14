@@ -44,7 +44,7 @@ export function JobSeekingToggle({ initialActive = false, onToggle }: JobSeeking
             <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">
               Job Seeking
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {active
                 ? 'Active — AI is matching and negotiating on your behalf'
                 : 'Inactive — your profile is hidden from employers'}
@@ -72,7 +72,7 @@ export function JobSeekingToggle({ initialActive = false, onToggle }: JobSeeking
         <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
           <div className="flex items-start gap-2 mb-3">
             <span className="material-symbols-outlined text-base text-primary mt-0.5">info</span>
-            <p className="text-sm text-foreground leading-relaxed">
+            <p className="text-base text-foreground leading-relaxed">
               구직 활동을 켜면 AI가 자동으로 매칭하고, 매칭된 공고에 대해 <strong>자동으로 협상을 진행</strong>합니다.
               협상 중 개입하거나 최종 합의만 직접 승인/거절할 수 있습니다.
             </p>
@@ -80,13 +80,13 @@ export function JobSeekingToggle({ initialActive = false, onToggle }: JobSeeking
           <div className="flex gap-2 justify-end">
             <button
               onClick={() => setShowConfirm(false)}
-              className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              className="px-3 py-1.5 rounded-lg text-base text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             >
               Cancel
             </button>
             <button
               onClick={confirmActivate}
-              className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all"
+              className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all"
             >
               Activate
             </button>

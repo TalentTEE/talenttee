@@ -24,12 +24,12 @@ export function OnboardingCard({ connectedCount }: { connectedCount: number }) {
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-sm">
+          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-base">
             {isZero
               ? 'Get started: Connect your data sources'
               : 'Almost there: Connect more sources for better AI analysis'}
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {isZero
               ? 'Link your GitHub, Slack, and more to build your AI-powered profile.'
               : `${connectedCount} of ${TOTAL_SOURCES} connected. More sources = more accurate profile.`}

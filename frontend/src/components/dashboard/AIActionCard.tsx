@@ -222,16 +222,16 @@ export function AIActionCard({ datasources, resume, matches, sessions, role }: A
 
         {/* Message */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-sm">
+          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-base">
             {action.message}
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{action.detail}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{action.detail}</p>
         </div>
 
         {/* CTA */}
         <Link
           href={action.ctaHref}
-          className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:brightness-90"
+          className="shrink-0 px-4 py-2 rounded-xl text-base font-semibold transition-all hover:brightness-90"
           style={{ backgroundColor: neon, color: '#0a0a0a' }}
         >
           {action.ctaLabel}

@@ -41,7 +41,13 @@ Phase 8 ─── Day 5-6 (4/16-17) ─── UX 폴리싱 + 데모 리허설
   │         ↓ 에러 핸들링, 로딩 상태, 반응형, 데모 리허설 완료
   │
 Phase 9 ─── Day 7+ (4/18~) ─── 랜딩 페이지 + NEAR Wallet Selector 연동
-            ↓ 실서비스 가입/로그인 + 지갑 팝업 연결 + 랜딩 어필
+  │         ↓ 실서비스 가입/로그인 + 지갑 팝업 연결 + 랜딩 어필
+  │
+Phase 10 ── (4/18~) ─── 인터페이스 정렬 (백엔드 ↔ 프론트엔드)
+  │         ↓ API 응답 구조 일치 + 타입 동기화
+  │
+Phase 11 ── (4/18~) ─── AI Agentic UX — "AI Command Center" 전면 개선
+            ↓ AI 에이전트 존재감 + Smart Dashboard + Negotiation Theater
 ```
 
 ## Phase 의존 관계
@@ -81,7 +87,7 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 | 8 | [phase-8-ux-polishing-demo.md](./phase-8-ux-polishing-demo.md) | 완료 | ~3h |
 | 9 | [phase-9-landing-wallet-selector.md](./phase-9-landing-wallet-selector.md) | 진행 중 | ~4h |
 | 10 | [phase-10-interface-alignment.md](./phase-10-interface-alignment.md) | 미시작 | ~2h |
-| 11 | [phase-11-onboarding-ux.md](./phase-11-onboarding-ux.md) | 미시작 | ~3h |
+| 11 | [phase-11-onboarding-ux.md](./phase-11-onboarding-ux.md) | 진행 중 | ~6h |
 
 ## 전체 수락 기준
 
@@ -100,3 +106,8 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 - [ ] 랜딩 페이지에서 AI Agent 가치 어필 + 가입/로그인 유도
 - [ ] NEAR Wallet Selector 팝업으로 지갑 연결 (MetaMask 포함)
 - [ ] 가입 시 역할 선택 → 로그인 시 역할 자동 감지
+- [ ] AI Agent Status Indicator 헤더 실시간 표시
+- [ ] Smart Dashboard AI Action Card 맥락 기반 다음 행동 제안
+- [ ] Negotiation Theater (Thinking Animation + Strategy Insight)
+- [ ] AI Nudge 각 페이지 맥락 메시지
+- [ ] Page Transition + CountUp + Staggered Loading 적용
