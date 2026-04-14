@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { DatasourceService } from './datasource.service.js';
+import { GithubSyncService } from './github/github-sync.service.js';
 import { DataSourceProvider } from '../common/enums/index.js';
 
 @Controller('datasource')
@@ -10,6 +11,7 @@ export class DatasourceController {
   constructor(
     private readonly datasourceService: DatasourceService,
     private readonly config: ConfigService,
+    private readonly githubSyncService: GithubSyncService,
   ) {}
 
   @Get('connect/github')
@@ -64,5 +66,37 @@ export class DatasourceController {
     const userId = req.user.id;
     const data = await this.datasourceService.collectAllData(userId);
     return { message: 'Sync complete', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
+  }
+
+  @Post('github/sync')
+  @UseGuards(JwtGuard)
+  async startGithubSync(@Req() req, @Body() body: { forceResume?: boolean }) {
+    const userId = req.user.id;
+    return this.githubSyncService.startSync(userId, body.forceResume ?? false);
+  }
+
+  @Get('github/sync/status')
+  @UseGuards(JwtGuard)
+  async getGithubSyncStatus(@Req() req) {
+    const userId = req.user.id;
+    return this.githubSyncService.getSyncStatus(userId);
+  }
+
+  @Get('github/repos')
+  @UseGuards(JwtGuard)
+  async getGithubRepos(@Req() req) {
+    const userId = req.user.id;
+    return this.githubSyncService.getRepos(userId);
+  }
+
+  @Patch('github/repos/:repoId')
+  @UseGuards(JwtGuard)
+  async toggleGithubRepo(
+    @Req() req,
+    @Param('repoId') repoId: string,
+    @Body() body: { isActive: boolean },
+  ) {
+    const userId = req.user.id;
+    return this.githubSyncService.toggleRepo(userId, repoId, body.isActive);
   }
 }

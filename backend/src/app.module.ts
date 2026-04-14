@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { BullModule } from '@nestjs/bullmq';
 import { databaseConfig } from './config/database.config.js';
 import { AuthModule } from './auth/auth.module.js';
 import { EscrowModule } from './escrow/escrow.module.js';
@@ -25,6 +26,12 @@ import { AppService } from './app.service.js';
     TypeOrmModule.forRoot(databaseConfig()),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    }),
     AgentModule,
     DatasourceModule,
     ResumeModule,
