@@ -1,5 +1,5 @@
 import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Job, Queue } from 'bullmq';
@@ -14,6 +14,7 @@ import { GithubSyncCursor } from '../entities/github-sync-cursor.entity.js';
 import { DataSourceConnection } from '../../entities/data-source-connection.entity.js';
 import { DataSourceProvider, DataSourceStatus, GithubSyncResourceType } from '../../common/enums/index.js';
 import type { OrchestratorJobData, RepoSyncJobData, ThresholdCheckJobData } from './github-sync.types.js';
+import { ResumeService } from '../../resume/resume.service.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Orchestrator Processor
@@ -389,6 +390,8 @@ export class ResumeUpdateProcessor extends WorkerHost {
   constructor(
     private readonly syncService: GithubSyncService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => ResumeService))
+    private readonly resumeService: ResumeService,
   ) {
     super();
   }
@@ -422,16 +425,14 @@ export class ResumeUpdateProcessor extends WorkerHost {
     const prsExceeded = pendingPrs >= thresholdPrs;
     const issuesExceeded = pendingIssues >= thresholdIssues;
 
-    if (forceResume || commitsExceeded || prsExceeded || issuesExceeded) {
-      this.logger.log(
-        `[resume-update] Threshold exceeded for user ${userId} — resume update should be triggered. ` +
-          `commits=${pendingCommits}/${thresholdCommits}, prs=${pendingPrs}/${thresholdPrs}, ` +
-          `issues=${pendingIssues}/${thresholdIssues}, forceResume=${forceResume}`,
-      );
-      // Actual resume update integration will be handled in Task 9
+    const shouldUpdate = forceResume || commitsExceeded || prsExceeded || issuesExceeded;
+
+    if (shouldUpdate) {
+      this.logger.log(`Threshold exceeded for user ${userId}. Triggering incremental resume update.`);
+      await this.resumeService.generateIncremental(userId);
     } else {
       this.logger.log(
-        `[resume-update] Thresholds below limits for user ${userId}. ` +
+        `Below threshold for user ${userId}: ` +
           `commits=${pendingCommits}/${thresholdCommits}, prs=${pendingPrs}/${thresholdPrs}, ` +
           `issues=${pendingIssues}/${thresholdIssues}`,
       );

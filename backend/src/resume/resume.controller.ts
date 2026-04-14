@@ -1,4 +1,4 @@
-import { Controller, Post, Get, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { ResumeService } from './resume.service.js';
 
@@ -9,9 +9,9 @@ export class ResumeController {
 
   @Post('generate')
   @HttpCode(HttpStatus.ACCEPTED)
-  async generate(@Req() req) {
+  async generate(@Req() req, @Body() body: { mode?: 'incremental' | 'full' }) {
     const userId = req.user.id;
-    const resume = await this.resumeService.generate(userId);
+    const resume = await this.resumeService.generate(userId, body?.mode ?? 'full');
     return { id: resume.id, status: resume.status, message: 'Resume generation started.' };
   }
 

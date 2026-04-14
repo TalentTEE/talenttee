@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { DataSourceConnection } from '../entities/data-source-connection.entity.js';
@@ -17,6 +17,7 @@ import {
   GithubRepoSyncProcessor,
   ResumeUpdateProcessor,
 } from './github/github-sync.processor.js';
+import { ResumeModule } from '../resume/resume.module.js';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import {
       { name: 'github-sync' },
       { name: 'resume-update' },
     ),
+    forwardRef(() => ResumeModule),
   ],
   controllers: [DatasourceController],
   providers: [
