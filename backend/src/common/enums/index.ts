@@ -48,3 +48,16 @@ export enum ResumeStatus {
   COMPLETE = 'COMPLETE',
   ERROR = 'ERROR',
 }
+
+export enum GithubSyncResourceType {
+  COMMIT = 'COMMIT',
+  PULL_REQUEST = 'PULL_REQUEST',
+  ISSUE = 'ISSUE',
+}
+
+export enum GithubSyncStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
