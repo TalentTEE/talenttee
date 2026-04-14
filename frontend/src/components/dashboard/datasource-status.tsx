@@ -17,7 +17,7 @@ export function DatasourceStatus({ connections }: { connections: DataSourceConne
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Data Sources</h3>
         <Link
           href="/datasource"
-          className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+          className="flex items-center gap-1 text-sm text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors font-medium"
         >
           <span className="material-symbols-outlined text-sm">add_circle</span>
           Add Source
@@ -32,7 +32,7 @@ export function DatasourceStatus({ connections }: { connections: DataSourceConne
               key={c.id}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
                 connected
-                  ? 'bg-primary/5 border-primary/20 text-primary'
+                  ? 'bg-[#00F0FF]/5 border-[#00F0FF]/20 text-[#00F0FF]'
                   : 'bg-muted border-border/10 text-muted-foreground'
               }`}
             >

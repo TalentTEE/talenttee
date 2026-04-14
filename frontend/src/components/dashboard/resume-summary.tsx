@@ -11,7 +11,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
         <p className="text-sm text-muted-foreground mb-4">No resume generated yet.</p>
         <Link
           href="/resume"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#BF5AF2] text-white text-sm font-bold hover:bg-[#BF5AF2]/90 transition-all"
         >
           <span className="material-symbols-outlined text-base">auto_awesome</span>
           Generate Resume
@@ -26,7 +26,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Resume</h3>
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
           resume.status === 'COMPLETE'
-            ? 'bg-primary/10 text-primary'
+            ? 'bg-[#BF5AF2]/10 text-[#BF5AF2]'
             : 'bg-muted text-muted-foreground'
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
