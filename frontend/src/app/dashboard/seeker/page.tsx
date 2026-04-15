@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions, updateJobSeekingStatus } from '@/lib/api';
+import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions, updateJobSeekingStatus, getJobSeekingStatus } from '@/lib/api';
 import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession } from '@/lib/types';
 import { JobSeekingToggle } from '@/components/dashboard/job-seeking-toggle';
 import { DatasourceStatus } from '@/components/dashboard/datasource-status';
@@ -18,20 +18,17 @@ export default function SeekerDashboard() {
   const [resume, setResume] = useState<ResumeProfile | null>(null);
   const [matches, setMatches] = useState<MatchResultDisplay[]>([]);
   const [sessions, setSessions] = useState<NegotiationSession[]>([]);
+  const [jobSeeking, setJobSeeking] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     Promise.all([
       getDatasourceStatus().then(setDatasources),
-      getResume().then((r) => {
-        setResume(r);
-        if (r?.status === 'COMPLETE') {
-          return getSeekerMatches().then(setMatches).catch(() => setMatches([]));
-        }
-        setMatches([]);
-      }).catch(() => { setResume(null); setMatches([]); }),
+      getResume().then(setResume).catch(() => setResume(null)),
+      getSeekerMatches().then(setMatches).catch(() => setMatches([])),
       getNegotiationSessions().then(setSessions).catch(() => setSessions([])),
+      getJobSeekingStatus().then((s) => setJobSeeking(s.jobSeeking)).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [user]);
 
@@ -61,7 +58,9 @@ export default function SeekerDashboard() {
         <AIActionCard datasources={datasources} resume={resume} matches={matches} sessions={sessions} role="SEEKER" />
       </div>
       <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
-        <JobSeekingToggle onToggle={(active) => updateJobSeekingStatus(active)} />
+        <JobSeekingToggle initialActive={jobSeeking} onToggle={async (active) => {
+          await updateJobSeekingStatus(active);
+        }} />
       </div>
       <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
         <DatasourceStatus connections={datasources} />
