@@ -1,6 +1,6 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { JobPosting } from '../entities/job-posting.entity.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/index.js';
 import type { NearAiClient } from '../common/interfaces/index.js';
@@ -14,6 +14,7 @@ interface ChatState {
 
 @Injectable()
 export class JobService {
+  private readonly logger = new Logger(JobService.name);
   private chatSessions = new Map<string, ChatState>();
 
   constructor(
@@ -21,7 +22,24 @@ export class JobService {
     private readonly jobRepo: Repository<JobPosting>,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
-  ) {}
+  ) {
+    // Backfill embeddings for existing jobs on startup
+    this.backfillEmbeddings().catch((err) =>
+      this.logger.error(`Embedding backfill failed: ${err}`),
+    );
+  }
+
+  private async backfillEmbeddings(): Promise<void> {
+    const missing = await this.jobRepo.find({ where: { embedding: IsNull() } });
+    if (missing.length === 0) return;
+    this.logger.log(`Backfilling embeddings for ${missing.length} job(s)...`);
+    for (const job of missing) {
+      await this.generateEmbedding(job).catch((err) =>
+        this.logger.error(`Backfill failed for job ${job.id}: ${err}`),
+      );
+    }
+    this.logger.log('Embedding backfill complete.');
+  }
 
   async listJobs(employerId?: string): Promise<JobPosting[]> {
     if (employerId) {
@@ -32,7 +50,22 @@ export class JobService {
 
   async createJob(employerId: string, dto: CreateJobDto): Promise<JobPosting> {
     const job = this.jobRepo.create({ ...dto, employerId });
-    return this.jobRepo.save(job);
+    const saved = await this.jobRepo.save(job);
+    // Generate embedding asynchronously (don't block job creation)
+    this.generateEmbedding(saved).catch((err) =>
+      this.logger.error(`Embedding generation failed for job ${saved.id}: ${err}`),
+    );
+    return saved;
+  }
+
+  private async generateEmbedding(job: JobPosting): Promise<void> {
+    const text = `${job.title} | ${job.description} | Skills: ${(job.requiredSkills ?? []).join(', ')}`;
+    const embeddings = await this.aiClient.embed(text);
+    if (embeddings.length > 0) {
+      job.embedding = JSON.stringify(embeddings[0]);
+      await this.jobRepo.save(job);
+      this.logger.log(`Embedding generated for job ${job.id}`);
+    }
   }
 
   async getJob(id: string): Promise<JobPosting> {

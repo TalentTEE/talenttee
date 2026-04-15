@@ -82,6 +82,19 @@ function getSeekerAction(
   }
 
   if (matches.length > 0 && sessions.length === 0) {
+    // If any match already has a negotiation session, show negotiating state
+    const negotiatingMatch = matches.find((m) => m.negotiationSessionId);
+    if (negotiatingMatch) {
+      return {
+        icon: 'handshake',
+        message: 'AI is negotiating on your behalf',
+        detail: 'Your agent is working on the best offer.',
+        ctaLabel: 'Watch Live',
+        ctaHref: `/negotiation/${negotiatingMatch.negotiationSessionId}`,
+        stage: 'negotiate',
+        animating: true,
+      };
+    }
     return {
       icon: 'groups',
       message: `${matches.length} new match${matches.length > 1 ? 'es' : ''} found!`,
@@ -139,6 +152,18 @@ function getEmployerAction(
   const agreedSessions = sessions.filter((s) => s.state === 'AGREED');
 
   if (matches.length > 0 && sessions.length === 0) {
+    const negotiatingMatch = matches.find((m) => m.negotiationSessionId);
+    if (negotiatingMatch) {
+      return {
+        icon: 'handshake',
+        message: 'AI is negotiating with candidate',
+        detail: 'Your agent is working on the best terms.',
+        ctaLabel: 'Monitor',
+        ctaHref: `/negotiation/${negotiatingMatch.negotiationSessionId}`,
+        stage: 'negotiate',
+        animating: true,
+      };
+    }
     return {
       icon: 'groups',
       message: `Found ${matches.length} matching seeker${matches.length > 1 ? 's' : ''}`,

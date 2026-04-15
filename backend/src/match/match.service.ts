@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { MatchResult } from '../entities/match-result.entity.js';
@@ -12,6 +12,8 @@ import { ResumeService } from '../resume/resume.service.js';
 
 @Injectable()
 export class MatchService {
+  private readonly logger = new Logger(MatchService.name);
+
   constructor(
     @InjectRepository(MatchResult)
     private readonly matchRepo: Repository<MatchResult>,
@@ -82,6 +84,13 @@ export class MatchService {
       }
     }
 
+    // Step 4: Auto-negotiate for rank 1 match
+    const topMatch = matches.find((m) => m.finalRank === 1);
+    if (topMatch && !topMatch.negotiationSessionId) {
+      const job = annResults[rerankResults[0].index];
+      await this.autoNegotiate(topMatch, job.employer_id);
+    }
+
     return matches;
   }
 
@@ -139,7 +148,31 @@ export class MatchService {
       }
     }
 
+    // Step 4: Auto-negotiate for rank 1 match
+    const topMatch = matches.find((m) => m.finalRank === 1);
+    if (topMatch && !topMatch.negotiationSessionId) {
+      await this.autoNegotiate(topMatch, job.employerId);
+    }
+
     return matches;
+  }
+
+  private async autoNegotiate(match: MatchResult, employerId: string): Promise<void> {
+    try {
+      match.seekerAgreed = true;
+      match.employerAgreed = true;
+      const result = await this.negotiationHandoff.createSession({
+        jobId: match.jobId,
+        seekerId: match.seekerId,
+        employerId,
+        matchId: match.id,
+      });
+      match.negotiationSessionId = result.sessionId;
+      await this.matchRepo.save(match);
+      this.logger.log(`Auto-negotiation started for match ${match.id} → session ${result.sessionId}`);
+    } catch (err) {
+      this.logger.error(`Auto-negotiation failed for match ${match.id}: ${err}`);
+    }
   }
 
   async agree(matchId: string, userId: string, role: string): Promise<MatchResult> {

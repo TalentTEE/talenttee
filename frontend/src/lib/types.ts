@@ -83,6 +83,7 @@ export interface MatchResult {
   finalRank: number;
   seekerAgreed: boolean;
   employerAgreed: boolean;
+  negotiationSessionId?: string;
 }
 
 /** Extended match result with joined display fields (not in backend entity) */
