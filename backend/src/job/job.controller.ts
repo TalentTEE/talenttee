@@ -29,6 +29,12 @@ export class JobController {
     return this.jobService.getJob(id);
   }
 
+  @Post('jobs/:id/publish')
+  async publishJob(@Req() req, @Param('id') id: string) {
+    this.ensureEmployer(req);
+    return this.jobService.publishJob(id, req.user.id);
+  }
+
   @Post('jobs/chat')
   async chatCreateJob(@Req() req, @Body() dto: ChatMessageDto) {
     this.ensureEmployer(req);

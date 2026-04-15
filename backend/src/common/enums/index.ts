@@ -16,6 +16,7 @@ export enum DataSourceStatus {
 }
 
 export enum JobPostingStatus {
+  DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
   CLOSED = 'CLOSED',
 }

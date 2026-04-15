@@ -291,6 +291,11 @@ export async function createJob(jobData: Partial<JobPosting>): Promise<JobPostin
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(jobData) });
 }
 
+export async function publishJob(jobId: string): Promise<JobPosting> {
+  if (USE_DUMMY) return { ...DUMMY_JOBS[0], id: jobId, status: 'ACTIVE' } as JobPosting;
+  return apiFetch(`/jobs/${jobId}/publish`, { method: 'POST' });
+}
+
 // === Matching ===
 export async function getSeekerMatches(): Promise<MatchResultDisplay[]> {
   if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
