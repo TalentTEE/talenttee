@@ -115,10 +115,94 @@ export async function connectDatasourceMock(provider: string): Promise<DataSourc
 export async function getDatasourceData(provider: string): Promise<DatasourceDetail> {
   if (USE_DUMMY) {
     const fixtures: Record<string, DatasourceDetail> = {
-      GITHUB: {"profile":{"login":"demo-developer","name":"김개발","bio":"Full-stack developer passionate about Web3","public_repos":42,"followers":128},"languages":{"TypeScript":45000,"JavaScript":32000,"Rust":18000,"Python":12000,"Solidity":8000},"repositories":[{"name":"defi-swap-protocol","description":"Decentralized token swap on NEAR Protocol","language":"Rust","stars":34,"forks":12,"topics":["near","defi","blockchain"]},{"name":"ai-resume-builder","description":"AI-powered resume generation tool","language":"TypeScript","stars":89,"forks":23,"topics":["ai","nestjs","openai"]},{"name":"react-dashboard-kit","description":"Enterprise dashboard component library","language":"TypeScript","stars":156,"forks":45,"topics":["react","nextjs","tailwindcss"]}],"contributions":{"total_commits_last_year":847,"prs_merged":123,"issues_closed":67,"code_reviews":89}},
-      SLACK: {"messages":[{"id":"slack-001","channel":"#backend-team","text":"PR #234 머지했습니다. 인증 미들웨어 리팩토링 완료.","timestamp":"2026-03-15T09:30:00Z"},{"id":"slack-002","channel":"#architecture","text":"마이크로서비스 전환 관련해서 이벤트 소싱 패턴이 좋을 것 같습니다.","timestamp":"2026-03-16T14:20:00Z"},{"id":"slack-003","channel":"#code-review","text":"이 부분은 N+1 쿼리 이슈가 있네요. QueryBuilder로 JOIN 걸면 성능 개선됩니다.","timestamp":"2026-03-17T11:00:00Z"},{"id":"slack-004","channel":"#backend-team","text":"배포 파이프라인 에러 수정했습니다. Docker 빌드 캐시 문제였는데 multi-stage build로 해결.","timestamp":"2026-03-18T16:45:00Z"},{"id":"slack-005","channel":"#general","text":"이번 스프린트 회고 결과 공유합니다. API 응답시간 30% 개선.","timestamp":"2026-03-20T10:00:00Z"}]},
-      DISCORD: {"activities":[{"id":"discord-001","server":"NEAR Korea Developers","role":"Core Contributor","messages_count":234,"helpful_answers":45},{"id":"discord-002","server":"TypeScript Korea","role":"Moderator","messages_count":567,"helpful_answers":89},{"id":"discord-003","server":"Web3 Builders","role":"Member","messages_count":123,"helpful_answers":23}]},
-      GOV24: {"certificates":[{"name":"정보처리기사","issuer":"한국산업인력공단","issued_date":"2022-06-15","status":"유효"},{"name":"SQLD (SQL Developer)","issuer":"한국데이터산업진흥원","issued_date":"2021-09-20","status":"유효"}],"education":[{"institution":"서울대학교","degree":"컴퓨터공학 학사","graduation_year":2021,"status":"졸업"}]},
+      GITHUB: {
+        profile:{login:"demo-developer",name:"Dev Kim",bio:"Full-stack developer passionate about Web3",public_repos:42,followers:128},
+        languages:{TypeScript:45000,JavaScript:32000,Rust:18000,Python:12000,Solidity:8000},
+        repositories:[
+          {name:"defi-swap-protocol",description:"Decentralized token swap on NEAR Protocol",language:"Rust",stars:34,forks:12,topics:["near","defi","blockchain"]},
+          {name:"ai-resume-builder",description:"AI-powered resume generation tool",language:"TypeScript",stars:89,forks:23,topics:["ai","nestjs","openai"]},
+          {name:"react-dashboard-kit",description:"Enterprise dashboard component library",language:"TypeScript",stars:156,forks:45,topics:["react","nextjs","tailwindcss"]},
+        ],
+        contributions:{total_commits_last_year:847,prs_merged:123,issues_closed:67,code_reviews:89},
+        analysis:{
+          skills:[
+            {name:"TypeScript/JavaScript",level:92,evidence:"Primary language, 67% of total codebase. Used across frontend (React) and backend (NestJS)"},
+            {name:"Rust/Smart Contract",level:75,evidence:"DeFi protocol development on NEAR. Smart contract design and implementation"},
+            {name:"AI/ML Integration",level:68,evidence:"AI tool development with OpenAI API. Prompt engineering and pipeline construction"},
+            {name:"Frontend Architecture",level:88,evidence:"Component library maintainer (156 stars). Next.js and Tailwind-based architecture"},
+          ],
+          workPatterns:[
+            {trait:"Consistent Contributions",description:"847 commits/year, averaging 16.3 per week"},
+            {trait:"Active Code Reviewer",description:"89 reviews completed. 72% review-to-PR ratio, team-oriented collaboration"},
+            {trait:"Open Source Impact",description:"279 total stars, 80 forks across projects. High community adoption"},
+          ],
+          projects:[
+            {name:"DeFi Swap Protocol",role:"Lead Developer",skills:["Rust","NEAR Protocol","Smart Contract"],impact:"Designed & built decentralized token swap protocol. Forked by 12 developers"},
+            {name:"AI Resume Builder",role:"Full-stack Developer",skills:["TypeScript","NestJS","OpenAI API"],impact:"AI-powered resume generation tool. Achieved 89 stars, 23 forks"},
+            {name:"React Dashboard Kit",role:"Library Author",skills:["React","Next.js","Tailwind CSS"],impact:"Enterprise dashboard component library. Highest adoption rate (156 stars)"},
+          ],
+        },
+      },
+      SLACK: {
+        messages:[
+          {id:"slack-001",channel:"#backend-team",text:"Merged PR #234. Auth middleware refactoring complete.",timestamp:"2026-03-15T09:30:00Z"},
+          {id:"slack-002",channel:"#architecture",text:"For the microservice migration, I think Event Sourcing pattern would work well.",timestamp:"2026-03-16T14:20:00Z"},
+          {id:"slack-003",channel:"#code-review",text:"This has an N+1 query issue. Using QueryBuilder with JOIN should improve performance.",timestamp:"2026-03-17T11:00:00Z"},
+          {id:"slack-004",channel:"#backend-team",text:"Fixed the deployment pipeline error. It was a Docker build cache issue — resolved with multi-stage build.",timestamp:"2026-03-18T16:45:00Z"},
+          {id:"slack-005",channel:"#general",text:"Sharing this sprint's retrospective results. API response time improved by 30%.",timestamp:"2026-03-20T10:00:00Z"},
+        ],
+        analysis:{
+          communicationStyle:{clarity:90,technicalDepth:85,proactiveness:88},
+          traits:[
+            {trait:"Technical Communication",level:90,evidence:"Provides specific improvements like N+1 query fixes in code reviews. Active in architecture discussions"},
+            {trait:"Problem-Solving Initiative",level:88,evidence:"Independently diagnosed deployment pipeline issues and resolved with Docker multi-stage builds"},
+            {trait:"Results Sharing",level:85,evidence:"Quantitatively shares sprint results (30% response time improvement, 0.1% error rate)"},
+            {trait:"Architecture Design",level:82,evidence:"Proposes system-level patterns like Event Sourcing + CQRS in design discussions"},
+          ],
+          workAreas:[
+            {area:"Backend Development",messageCount:2,keywords:["JWT","passport-jwt","Docker","multi-stage build"]},
+            {area:"Architecture Design",messageCount:1,keywords:["CQRS","Event Sourcing","Microservice"]},
+            {area:"Code Review",messageCount:1,keywords:["N+1 Query","TypeORM","QueryBuilder"]},
+            {area:"Sprint Management",messageCount:1,keywords:["Performance","Error Rate","Retrospective"]},
+          ],
+        },
+      },
+      DISCORD: {
+        activities:[
+          {id:"discord-001",server:"NEAR Korea Developers",role:"Core Contributor",messages_count:234,helpful_answers:45},
+          {id:"discord-002",server:"TypeScript Korea",role:"Moderator",messages_count:567,helpful_answers:89},
+          {id:"discord-003",server:"Web3 Builders",role:"Member",messages_count:123,helpful_answers:23},
+        ],
+        analysis:{
+          communityImpact:{totalServers:3,totalMessages:924,totalHelpful:157,helpfulRatio:17},
+          traits:[
+            {trait:"Technical Mentoring",level:88,evidence:"TypeScript Korea moderator. Top contributor with 89 helpful answers"},
+            {trait:"Blockchain Expertise",level:82,evidence:"NEAR Korea Core Contributor. 45 answers on smart contract questions"},
+            {trait:"Community Leadership",level:85,evidence:"Active in 3 servers, holding leadership roles in 2 (Moderator, Core Contributor)"},
+          ],
+          expertise:[
+            {domain:"TypeScript/JavaScript",confidence:92,source:"TypeScript Korea moderator, 567 messages"},
+            {domain:"NEAR/Blockchain",confidence:78,source:"NEAR Korea Core Contributor, 234 messages"},
+            {domain:"Web3 Development",confidence:70,source:"Web3 Builders member, 123 messages"},
+          ],
+        },
+      },
+      GOV24: {
+        certificates:[
+          {name:"Engineer Information Processing",issuer:"HRD Korea",issued_date:"2022-06-15",status:"Valid"},
+          {name:"SQLD (SQL Developer)",issuer:"Korea Data Agency",issued_date:"2021-09-20",status:"Valid"},
+        ],
+        education:[
+          {institution:"Seoul National University",degree:"B.S. Computer Science",graduation_year:2021,status:"Graduated"},
+        ],
+        analysis:{
+          qualifications:[
+            {trait:"Software Engineering Fundamentals",level:90,evidence:"Engineer Information Processing certificate. CS fundamentals verified"},
+            {trait:"Database Design",level:78,evidence:"SQLD certification. SQL query optimization and DB design skills verified"},
+            {trait:"Formal CS Education",level:85,evidence:"Seoul National University, B.S. in Computer Science. Algorithms, data structures, OS coursework"},
+          ],
+        },
+      },
     };
     return fixtures[provider] ?? fixtures.GITHUB;
   }

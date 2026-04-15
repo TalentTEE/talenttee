@@ -1,24 +1,31 @@
 {
   "certificates": [
     {
-      "name": "정보처리기사",
-      "issuer": "한국산업인력공단",
+      "name": "Engineer Information Processing",
+      "issuer": "HRD Korea",
       "issued_date": "2022-06-15",
-      "status": "유효"
+      "status": "Valid"
     },
     {
       "name": "SQLD (SQL Developer)",
-      "issuer": "한국데이터산업진흥원",
+      "issuer": "Korea Data Agency",
       "issued_date": "2021-09-20",
-      "status": "유효"
+      "status": "Valid"
     }
   ],
   "education": [
     {
-      "institution": "서울대학교",
-      "degree": "컴퓨터공학 학사",
+      "institution": "Seoul National University",
+      "degree": "B.S. Computer Science",
       "graduation_year": 2021,
-      "status": "졸업"
+      "status": "Graduated"
     }
-  ]
+  ],
+  "analysis": {
+    "qualifications": [
+      { "trait": "Software Engineering Fundamentals", "level": 90, "evidence": "Engineer Information Processing certificate. CS fundamentals verified" },
+      { "trait": "Database Design", "level": 78, "evidence": "SQLD certification. SQL query optimization and DB design skills verified" },
+      { "trait": "Formal CS Education", "level": 85, "evidence": "Seoul National University, B.S. in Computer Science. Algorithms, data structures, OS coursework" }
+    ]
+  }
 }

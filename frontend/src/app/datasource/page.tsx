@@ -64,6 +64,39 @@ function formatSyncTime(iso: string) {
   });
 }
 
+/* ── Shared Analysis UI Components ── */
+
+function LevelBar({ label, level, evidence }: { label: string; level: number; evidence: string }) {
+  const color = level >= 85 ? 'bg-primary' : level >= 70 ? 'bg-sky-500' : 'bg-slate-500';
+  return (
+    <div className="group">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm text-foreground font-medium">{label}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{level}</span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${level}%` }} />
+      </div>
+      <p className="text-[11px] text-muted-foreground/60 mt-1 leading-snug opacity-0 group-hover:opacity-100 transition-opacity">{evidence}</p>
+    </div>
+  );
+}
+
+function CollapsibleRawData({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-5 pt-4 border-t border-border/10">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+        <span className="material-symbols-outlined text-sm transition-transform duration-200" style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+          chevron_right
+        </span>
+        Raw Data
+      </button>
+      {open && <div className="mt-3 space-y-4">{children}</div>}
+    </div>
+  );
+}
+
 /* ── Provider-specific Detail Panels ── */
 
 function GitHubDetail({ data }: { data: GitHubData }) {
@@ -72,87 +105,142 @@ function GitHubDetail({ data }: { data: GitHubData }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <span className="material-symbols-outlined text-base">person</span>
-        <span className="font-medium text-foreground">{data.profile.name ?? data.profile.login}</span>
-        <span>&middot;</span>
-        <span>{data.profile.public_repos} repos</span>
-        <span>&middot;</span>
-        <span>{data.profile.followers} followers</span>
-      </div>
-
-      {totalBytes > 0 && (
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Languages</p>
-          <div className="flex h-2.5 rounded-full overflow-hidden bg-muted">
-            {langEntries.map(([lang, bytes]) => (
-              <div key={lang} className="h-full first:rounded-l-full last:rounded-r-full"
-                style={{ width: `${(bytes / totalBytes) * 100}%`, backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }}
-                title={`${lang}: ${((bytes / totalBytes) * 100).toFixed(1)}%`} />
-            ))}
+      {/* Analysis Section */}
+      {data.analysis && (
+        <>
+          {/* Skills */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Skills</p>
+            <div className="space-y-3">
+              {data.analysis.skills.map((s) => (
+                <LevelBar key={s.name} label={s.name} level={s.level} evidence={s.evidence} />
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-            {langEntries.map(([lang, bytes]) => (
-              <span key={lang} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }} />
-                {lang} {((bytes / totalBytes) * 100).toFixed(1)}%
-              </span>
+
+          {/* Projects */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Projects</p>
+            <div className="space-y-2">
+              {data.analysis.projects.map((p) => (
+                <div key={p.name} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm text-foreground">{p.name}</span>
+                    <span className="text-xs text-primary/80 font-medium">{p.role}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {p.skills.map((sk) => (
+                      <span key={sk} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary/80">{sk}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{p.impact}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Work Patterns */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Work Patterns</p>
+            <div className="space-y-2">
+              {data.analysis.workPatterns.map((w) => (
+                <div key={w.trait} className="flex items-start gap-2.5 rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+                  <span className="material-symbols-outlined text-sm text-primary/70 mt-0.5 shrink-0">trending_up</span>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{w.trait}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{w.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Raw Data */}
+      <CollapsibleRawData>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="material-symbols-outlined text-base">person</span>
+          <span className="font-medium text-foreground">{data.profile.name ?? data.profile.login}</span>
+          <span>&middot;</span>
+          <span>{data.profile.public_repos} repos</span>
+          <span>&middot;</span>
+          <span>{data.profile.followers} followers</span>
+        </div>
+
+        {totalBytes > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Languages</p>
+            <div className="flex h-2.5 rounded-full overflow-hidden bg-muted">
+              {langEntries.map(([lang, bytes]) => (
+                <div key={lang} className="h-full first:rounded-l-full last:rounded-r-full"
+                  style={{ width: `${(bytes / totalBytes) * 100}%`, backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }}
+                  title={`${lang}: ${((bytes / totalBytes) * 100).toFixed(1)}%`} />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+              {langEntries.map(([lang, bytes]) => (
+                <span key={lang} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }} />
+                  {lang} {((bytes / totalBytes) * 100).toFixed(1)}%
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top Repositories</p>
+          <div className="grid grid-cols-1 gap-2">
+            {data.repositories.map((repo) => (
+              <div key={repo.name} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm text-foreground">{repo.name}</span>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    {repo.language && (
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[repo.language] ?? '#8b8b8b' }} />
+                        {repo.language}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-xs">star</span>{repo.stars}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-xs">call_split</span>{repo.forks}
+                    </span>
+                  </div>
+                </div>
+                {repo.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{repo.description}</p>}
+                {repo.topics.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {repo.topics.map((t) => (
+                      <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary/80">{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
-      )}
 
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top Repositories</p>
-        <div className="grid grid-cols-1 gap-2">
-          {data.repositories.map((repo) => (
-            <div key={repo.name} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-sm text-foreground">{repo.name}</span>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {repo.language && (
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[repo.language] ?? '#8b8b8b' }} />
-                      {repo.language}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-0.5">
-                    <span className="material-symbols-outlined text-xs">star</span>{repo.stars}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <span className="material-symbols-outlined text-xs">call_split</span>{repo.forks}
-                  </span>
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { icon: 'commit', label: 'Commits', value: data.contributions.total_commits_last_year.toLocaleString() },
+            { icon: 'merge_type', label: 'PRs Merged', value: data.contributions.prs_merged.toLocaleString() },
+            { icon: 'bug_report', label: 'Issues Closed', value: data.contributions.issues_closed.toLocaleString() },
+            { icon: 'rate_review', label: 'Code Reviews', value: data.contributions.code_reviews.toLocaleString() },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2.5 rounded-lg bg-[#060610] border border-border/5 px-3 py-2.5">
+              <span className="material-symbols-outlined text-base text-primary/70">{item.icon}</span>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+                <p className="text-sm font-semibold text-foreground">{item.value}</p>
               </div>
-              {repo.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{repo.description}</p>}
-              {repo.topics.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {repo.topics.map((t) => (
-                    <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary/80">{t}</span>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { icon: 'commit', label: 'Commits', value: data.contributions.total_commits_last_year.toLocaleString() },
-          { icon: 'merge_type', label: 'PRs Merged', value: data.contributions.prs_merged.toLocaleString() },
-          { icon: 'bug_report', label: 'Issues Closed', value: data.contributions.issues_closed.toLocaleString() },
-          { icon: 'rate_review', label: 'Code Reviews', value: data.contributions.code_reviews.toLocaleString() },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center gap-2.5 rounded-lg bg-[#060610] border border-border/5 px-3 py-2.5">
-            <span className="material-symbols-outlined text-base text-primary/70">{item.icon}</span>
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="text-sm font-semibold text-foreground">{item.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      </CollapsibleRawData>
     </div>
   );
 }
@@ -167,26 +255,75 @@ function SlackDetail({ data }: { data: SlackData }) {
   const channels = Array.from(channelMap.entries());
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <span className="material-symbols-outlined text-base">chat_bubble</span>
-        <span>{data.messages.length} messages across {channels.length} channels</span>
-      </div>
-      {channels.map(([channel, msgs]) => (
-        <div key={channel}>
-          <p className="text-xs font-semibold text-primary/80 mb-2">{channel}</p>
-          <div className="space-y-2">
-            {msgs.map((msg) => (
-              <div key={msg.id} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
-                <p className="text-sm text-foreground/90 line-clamp-2">{msg.text}</p>
-                <p className="text-[10px] text-muted-foreground/50 mt-1">
-                  {new Date(msg.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            ))}
+    <div className="space-y-5">
+      {/* Analysis Section */}
+      {data.analysis && (
+        <>
+          {/* Communication Style */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Communication Style</p>
+            <div className="space-y-3">
+              {Object.entries(data.analysis.communicationStyle).map(([key, val]) => {
+                const labels: Record<string, string> = { clarity: 'Clarity', technicalDepth: 'Technical Depth', proactiveness: 'Proactiveness' };
+                return <LevelBar key={key} label={labels[key] ?? key} level={val} evidence="" />;
+              })}
+            </div>
           </div>
+
+          {/* Traits */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Traits</p>
+            <div className="space-y-3">
+              {data.analysis.traits.map((t) => (
+                <LevelBar key={t.trait} label={t.trait} level={t.level} evidence={t.evidence} />
+              ))}
+            </div>
+          </div>
+
+          {/* Work Areas */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Work Areas</p>
+            <div className="space-y-2">
+              {data.analysis.workAreas.map((wa) => (
+                <div key={wa.area} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">{wa.area}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{wa.messageCount} msgs</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {wa.keywords.map((kw) => (
+                      <span key={kw} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary/80">{kw}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Raw Data */}
+      <CollapsibleRawData>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span className="material-symbols-outlined text-base">chat_bubble</span>
+          <span>{data.messages.length} messages across {channels.length} channels</span>
         </div>
-      ))}
+        {channels.map(([channel, msgs]) => (
+          <div key={channel}>
+            <p className="text-xs font-semibold text-primary/80 mb-2">{channel}</p>
+            <div className="space-y-2">
+              {msgs.map((msg) => (
+                <div key={msg.id} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+                  <p className="text-sm text-foreground/90 line-clamp-2">{msg.text}</p>
+                  <p className="text-[10px] text-muted-foreground/50 mt-1">
+                    {new Date(msg.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CollapsibleRawData>
     </div>
   );
 }
@@ -196,33 +333,79 @@ function DiscordDetail({ data }: { data: DiscordData }) {
   const totalHelpful = data.activities.reduce((s, a) => s + a.helpful_answers, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-base">dns</span>{data.activities.length} servers
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-base">chat_bubble</span>{totalMessages.toLocaleString()} messages
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-base">thumb_up</span>{totalHelpful} helpful
-        </span>
-      </div>
-      <div className="space-y-2">
-        {data.activities.map((a) => (
-          <div key={a.id} className="flex items-center justify-between rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">{a.server}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{a.messages_count.toLocaleString()} messages &middot; {a.helpful_answers} helpful</p>
-            </div>
-            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-              a.role === 'Moderator' ? 'bg-amber-500/10 text-amber-400'
-                : a.role === 'Core Contributor' ? 'bg-primary/10 text-primary'
-                  : 'bg-muted text-muted-foreground'
-            }`}>{a.role}</span>
+    <div className="space-y-5">
+      {/* Analysis Section */}
+      {data.analysis && (
+        <>
+          {/* Community Impact Summary */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { icon: 'dns', label: 'Servers', value: String(data.analysis.communityImpact.totalServers) },
+              { icon: 'chat_bubble', label: 'Messages', value: data.analysis.communityImpact.totalMessages.toLocaleString() },
+              { icon: 'thumb_up', label: 'Helpful', value: String(data.analysis.communityImpact.totalHelpful) },
+              { icon: 'percent', label: 'Help Rate', value: `${data.analysis.communityImpact.helpfulRatio}%` },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-2.5 rounded-lg bg-[#060610] border border-border/5 px-3 py-2.5">
+                <span className="material-symbols-outlined text-base text-primary/70">{item.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className="text-sm font-semibold text-foreground">{item.value}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+
+          {/* Traits */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Traits</p>
+            <div className="space-y-3">
+              {data.analysis.traits.map((t) => (
+                <LevelBar key={t.trait} label={t.trait} level={t.level} evidence={t.evidence} />
+              ))}
+            </div>
+          </div>
+
+          {/* Expertise */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Expertise</p>
+            <div className="space-y-3">
+              {data.analysis.expertise.map((e) => (
+                <LevelBar key={e.domain} label={e.domain} level={e.confidence} evidence={e.source} />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Raw Data */}
+      <CollapsibleRawData>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base">dns</span>{data.activities.length} servers
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base">chat_bubble</span>{totalMessages.toLocaleString()} messages
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base">thumb_up</span>{totalHelpful} helpful
+          </span>
+        </div>
+        <div className="space-y-2">
+          {data.activities.map((a) => (
+            <div key={a.id} className="flex items-center justify-between rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">{a.server}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{a.messages_count.toLocaleString()} messages &middot; {a.helpful_answers} helpful</p>
+              </div>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                a.role === 'Moderator' ? 'bg-amber-500/10 text-amber-400'
+                  : a.role === 'Core Contributor' ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-muted-foreground'
+              }`}>{a.role}</span>
+            </div>
+          ))}
+        </div>
+      </CollapsibleRawData>
     </div>
   );
 }
@@ -230,6 +413,19 @@ function DiscordDetail({ data }: { data: DiscordData }) {
 function Gov24Detail({ data }: { data: Gov24Data }) {
   return (
     <div className="space-y-5">
+      {/* Analysis Section */}
+      {data.analysis && (
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Qualifications</p>
+          <div className="space-y-3">
+            {data.analysis.qualifications.map((q) => (
+              <LevelBar key={q.trait} label={q.trait} level={q.level} evidence={q.evidence} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Certifications & Education (kept as primary, not raw data) */}
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Certifications</p>
         <div className="space-y-2">
