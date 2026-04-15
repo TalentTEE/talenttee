@@ -14,7 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Header onMenuToggle={() => setSidebarOpen((o) => !o)} />
         <div className="flex">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 p-6 lg:p-8 overflow-auto">{children}</main>
+          <main className="flex-1 p-6 lg:p-8">{children}</main>
         </div>
       </div>
     </AgentStatusProvider>
