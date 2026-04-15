@@ -60,7 +60,7 @@ export interface JobPosting {
   remotePolicy: string;
   workingHours: string;
   benefits: string;
-  status: 'ACTIVE' | 'CLOSED';
+  status: 'DRAFT' | 'ACTIVE' | 'CLOSED';
   negotiationBoundary: NegotiationBoundary | null;
 }
 

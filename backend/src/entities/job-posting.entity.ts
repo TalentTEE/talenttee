@@ -53,7 +53,7 @@ export class JobPosting {
   @Column({ type: 'varchar', nullable: true })
   embedding: string; // pgvector VECTOR(1536)
 
-  @Column({ type: 'varchar', length: 10, default: JobPostingStatus.ACTIVE })
+  @Column({ type: 'varchar', length: 10, default: JobPostingStatus.DRAFT })
   status: JobPostingStatus;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

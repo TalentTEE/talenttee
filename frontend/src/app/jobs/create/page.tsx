@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { chatCreateJob, createJob } from '@/lib/api';
+import { chatCreateJob, createJob, publishJob } from '@/lib/api';
 import { ChatMessage, JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import {
@@ -125,22 +125,33 @@ export default function CreateJobPage() {
       </div>
 
       {activeTab === 'chat' ? (
-        <div className="grid grid-cols-[260px_1fr] gap-4">
-          <ChatSidebar
-            sessions={sessions}
-            currentId={currentSessionId}
-            onSelect={handleSelectSession}
-            onNew={handleNewSession}
-            onDelete={handleDeleteSession}
-          />
-          {currentSession && (
-            <ChatMode
-              key={currentSession.id}
-              session={currentSession}
-              onSessionUpdated={refreshSessions}
+        <>
+          <div className="grid grid-cols-[260px_1fr] gap-4 h-[calc(100vh-14rem)] min-h-[600px]">
+            <ChatSidebar
+              sessions={sessions}
+              currentId={currentSessionId}
+              onSelect={handleSelectSession}
+              onNew={handleNewSession}
+              onDelete={handleDeleteSession}
+            />
+            {currentSession && (
+              <ChatMode
+                key={currentSession.id}
+                session={currentSession}
+                onSessionUpdated={refreshSessions}
+              />
+            )}
+          </div>
+          {currentSession?.completedJob && (
+            <JobPreviewCard
+              job={currentSession.completedJob}
+              onPublished={(updated) => {
+                saveSession({ ...currentSession, completedJob: updated });
+                refreshSessions();
+              }}
             />
           )}
-        </div>
+        </>
       ) : (
         <div className="max-w-3xl">
           <FormMode />
@@ -166,8 +177,8 @@ function ChatSidebar({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-[560px]">
-      <div className="p-3 border-b border-border/10">
+    <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-full min-h-0">
+      <div className="shrink-0 p-3 border-b border-border/10">
         <button
           onClick={onNew}
           className="w-full flex items-center gap-2 justify-center px-3 py-2 rounded-lg bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all"
@@ -176,7 +187,7 @@ function ChatSidebar({
           New Chat
         </button>
       </div>
-      <div data-lenis-prevent className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div data-lenis-prevent className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
         {sessions.length === 0 && (
           <p className="text-xs text-muted-foreground p-3 text-center">
             No conversations yet
@@ -339,9 +350,9 @@ function ChatMode({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Chat Window */}
-      <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-[560px] min-h-0">
+    <div className="h-full min-h-0">
+      {/* Chat Window — fills grid cell; preview card renders outside */}
+      <div className="h-full rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -434,9 +445,6 @@ function ChatMode({
           </div>
         </div>
       </div>
-
-      {/* Job Preview Card */}
-      {createdJob && <JobPreviewCard job={createdJob} />}
     </div>
   );
 }
@@ -465,7 +473,7 @@ function FormMode() {
     setIsSubmitting(true);
 
     try {
-      await createJob({
+      const draft = await createJob({
         title: form.title,
         description: form.description,
         requiredSkills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
@@ -473,6 +481,8 @@ function FormMode() {
         salaryMax: Number(form.salaryMax),
         remotePolicy: form.remotePolicy,
       });
+      // Form submissions go live immediately — publish right after create.
+      await publishJob(draft.id);
       setSubmitted(true);
     } catch {
       alert('Failed to create job posting. Please try again.');
@@ -630,7 +640,34 @@ function FormMode() {
 
 /* ─────────────────────────── Job Preview Card ─────────────────────────── */
 
-function JobPreviewCard({ job }: { job: JobPosting }) {
+function JobPreviewCard({
+  job,
+  onPublished,
+}: {
+  job: JobPosting;
+  onPublished: (updated: JobPosting) => void;
+}) {
+  const router = useRouter();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+
+  const isPublished = job.status === 'ACTIVE';
+
+  const handlePublish = async () => {
+    if (isPublished || isPublishing) return;
+    setIsPublishing(true);
+    setPublishError(null);
+    try {
+      const updated = await publishJob(job.id);
+      onPublished(updated);
+      // Give user a moment to see "Published" state before navigating.
+      setTimeout(() => router.push('/dashboard/employer'), 800);
+    } catch {
+      setPublishError('Failed to publish. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-[#FFE600]/20 bg-card p-6 space-y-5">
@@ -685,13 +722,32 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
         </div>
       )}
 
+      {publishError && (
+        <p className="text-sm text-red-400">{publishError}</p>
+      )}
+
       <div className="flex gap-3 pt-2">
-        <button className="flex-1 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined text-lg">check</span>
-          Publish Job
-        </button>
-        <button className="px-6 py-2.5 rounded-xl bg-accent text-foreground text-base font-medium hover:bg-accent/80 transition-all">
-          Edit
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing || isPublished}
+          className="flex-1 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isPublishing ? (
+            <>
+              <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+              Publishing…
+            </>
+          ) : isPublished ? (
+            <>
+              <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              Published
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-lg">check</span>
+              Publish Job
+            </>
+          )}
         </button>
       </div>
     </div>
