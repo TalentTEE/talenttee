@@ -160,14 +160,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await doLogin(nearAccountId, role);
   };
 
-  /** Login by account ID — looks up stored role */
+  /** Login by account ID — looks up stored role, falls back to backend lookup */
   const loginByAccount = async (nearAccountId: string) => {
     const registry = getAccountRegistry();
-    const role = registry[nearAccountId];
-    if (!role) {
-      throw new Error('Account not found. Please sign up first.');
-    }
+    // Use stored role if available; otherwise fall back to SEEKER.
+    // The backend's findOrCreateUser returns the real role for existing users,
+    // so the fallback value only matters for truly new accounts.
+    const role = registry[nearAccountId] || ('SEEKER' as UserRole);
     await doLogin(nearAccountId, role);
+    // After successful login, persist the actual role from the backend response
+    // so future logins on this browser don't need the fallback.
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      const userData = JSON.parse(stored);
+      if (userData.role) {
+        saveAccountRole(nearAccountId, userData.role);
+      }
+    }
   };
 
   /** Legacy: dummy login by role */
