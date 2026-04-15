@@ -238,6 +238,9 @@ export async function getJobs(): Promise<JobPosting[]> {
   return apiFetch('/jobs');
 }
 
+// Module-level state for multi-turn chat session continuity
+let jobChatSessionId: string | undefined;
+
 export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatResponse> {
   if (USE_DUMMY) {
     if (messages.length >= 6) {
@@ -253,11 +256,20 @@ export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatRes
     return { complete: false, question: questions[Math.min(messages.length, questions.length - 1)] };
   }
   // Backend expects { message: string, sessionId?: string }
+  // Backend returns { sessionId: string, response: JobChatResponse }
   const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
-  return apiFetch('/jobs/chat', {
+  const wrapped = await apiFetch<{ sessionId: string; response: JobChatResponse }>('/jobs/chat', {
     method: 'POST',
-    body: JSON.stringify({ message: lastUserMsg?.content ?? '' }),
+    body: JSON.stringify({
+      message: lastUserMsg?.content ?? '',
+      sessionId: jobChatSessionId,
+    }),
   });
+  jobChatSessionId = wrapped.sessionId;
+  if (wrapped.response.complete) {
+    jobChatSessionId = undefined; // reset for next job
+  }
+  return wrapped.response;
 }
 
 export async function createJob(jobData: Partial<JobPosting>): Promise<JobPosting> {
