@@ -184,6 +184,68 @@ export interface EncryptedNegotiationRound {
   timestamp: string;
 }
 
+/* ── Datasource Detail Types ── */
+export interface GitHubData {
+  profile: {
+    login: string;
+    name: string;
+    bio: string;
+    public_repos: number;
+    followers: number;
+  };
+  languages: Record<string, number>;
+  repositories: {
+    name: string;
+    description: string;
+    language: string;
+    stars: number;
+    forks: number;
+    topics: string[];
+  }[];
+  contributions: {
+    total_commits_last_year: number;
+    prs_merged: number;
+    issues_closed: number;
+    code_reviews: number;
+  };
+}
+
+export interface SlackData {
+  messages: {
+    id: string;
+    channel: string;
+    text: string;
+    timestamp: string;
+  }[];
+}
+
+export interface DiscordData {
+  activities: {
+    id: string;
+    server: string;
+    role: string;
+    messages_count: number;
+    helpful_answers: number;
+  }[];
+}
+
+export interface Gov24Data {
+  certificates: {
+    name: string;
+    issuer: string;
+    issued_date: string;
+    status: string;
+  }[];
+  education: {
+    institution: string;
+    degree: string;
+    graduation_year: number;
+    status: string;
+  }[];
+}
+
+export type DatasourceDetail = GitHubData | SlackData | DiscordData | Gov24Data;
+
 export interface ChatMessage {
   role: 'user' | 'agent';
   content: string;

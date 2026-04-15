@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
@@ -41,6 +41,14 @@ export class DatasourceController {
     const userId = req.user.id;
     const provider = body.provider.toUpperCase() as DataSourceProvider;
     return this.datasourceService.connectMock(userId, provider);
+  }
+
+  @Get('me/:provider/data')
+  @UseGuards(JwtGuard)
+  async getProviderData(@Req() req, @Param('provider') provider: string) {
+    const userId = req.user.id;
+    const normalizedProvider = provider.toUpperCase() as DataSourceProvider;
+    return this.datasourceService.getProviderData(userId, normalizedProvider);
   }
 
   @Get('status')

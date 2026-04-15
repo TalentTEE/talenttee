@@ -468,7 +468,7 @@ export default function ResumePage() {
                 </h2>
               </div>
               <ul className="space-y-2">
-                {resume.strengths.map((s, idx) => (
+                {(resume.strengths ?? []).map((s, idx) => (
                   <li
                     key={idx}
                     className="flex items-start gap-2 text-base text-muted-foreground"
@@ -498,7 +498,7 @@ export default function ResumePage() {
                 </h2>
               </div>
               <ul className="space-y-2">
-                {resume.improvementAreas.map((area, idx) => (
+                {(resume.improvementAreas ?? []).map((area, idx) => (
                   <li
                     key={idx}
                     className="flex items-start gap-2 text-base text-muted-foreground"

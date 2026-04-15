@@ -1,5 +1,5 @@
 import {
-  User, DataSourceConnection, ResumeProfile, JobPosting,
+  User, DataSourceConnection, DatasourceDetail, ResumeProfile, JobPosting,
   MatchResult, MatchResultDisplay, ProfileReport, NegotiationSession, NegotiationRound,
   EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
@@ -110,6 +110,19 @@ export async function connectDatasourceMock(provider: string): Promise<DataSourc
     return conn;
   }
   return apiFetch('/datasource/connect/mock', { method: 'POST', body: JSON.stringify({ provider }) });
+}
+
+export async function getDatasourceData(provider: string): Promise<DatasourceDetail> {
+  if (USE_DUMMY) {
+    const fixtures: Record<string, DatasourceDetail> = {
+      GITHUB: {"profile":{"login":"demo-developer","name":"김개발","bio":"Full-stack developer passionate about Web3","public_repos":42,"followers":128},"languages":{"TypeScript":45000,"JavaScript":32000,"Rust":18000,"Python":12000,"Solidity":8000},"repositories":[{"name":"defi-swap-protocol","description":"Decentralized token swap on NEAR Protocol","language":"Rust","stars":34,"forks":12,"topics":["near","defi","blockchain"]},{"name":"ai-resume-builder","description":"AI-powered resume generation tool","language":"TypeScript","stars":89,"forks":23,"topics":["ai","nestjs","openai"]},{"name":"react-dashboard-kit","description":"Enterprise dashboard component library","language":"TypeScript","stars":156,"forks":45,"topics":["react","nextjs","tailwindcss"]}],"contributions":{"total_commits_last_year":847,"prs_merged":123,"issues_closed":67,"code_reviews":89}},
+      SLACK: {"messages":[{"id":"slack-001","channel":"#backend-team","text":"PR #234 머지했습니다. 인증 미들웨어 리팩토링 완료.","timestamp":"2026-03-15T09:30:00Z"},{"id":"slack-002","channel":"#architecture","text":"마이크로서비스 전환 관련해서 이벤트 소싱 패턴이 좋을 것 같습니다.","timestamp":"2026-03-16T14:20:00Z"},{"id":"slack-003","channel":"#code-review","text":"이 부분은 N+1 쿼리 이슈가 있네요. QueryBuilder로 JOIN 걸면 성능 개선됩니다.","timestamp":"2026-03-17T11:00:00Z"},{"id":"slack-004","channel":"#backend-team","text":"배포 파이프라인 에러 수정했습니다. Docker 빌드 캐시 문제였는데 multi-stage build로 해결.","timestamp":"2026-03-18T16:45:00Z"},{"id":"slack-005","channel":"#general","text":"이번 스프린트 회고 결과 공유합니다. API 응답시간 30% 개선.","timestamp":"2026-03-20T10:00:00Z"}]},
+      DISCORD: {"activities":[{"id":"discord-001","server":"NEAR Korea Developers","role":"Core Contributor","messages_count":234,"helpful_answers":45},{"id":"discord-002","server":"TypeScript Korea","role":"Moderator","messages_count":567,"helpful_answers":89},{"id":"discord-003","server":"Web3 Builders","role":"Member","messages_count":123,"helpful_answers":23}]},
+      GOV24: {"certificates":[{"name":"정보처리기사","issuer":"한국산업인력공단","issued_date":"2022-06-15","status":"유효"},{"name":"SQLD (SQL Developer)","issuer":"한국데이터산업진흥원","issued_date":"2021-09-20","status":"유효"}],"education":[{"institution":"서울대학교","degree":"컴퓨터공학 학사","graduation_year":2021,"status":"졸업"}]},
+    };
+    return fixtures[provider] ?? fixtures.GITHUB;
+  }
+  return apiFetch(`/datasource/me/${provider.toLowerCase()}/data`);
 }
 
 // === Resume ===
