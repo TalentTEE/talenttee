@@ -17,10 +17,7 @@ function stepIndex(status: ResumeProfile['status']): number {
   return STEPS.findIndex((s) => s.key === status);
 }
 
-function formatCurrency(value: number | null): string {
-  if (value === null) return '-';
-  return `$${value.toLocaleString()}`;
-}
+import { formatCurrency } from '@/lib/format';
 
 export default function ResumePage() {
   const { user } = useAuth();

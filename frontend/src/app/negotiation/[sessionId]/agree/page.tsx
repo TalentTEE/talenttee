@@ -4,12 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord } from '@/lib/types';
-
-function formatSalary(value: number): string {
-  if (value >= 10000000) return `${(value / 10000000).toFixed(0)}M KRW`;
-  if (value >= 10000) return `${(value / 10000).toFixed(0)}K KRW`;
-  return `${value.toLocaleString()} KRW`;
-}
+import { formatSalary } from '@/lib/format';
 
 export default function AgreementPage() {
   const params = useParams();

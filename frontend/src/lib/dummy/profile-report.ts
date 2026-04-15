@@ -26,5 +26,5 @@ export const DUMMY_PROFILE_REPORT: ProfileReport = {
     { period: '2024-present', skills: ['AWS', 'CI/CD', 'Architecture'] },
   ],
   certifications: ['Engineer Information Processing', 'AWS Solutions Architect Associate'],
-  marketValueRange: '60M ~ 75M KRW',
+  marketValueRange: '$60M ~ $75M',
 };

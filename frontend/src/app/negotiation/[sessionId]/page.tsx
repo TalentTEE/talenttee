@@ -7,12 +7,7 @@ import { getNegotiationSession, getNegotiationRounds } from '@/lib/api';
 import { NegotiationSession, NegotiationRound } from '@/lib/types';
 import { ThinkingAnimation } from '@/components/negotiation/ThinkingAnimation';
 import { StrategyInsight } from '@/components/negotiation/StrategyInsight';
-
-function formatSalary(value: number): string {
-  if (value >= 10000000) return `${(value / 10000000).toFixed(0)}M`;
-  if (value >= 10000) return `${(value / 10000).toFixed(0)}K`;
-  return value.toLocaleString();
-}
+import { formatSalary } from '@/lib/format';
 
 function stateLabel(state: string): string {
   const map: Record<string, string> = {

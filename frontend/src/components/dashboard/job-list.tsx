@@ -1,6 +1,7 @@
 'use client';
 
 import { JobPosting } from '@/lib/types';
+import { formatSalary } from '@/lib/format';
 import Link from 'next/link';
 
 export function JobList({ jobs }: { jobs: JobPosting[] }) {
@@ -33,7 +34,7 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
                     {j.status}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {(j.salaryMin / 10000).toLocaleString()}M ~ {(j.salaryMax / 10000).toLocaleString()}M KRW
+                    {formatSalary(j.salaryMin)} ~ {formatSalary(j.salaryMax)}
                   </span>
                 </div>
               </div>

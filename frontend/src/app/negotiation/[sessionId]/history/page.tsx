@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getEncryptedHistory, getServerPublicKey } from '@/lib/api';
 import { decryptNegotiationRound } from '@/lib/crypto';
 import { EncryptedNegotiationRound, NegotiationProposal } from '@/lib/types';
+import { formatSalary } from '@/lib/format';
 
 interface DecryptedRound {
   id: string;
@@ -15,12 +16,6 @@ interface DecryptedRound {
   timestamp: string;
   proposal: NegotiationProposal;
   reasoning: string;
-}
-
-function formatSalary(value: number): string {
-  if (value >= 10000000) return `${(value / 10000000).toFixed(0)}M`;
-  if (value >= 10000) return `${(value / 10000).toFixed(0)}K`;
-  return value.toLocaleString();
 }
 
 function decisionStyle(decision: string) {
