@@ -10,7 +10,7 @@ import { AgentActivityStream } from './AgentActivityStream';
 const seekerLinks = [
   { href: '/dashboard/seeker', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
   { href: '/datasource', label: 'Data Sources', icon: 'database', neonColor: '#00F0FF' },
-  { href: '/resume', label: 'Resume', icon: 'description', neonColor: '#BF5AF2' },
+  { href: '/resume', label: 'Insights', icon: 'insights', neonColor: '#BF5AF2' },
   { href: '/negotiations', label: 'Negotiations', icon: 'handshake', neonColor: '#FF2DF1' },
 ];
 

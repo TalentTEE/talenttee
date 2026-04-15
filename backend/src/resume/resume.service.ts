@@ -6,9 +6,9 @@ import { DatasourceService } from '../datasource/datasource.service.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ResumeStatus } from '../common/enums/index.js';
-import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.prompt.js';
-import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.prompt.js';
-import { MARKET_VALUE_PROMPT } from './prompts/market-value.prompt.js';
+import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.en.prompt.js';
+import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.en.prompt.js';
+import { MARKET_VALUE_PROMPT } from './prompts/market-value.en.prompt.js';
 
 @Injectable()
 export class ResumeService {
