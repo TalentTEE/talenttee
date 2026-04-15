@@ -31,8 +31,10 @@ export default function SeekerDashboard() {
         }
         setMatches([]);
       }).catch(() => { setResume(null); setMatches([]); }),
+    ]).then(() =>
+      // Fetch sessions AFTER matches — matching may auto-create negotiation sessions
       getNegotiationSessions().then(setSessions).catch(() => setSessions([])),
-    ]).finally(() => setLoading(false));
+    ).finally(() => setLoading(false));
   }, [user]);
 
   if (loading) {

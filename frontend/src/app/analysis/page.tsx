@@ -161,14 +161,14 @@ export default function ResumePage() {
             rocket_launch
           </span>
           <div className="flex-1">
-            <p className="text-base font-semibold text-foreground">Analysis ready! AI can now match you with jobs.</p>
-            <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking to start automatic matching and negotiation.</p>
+            <p className="text-base font-semibold text-foreground">Analysis ready! AI will automatically match and negotiate for you.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking from the dashboard to start.</p>
           </div>
           <button
-            onClick={() => router.push('/matching')}
+            onClick={() => router.push('/dashboard/seeker')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all"
           >
-            View Matches
+            Go to Dashboard
             <span className="material-symbols-outlined text-base">arrow_forward</span>
           </button>
         </div>
