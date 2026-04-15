@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { chatCreateJob, createJob } from '@/lib/api';
+import { chatCreateJob, createJob, publishJob } from '@/lib/api';
 import { ChatMessage, JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import {
@@ -436,7 +436,12 @@ function ChatMode({
       </div>
 
       {/* Job Preview Card */}
-      {createdJob && <JobPreviewCard job={createdJob} />}
+      {createdJob && (
+        <JobPreviewCard
+          job={createdJob}
+          onPublished={(updated) => setCreatedJob(updated)}
+        />
+      )}
     </div>
   );
 }
@@ -465,7 +470,7 @@ function FormMode() {
     setIsSubmitting(true);
 
     try {
-      await createJob({
+      const draft = await createJob({
         title: form.title,
         description: form.description,
         requiredSkills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
@@ -473,6 +478,8 @@ function FormMode() {
         salaryMax: Number(form.salaryMax),
         remotePolicy: form.remotePolicy,
       });
+      // Form submissions go live immediately — publish right after create.
+      await publishJob(draft.id);
       setSubmitted(true);
     } catch {
       alert('Failed to create job posting. Please try again.');
@@ -630,7 +637,34 @@ function FormMode() {
 
 /* ─────────────────────────── Job Preview Card ─────────────────────────── */
 
-function JobPreviewCard({ job }: { job: JobPosting }) {
+function JobPreviewCard({
+  job,
+  onPublished,
+}: {
+  job: JobPosting;
+  onPublished: (updated: JobPosting) => void;
+}) {
+  const router = useRouter();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+
+  const isPublished = job.status === 'ACTIVE';
+
+  const handlePublish = async () => {
+    if (isPublished || isPublishing) return;
+    setIsPublishing(true);
+    setPublishError(null);
+    try {
+      const updated = await publishJob(job.id);
+      onPublished(updated);
+      // Give user a moment to see "Published" state before navigating.
+      setTimeout(() => router.push('/dashboard/employer'), 800);
+    } catch {
+      setPublishError('Failed to publish. Please try again.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-[#FFE600]/20 bg-card p-6 space-y-5">
@@ -685,13 +719,32 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
         </div>
       )}
 
+      {publishError && (
+        <p className="text-sm text-red-400">{publishError}</p>
+      )}
+
       <div className="flex gap-3 pt-2">
-        <button className="flex-1 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined text-lg">check</span>
-          Publish Job
-        </button>
-        <button className="px-6 py-2.5 rounded-xl bg-accent text-foreground text-base font-medium hover:bg-accent/80 transition-all">
-          Edit
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing || isPublished}
+          className="flex-1 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isPublishing ? (
+            <>
+              <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+              Publishing…
+            </>
+          ) : isPublished ? (
+            <>
+              <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              Published
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-lg">check</span>
+              Publish Job
+            </>
+          )}
         </button>
       </div>
     </div>
