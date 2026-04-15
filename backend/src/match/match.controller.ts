@@ -8,12 +8,22 @@ export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
   @Get('me')
-  async matchForMe(@Req() req) {
+  async getMyMatches(@Req() req) {
+    return this.matchService.getCachedSeekerMatches(req.user.id);
+  }
+
+  @Post('me/refresh')
+  async refreshMyMatches(@Req() req) {
     return this.matchService.matchForSeeker(req.user.id);
   }
 
   @Get('job/:jobId')
-  async matchForJob(@Param('jobId') jobId: string) {
+  async getJobMatches(@Param('jobId') jobId: string) {
+    return this.matchService.getCachedJobMatches(jobId);
+  }
+
+  @Post('job/:jobId/refresh')
+  async refreshJobMatches(@Param('jobId') jobId: string) {
     return this.matchService.matchForJob(jobId);
   }
 

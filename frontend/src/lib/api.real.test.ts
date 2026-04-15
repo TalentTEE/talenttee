@@ -97,7 +97,7 @@ describe('API — Real mode', () => {
       ['getEmployerMatches', () => api.getEmployerMatches('j1'), '/match/job/j1'],
       ['getNegotiationSessions', () => api.getNegotiationSessions(), '/negotiation/sessions'],
       ['getNegotiationSession', () => api.getNegotiationSession('sess1'), '/negotiation/sessions/sess1'],
-      ['getNegotiationRounds', () => api.getNegotiationRounds('sess1'), '/negotiation/sessions/sess1/rounds'],
+      ['getNegotiationRounds', () => api.getNegotiationRounds('sess1'), '/negotiation/sessions/sess1/rounds/decrypted'],
       ['getAgreement', () => api.getAgreement('sess2'), '/agreement/sess2'],
       ['getEscrowBalance', () => api.getEscrowBalance('bob'), '/escrow/balance?accountId=bob'],
       ['getEscrowPayments', () => api.getEscrowPayments(), '/escrow/payments'],
@@ -200,6 +200,24 @@ describe('API — Real mode', () => {
       expect(url).toBe('http://localhost:3001/jobs');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual(jobData);
+    });
+
+    it('refreshSeekerMatches → POST /match/me/refresh', async () => {
+      mockFetch.mockReturnValue(jsonRes([]));
+      await api.refreshSeekerMatches();
+
+      const [url, opts] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:3001/match/me/refresh');
+      expect(opts.method).toBe('POST');
+    });
+
+    it('refreshEmployerMatches → POST /match/job/{id}/refresh', async () => {
+      mockFetch.mockReturnValue(jsonRes([]));
+      await api.refreshEmployerMatches('j1');
+
+      const [url, opts] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:3001/match/job/j1/refresh');
+      expect(opts.method).toBe('POST');
     });
 
     it('agreeMatch → POST /match/{id}/agree', async () => {
