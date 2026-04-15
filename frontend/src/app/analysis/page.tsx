@@ -122,7 +122,7 @@ export default function ResumePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
-            AI Resume
+            Analysis
           </h1>
           <p className="text-base text-muted-foreground mt-1">
             AI-generated professional profile based on your connected data
@@ -138,14 +138,14 @@ export default function ResumePage() {
             <span className="material-symbols-outlined text-base">
               auto_awesome
             </span>
-            Generate Resume
+            Generate Analysis
           </button>
         )}
       </div>
 
       {/* AI Nudge */}
       {!resume && !generating && (
-        <AINudge id="resume-none" message="Your data sources are ready. Generate your AI resume now — it takes about 30 seconds." />
+        <AINudge id="resume-none" message="Your data sources are ready. Generate your AI analysis now — it takes about 30 seconds." />
       )}
       {generating && (
         <AINudge id="resume-gen" message="AI is analyzing your professional history across all connected sources..." />
@@ -161,7 +161,7 @@ export default function ResumePage() {
             rocket_launch
           </span>
           <div className="flex-1">
-            <p className="text-base font-semibold text-foreground">Resume ready! AI can now match you with jobs.</p>
+            <p className="text-base font-semibold text-foreground">Analysis ready! AI can now match you with jobs.</p>
             <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking to start automatic matching and negotiation.</p>
           </div>
           <button
@@ -266,7 +266,7 @@ export default function ResumePage() {
 
         {!generating && !resume && !loading && (
           <div className="mt-6 text-base text-muted-foreground">
-            Connect your data sources and click &quot;Generate Resume&quot; to
+            Connect your data sources and click &quot;Generate Analysis&quot; to
             get started.
           </div>
         )}
