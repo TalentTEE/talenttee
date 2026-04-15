@@ -139,7 +139,7 @@ export default function AgreementPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)] overflow-hidden">
+    <div className="space-y-6">
       {/* Page Title */}
       <div className="mb-6 shrink-0">
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
@@ -150,9 +150,9 @@ export default function AgreementPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Left Column: Agreement Details ── */}
-        <div className="space-y-6 min-h-0 overflow-y-auto pr-2">
+        <div className="space-y-6">
           {/* Success Banner */}
           <div className="bg-primary/5 rounded-2xl border border-primary/20 p-6 text-center">
             <div className="w-14 h-14 rounded-full bg-primary/10 mx-auto mb-3 flex items-center justify-center">
@@ -309,7 +309,7 @@ export default function AgreementPage() {
         </div>
 
         {/* ── Right Column: Negotiation Conversation ── */}
-        <div className="bg-card rounded-2xl border border-border/10 p-5 flex flex-col min-h-0 overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border/10 p-5">
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
               forum
@@ -339,7 +339,7 @@ export default function AgreementPage() {
           )}
 
           {/* Chat Messages */}
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
+          <div className="space-y-3">
             {rounds.length === 0 && (
               <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
                 No negotiation rounds available.

@@ -171,7 +171,7 @@ function FailedRow({ session: s, match }: { session: NegotiationSession; match?:
         </div>
       </div>
       <Link
-        href={`/negotiation/${s.id}/history`}
+        href={`/negotiation/${s.id}`}
         className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-accent transition-all"
       >
         <span className="material-symbols-outlined text-base">history</span>
