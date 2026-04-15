@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, generateResume, USE_DUMMY } from '@/lib/api';
-import { DataSourceConnection } from '@/lib/types';
+import { getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth, generateResume, USE_DUMMY } from '@/lib/api';
+import { DataSourceConnection, DatasourceDetail, GitHubData, SlackData, DiscordData, Gov24Data } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
+import { GitHubConnectDialog } from '@/components/datasource/github-connect-dialog';
+import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
+import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
+import { Gov24ConnectDialog } from '@/components/datasource/gov24-connect-dialog';
 
 /* ── Brand SVG Icons ── */
 function GitHubIcon({ className }: { className?: string }) {
@@ -33,46 +37,9 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 const providerIcons: Record<string, React.ReactNode> = {
-  GITHUB: <GitHubIcon className="w-6 h-6" />,
-  SLACK: <SlackIcon className="w-6 h-6" />,
-  DISCORD: <DiscordIcon className="w-6 h-6" />,
-};
-
-/* ── Collected Data Stats (dummy) ── */
-const COLLECTED_DATA: Record<string, { icon: string; label: string; value: string }[]> = {
-  GITHUB: [
-    { icon: 'folder', label: 'Repositories', value: '127' },
-    { icon: 'commit', label: 'Commits', value: '2,340' },
-    { icon: 'merge_type', label: 'Pull Requests', value: '189' },
-    { icon: 'star', label: 'Stars Received', value: '56' },
-  ],
-  SLACK: [
-    { icon: 'chat_bubble', label: 'Messages', value: '15,230' },
-    { icon: 'tag', label: 'Channels', value: '8' },
-    { icon: 'emoji_emotions', label: 'Reactions Given', value: '1,847' },
-    { icon: 'attachment', label: 'Files Shared', value: '94' },
-  ],
-  DISCORD: [
-    { icon: 'chat_bubble', label: 'Messages', value: '3,210' },
-    { icon: 'dns', label: 'Servers', value: '12' },
-    { icon: 'forum', label: 'Threads', value: '47' },
-    { icon: 'emoji_events', label: 'Roles', value: '5' },
-  ],
-  GOV24: [
-    { icon: 'workspace_premium', label: 'Certifications', value: '4' },
-    { icon: 'school', label: 'Degrees', value: '2' },
-    { icon: 'verified', label: 'Verified Records', value: '6' },
-    { icon: 'calendar_month', label: 'Last Verified', value: 'Apr 2026' },
-  ],
-};
-
-type ConnectPhase = 'connecting' | 'syncing' | 'done';
-
-const SYNC_STATS: Record<string, string> = {
-  GITHUB: 'Analyzing 127 repositories, 2,340 commits...',
-  SLACK: 'Processing 15,000 messages across 8 channels...',
-  DISCORD: 'Reviewing 3,200 messages in 12 servers...',
-  GOV24: 'Verifying 4 certifications, 2 degrees...',
+  GITHUB: <GitHubIcon className="w-5 h-5" />,
+  SLACK: <SlackIcon className="w-5 h-5" />,
+  DISCORD: <DiscordIcon className="w-5 h-5" />,
 };
 
 const PROVIDERS: {
@@ -80,53 +47,257 @@ const PROVIDERS: {
   name: string;
   description: string;
 }[] = [
-  {
-    id: 'GITHUB',
-    name: 'GitHub',
-    description:
-      'Analyze your repositories, contributions, and coding activity to assess technical skills.',
-  },
-  {
-    id: 'SLACK',
-    name: 'Slack',
-    description:
-      'Evaluate communication patterns and collaboration style from workspace interactions.',
-  },
-  {
-    id: 'DISCORD',
-    name: 'Discord',
-    description:
-      'Review community engagement and technical discussions across servers.',
-  },
-  {
-    id: 'GOV24',
-    name: 'Gov24',
-    description:
-      'Verify certifications, education credentials, and official records.',
-  },
+  { id: 'GITHUB', name: 'GitHub', description: 'Repositories, contributions, and coding activity' },
+  { id: 'SLACK', name: 'Slack', description: 'Communication patterns and collaboration style' },
+  { id: 'DISCORD', name: 'Discord', description: 'Community engagement and technical discussions' },
+  { id: 'GOV24', name: 'Gov24', description: 'Certifications and education credentials' },
 ];
+
+const LANG_COLORS: Record<string, string> = {
+  TypeScript: '#3178c6', JavaScript: '#f1e05a', Rust: '#dea584', Python: '#3572A5',
+  Solidity: '#AA6746', Go: '#00ADD8', Java: '#b07219', 'C++': '#f34b7d',
+};
 
 function formatSyncTime(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
 
-function getNextSyncDate(lastSynced: string) {
-  const d = new Date(lastSynced);
-  d.setDate(d.getDate() + 1);
-  d.setHours(9, 0, 0, 0);
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+/* ── Provider-specific Detail Panels ── */
+
+function GitHubDetail({ data }: { data: GitHubData }) {
+  const totalBytes = Object.values(data.languages).reduce((a, b) => a + b, 0);
+  const langEntries = Object.entries(data.languages).sort(([, a], [, b]) => b - a).slice(0, 6);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <span className="material-symbols-outlined text-base">person</span>
+        <span className="font-medium text-foreground">{data.profile.name ?? data.profile.login}</span>
+        <span>&middot;</span>
+        <span>{data.profile.public_repos} repos</span>
+        <span>&middot;</span>
+        <span>{data.profile.followers} followers</span>
+      </div>
+
+      {totalBytes > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Languages</p>
+          <div className="flex h-2.5 rounded-full overflow-hidden bg-muted">
+            {langEntries.map(([lang, bytes]) => (
+              <div key={lang} className="h-full first:rounded-l-full last:rounded-r-full"
+                style={{ width: `${(bytes / totalBytes) * 100}%`, backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }}
+                title={`${lang}: ${((bytes / totalBytes) * 100).toFixed(1)}%`} />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+            {langEntries.map(([lang, bytes]) => (
+              <span key={lang} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }} />
+                {lang} {((bytes / totalBytes) * 100).toFixed(1)}%
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Top Repositories</p>
+        <div className="grid grid-cols-1 gap-2">
+          {data.repositories.map((repo) => (
+            <div key={repo.name} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-sm text-foreground">{repo.name}</span>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  {repo.language && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[repo.language] ?? '#8b8b8b' }} />
+                      {repo.language}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-xs">star</span>{repo.stars}
+                  </span>
+                  <span className="flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-xs">call_split</span>{repo.forks}
+                  </span>
+                </div>
+              </div>
+              {repo.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{repo.description}</p>}
+              {repo.topics.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {repo.topics.map((t) => (
+                    <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary/80">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { icon: 'commit', label: 'Commits', value: data.contributions.total_commits_last_year.toLocaleString() },
+          { icon: 'merge_type', label: 'PRs Merged', value: data.contributions.prs_merged.toLocaleString() },
+          { icon: 'bug_report', label: 'Issues Closed', value: data.contributions.issues_closed.toLocaleString() },
+          { icon: 'rate_review', label: 'Code Reviews', value: data.contributions.code_reviews.toLocaleString() },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center gap-2.5 rounded-lg bg-[#060610] border border-border/5 px-3 py-2.5">
+            <span className="material-symbols-outlined text-base text-primary/70">{item.icon}</span>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">{item.label}</p>
+              <p className="text-sm font-semibold text-foreground">{item.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SlackDetail({ data }: { data: SlackData }) {
+  const channelMap = new Map<string, typeof data.messages>();
+  for (const msg of data.messages) {
+    const list = channelMap.get(msg.channel) ?? [];
+    list.push(msg);
+    channelMap.set(msg.channel, list);
+  }
+  const channels = Array.from(channelMap.entries());
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <span className="material-symbols-outlined text-base">chat_bubble</span>
+        <span>{data.messages.length} messages across {channels.length} channels</span>
+      </div>
+      {channels.map(([channel, msgs]) => (
+        <div key={channel}>
+          <p className="text-xs font-semibold text-primary/80 mb-2">{channel}</p>
+          <div className="space-y-2">
+            {msgs.map((msg) => (
+              <div key={msg.id} className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+                <p className="text-sm text-foreground/90 line-clamp-2">{msg.text}</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-1">
+                  {new Date(msg.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DiscordDetail({ data }: { data: DiscordData }) {
+  const totalMessages = data.activities.reduce((s, a) => s + a.messages_count, 0);
+  const totalHelpful = data.activities.reduce((s, a) => s + a.helpful_answers, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-base">dns</span>{data.activities.length} servers
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-base">chat_bubble</span>{totalMessages.toLocaleString()} messages
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-base">thumb_up</span>{totalHelpful} helpful
+        </span>
+      </div>
+      <div className="space-y-2">
+        {data.activities.map((a) => (
+          <div key={a.id} className="flex items-center justify-between rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">{a.server}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{a.messages_count.toLocaleString()} messages &middot; {a.helpful_answers} helpful</p>
+            </div>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+              a.role === 'Moderator' ? 'bg-amber-500/10 text-amber-400'
+                : a.role === 'Core Contributor' ? 'bg-primary/10 text-primary'
+                  : 'bg-muted text-muted-foreground'
+            }`}>{a.role}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Gov24Detail({ data }: { data: Gov24Data }) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Certifications</p>
+        <div className="space-y-2">
+          {data.certificates.map((cert) => (
+            <div key={cert.name} className="flex items-center justify-between rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">{cert.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{cert.issuer} &middot; {cert.issued_date}</p>
+              </div>
+              <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                {cert.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Education</p>
+        <div className="space-y-2">
+          {data.education.map((edu) => (
+            <div key={edu.institution} className="flex items-center justify-between rounded-lg bg-[#060610] border border-border/5 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">{edu.institution}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{edu.degree} &middot; {edu.graduation_year}</p>
+              </div>
+              <span className="flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+                {edu.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailPanel({ provider, data }: { provider: string; data: DatasourceDetail }) {
+  if (provider === 'GITHUB' && 'repositories' in data) return <GitHubDetail data={data as GitHubData} />;
+  if (provider === 'SLACK' && 'messages' in data) return <SlackDetail data={data as SlackData} />;
+  if (provider === 'DISCORD' && 'activities' in data) return <DiscordDetail data={data as DiscordData} />;
+  if (provider === 'GOV24' && 'certificates' in data) return <Gov24Detail data={data as Gov24Data} />;
+  return null;
+}
+
+/* ── Summary text for collapsed connected sources ── */
+function getProviderSummary(provider: string, data?: DatasourceDetail): string {
+  if (!data) return 'Connected';
+  if (provider === 'GITHUB' && 'repositories' in data) {
+    const d = data as GitHubData;
+    return `${d.profile.public_repos} repos, ${d.contributions.total_commits_last_year} commits`;
+  }
+  if (provider === 'SLACK' && 'messages' in data) {
+    const d = data as SlackData;
+    const channels = new Set(d.messages.map((m) => m.channel));
+    return `${d.messages.length} messages, ${channels.size} channels`;
+  }
+  if (provider === 'DISCORD' && 'activities' in data) {
+    const d = data as DiscordData;
+    const total = d.activities.reduce((s, a) => s + a.messages_count, 0);
+    return `${d.activities.length} servers, ${total} messages`;
+  }
+  if (provider === 'GOV24' && 'certificates' in data) {
+    const d = data as Gov24Data;
+    return `${d.certificates.length} certs, ${d.education.length} degrees`;
+  }
+  return 'Connected';
 }
 
 export default function DatasourcePage() {
@@ -134,8 +305,10 @@ export default function DatasourcePage() {
   const router = useRouter();
   const [connections, setConnections] = useState<DataSourceConnection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [connectPhases, setConnectPhases] = useState<Record<string, ConnectPhase>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [detailData, setDetailData] = useState<Record<string, DatasourceDetail>>({});
+  const [detailLoading, setDetailLoading] = useState<Record<string, boolean>>({});
+  const [dialogOpen, setDialogOpen] = useState<string | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
   const [syncAllProgress, setSyncAllProgress] = useState('');
 
@@ -154,46 +327,29 @@ export default function DatasourcePage() {
     }
   }, []);
 
-  const handleConnect = useCallback(async (provider: string) => {
-    setConnectPhases((prev) => ({ ...prev, [provider]: 'connecting' }));
-
-    try {
-      if (!USE_DUMMY && provider === 'GITHUB') {
-        connectGithubOAuth();
-        return;
+  /* Dialog-based connect handlers */
+  const handleDialogConnect = useCallback(async (provider: string) => {
+    const result = await connectDatasourceMock(provider);
+    setConnections((prev) => {
+      const existing = prev.findIndex((c) => c.provider === provider);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = result;
+        return updated;
       }
-
-      await new Promise((r) => setTimeout(r, 800));
-
-      setConnectPhases((prev) => ({ ...prev, [provider]: 'syncing' }));
-      await new Promise((r) => setTimeout(r, 1500));
-
-      const result = await connectDatasourceMock(provider);
-      setConnections((prev) => {
-        const existing = prev.findIndex((c) => c.provider === provider);
-        if (existing >= 0) {
-          const updated = [...prev];
-          updated[existing] = result;
-          return updated;
-        }
-        return [...prev, result];
-      });
-
-      setConnectPhases((prev) => ({ ...prev, [provider]: 'done' }));
-      await new Promise((r) => setTimeout(r, 1000));
-
-      // Auto-trigger resume generation after first datasource connection
-      generateResume().catch(() => {/* resume generation is fire-and-forget */});
-    } catch (err) {
-      console.error('Failed to connect datasource:', err);
-    } finally {
-      setConnectPhases((prev) => {
-        const next = { ...prev };
-        delete next[provider];
-        return next;
-      });
-    }
+      return [...prev, result];
+    });
+    // Auto-trigger resume generation
+    generateResume().catch(() => {});
   }, []);
+
+  const openConnectDialog = (provider: string) => {
+    if (!USE_DUMMY && provider === 'GITHUB') {
+      connectGithubOAuth();
+      return;
+    }
+    setDialogOpen(provider);
+  };
 
   const handleSyncAll = useCallback(async () => {
     const connectedProviders = connections
@@ -206,23 +362,33 @@ export default function DatasourcePage() {
       const provider = connectedProviders[i];
       const name = PROVIDERS.find((p) => p.id === provider)?.name ?? provider;
       setSyncAllProgress(`Syncing ${name}... (${i + 1}/${connectedProviders.length})`);
-      setConnectPhases((prev) => ({ ...prev, [provider]: 'syncing' }));
       await new Promise((r) => setTimeout(r, 1200));
-      setConnectPhases((prev) => ({ ...prev, [provider]: 'done' }));
-      await new Promise((r) => setTimeout(r, 500));
-      setConnectPhases((prev) => {
-        const next = { ...prev };
-        delete next[provider];
-        return next;
-      });
+      // Refresh data
+      try {
+        const data = await getDatasourceData(provider);
+        setDetailData((prev) => ({ ...prev, [provider]: data }));
+      } catch {}
     }
     setSyncAllProgress('');
     setSyncingAll(false);
   }, [connections]);
 
-  const toggleExpand = (providerId: string) => {
-    setExpanded((prev) => ({ ...prev, [providerId]: !prev[providerId] }));
-  };
+  const toggleExpand = useCallback(async (providerId: string) => {
+    const willExpand = !expanded[providerId];
+    setExpanded((prev) => ({ ...prev, [providerId]: willExpand }));
+
+    if (willExpand && !detailData[providerId]) {
+      setDetailLoading((prev) => ({ ...prev, [providerId]: true }));
+      try {
+        const data = await getDatasourceData(providerId);
+        setDetailData((prev) => ({ ...prev, [providerId]: data }));
+      } catch (err) {
+        console.error(`Failed to load ${providerId} data:`, err);
+      } finally {
+        setDetailLoading((prev) => ({ ...prev, [providerId]: false }));
+      }
+    }
+  }, [expanded, detailData]);
 
   function getConnectionStatus(provider: string): DataSourceConnection | undefined {
     return connections.find((c) => c.provider === provider);
@@ -245,7 +411,6 @@ export default function DatasourcePage() {
             {connectedCount} of {PROVIDERS.length} sources connected.
           </p>
         </div>
-        {/* Sync All Button */}
         {connectedCount > 0 && (
           <button
             onClick={handleSyncAll}
@@ -255,7 +420,7 @@ export default function DatasourcePage() {
             <span className={`material-symbols-outlined text-base ${syncingAll ? 'animate-spin' : ''}`}>
               {syncingAll ? 'progress_activity' : 'sync'}
             </span>
-            {syncingAll ? syncAllProgress : 'Sync All Connected Sources'}
+            {syncingAll ? syncAllProgress : 'Sync All'}
           </button>
         )}
       </div>
@@ -277,10 +442,7 @@ export default function DatasourcePage() {
       {/* Auto-sync banner */}
       {connectedCount > 0 && (
         <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-5 py-4">
-          <span
-            className="material-symbols-outlined text-primary text-xl shrink-0"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
+          <span className="material-symbols-outlined text-primary text-xl shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
             autorenew
           </span>
           <p className="text-base text-foreground/80">
@@ -292,233 +454,161 @@ export default function DatasourcePage() {
       {/* Progress indicator */}
       <div className="rounded-2xl border border-border/10 bg-card p-5">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-base font-semibold text-foreground">
-            Connection Progress
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {connectedCount}/{PROVIDERS.length}
-          </span>
+          <span className="text-base font-semibold text-foreground">Connection Progress</span>
+          <span className="text-sm text-muted-foreground">{connectedCount}/{PROVIDERS.length}</span>
         </div>
         <div className="w-full h-2 rounded-full bg-muted">
-          <div
-            className="h-2 rounded-full bg-primary transition-all duration-500"
-            style={{ width: `${(connectedCount / PROVIDERS.length) * 100}%` }}
-          />
+          <div className="h-2 rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${(connectedCount / PROVIDERS.length) * 100}%` }} />
         </div>
       </div>
 
-      {/* Provider Grid */}
+      {/* Provider List — Collapsible Sections */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-border/10 bg-card p-6 h-52 animate-pulse"
-            />
+            <div key={i} className="rounded-2xl border border-border/10 bg-card p-5 h-16 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
           {PROVIDERS.map((provider) => {
             const connection = getConnectionStatus(provider.id);
-            const isConnected =
-              connection?.status === 'CONNECTED' ||
-              connection?.status === 'MOCK';
-            const phase = connectPhases[provider.id];
-            const isConnecting = !!phase;
+            const isConnected = connection?.status === 'CONNECTED' || connection?.status === 'MOCK';
             const isExpanded = expanded[provider.id] ?? false;
 
             return (
-              <div
-                key={provider.id}
-                className={`rounded-2xl border bg-card transition-all duration-300 ${
-                  phase === 'done'
-                    ? 'border-emerald-500/30'
-                    : isConnected
-                      ? 'border-border/10 hover:border-border/20'
-                      : 'border-border/10 hover:border-border/20'
-                }`}
-              >
-                <div className="p-6 flex flex-col gap-4">
-                  {/* Card Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                          phase === 'done'
-                            ? 'bg-emerald-500/10 text-emerald-400'
-                            : isConnected
-                              ? 'bg-primary/10 text-primary'
-                              : 'bg-muted text-muted-foreground'
-                        }`}
+              <div key={provider.id} className="rounded-2xl border border-border/10 bg-card overflow-hidden">
+                {/* Collapsible Header */}
+                <div className="flex items-center">
+                  <button
+                    onClick={() => isConnected ? toggleExpand(provider.id) : openConnectDialog(provider.id)}
+                    className="flex items-center gap-3 flex-1 min-w-0 px-5 py-4 text-left group"
+                  >
+                    {/* Chevron (only for connected) */}
+                    {isConnected ? (
+                      <span
+                        className="material-symbols-outlined text-lg text-muted-foreground/50 transition-transform duration-200 shrink-0"
+                        style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
                       >
-                        {phase === 'done' ? (
-                          <span
-                            className="material-symbols-outlined text-2xl"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            check_circle
-                          </span>
-                        ) : providerIcons[provider.id] ? (
-                          providerIcons[provider.id]
-                        ) : (
-                          <span
-                            className="material-symbols-outlined text-2xl"
-                            style={
-                              isConnected
-                                ? { fontVariationSettings: "'FILL' 1" }
-                                : undefined
-                            }
-                          >
-                            assured_workload
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-[var(--font-manrope)] font-bold text-foreground">
-                          {provider.name}
-                        </h3>
-                        <span
-                          className={`inline-flex items-center gap-1.5 text-sm font-medium ${
-                            phase === 'done'
-                              ? 'text-emerald-400'
-                              : isConnected
-                                ? 'text-emerald-400'
-                                : isConnecting
-                                  ? 'text-amber-400'
-                                  : 'text-muted-foreground'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              phase === 'done'
-                                ? 'bg-emerald-400'
-                                : isConnected
-                                  ? 'bg-emerald-400'
-                                  : isConnecting
-                                    ? 'bg-amber-400 animate-pulse'
-                                    : 'bg-muted-foreground/40'
-                            }`}
-                          />
-                          {phase === 'done'
-                            ? 'Connected!'
-                            : phase === 'syncing'
-                              ? 'Syncing data...'
-                              : phase === 'connecting'
-                                ? 'Connecting...'
-                                : isConnected
-                                  ? 'Connected'
-                                  : 'Disconnected'}
+                        chevron_right
+                      </span>
+                    ) : (
+                      <span className="w-[24px]" />
+                    )}
+
+                    {/* Icon */}
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      isConnected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {providerIcons[provider.id] ?? (
+                        <span className="material-symbols-outlined text-lg"
+                          style={isConnected ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                          assured_workload
                         </span>
-                      </div>
+                      )}
                     </div>
 
-                    {/* Expand toggle for connected sources */}
-                    {isConnected && !isConnecting && (
+                    {/* Name + status */}
+                    <div className="min-w-0 flex-1">
+                      <span className="font-[var(--font-manrope)] font-bold text-sm text-foreground">{provider.name}</span>
+                      {isConnected && (
+                        <span className="inline-flex items-center gap-1 ml-2 text-xs text-emerald-400 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          Connected
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Summary or Connect label */}
+                    <span className="text-xs text-muted-foreground/60 shrink-0 tabular-nums">
+                      {isConnected
+                        ? (connection?.lastSyncedAt
+                            ? formatSyncTime(connection.lastSyncedAt)
+                            : getProviderSummary(provider.id, detailData[provider.id]))
+                        : provider.description
+                      }
+                    </span>
+                  </button>
+
+                  {/* Connect button for disconnected / sync button for connected */}
+                  <div className="pr-4 shrink-0">
+                    {isConnected ? (
                       <button
                         onClick={() => toggleExpand(provider.id)}
-                        className="p-1 rounded-lg hover:bg-muted transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        title="View details"
                       >
-                        <span
-                          className="material-symbols-outlined text-xl text-muted-foreground transition-transform duration-300"
-                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                        >
+                        <span className="material-symbols-outlined text-lg text-muted-foreground/50 transition-transform duration-200"
+                          style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                           expand_more
                         </span>
                       </button>
+                    ) : (
+                      <button
+                        onClick={() => openConnectDialog(provider.id)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all"
+                      >
+                        <span className="material-symbols-outlined text-sm">link</span>
+                        Connect
+                      </button>
                     )}
                   </div>
-
-                  {/* Description or sync status */}
-                  {phase === 'syncing' ? (
-                    <p className="text-base text-amber-400/80 leading-relaxed flex-1 animate-pulse">
-                      {SYNC_STATS[provider.id]}
-                    </p>
-                  ) : phase === 'done' ? (
-                    <p className="text-base text-emerald-400/80 leading-relaxed flex-1">
-                      Data collection complete. Your profile is being updated.
-                    </p>
-                  ) : (
-                    <p className="text-base text-muted-foreground leading-relaxed flex-1">
-                      {provider.description}
-                    </p>
-                  )}
-
-                  {/* Auto-sync schedule (for connected sources) */}
-                  {isConnected && !isConnecting && connection?.lastSyncedAt && !isExpanded && (
-                    <div className="rounded-lg bg-[#060610] border border-border/5 px-4 py-3 space-y-1">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
-                        <span className="material-symbols-outlined text-base">schedule</span>
-                        Auto-sync: Daily at 9:00 AM KST
-                      </div>
-                      <p className="text-sm text-muted-foreground/50">
-                        Last synced: {formatSyncTime(connection.lastSyncedAt)}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Connect button — only for disconnected sources */}
-                  {!isConnected && (
-                    <button
-                      onClick={() => handleConnect(provider.id)}
-                      disabled={isConnecting}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-base font-semibold transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isConnecting ? (
-                        <>
-                          <span className="material-symbols-outlined text-base animate-spin">
-                            progress_activity
-                          </span>
-                          {phase === 'syncing'
-                            ? 'Syncing data...'
-                            : phase === 'done'
-                              ? 'Connected!'
-                              : 'Connecting...'}
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined text-base">
-                            link
-                          </span>
-                          Connect
-                        </>
-                      )}
-                    </button>
-                  )}
                 </div>
 
-                {/* Expandable Panel — collected data details */}
-                {isConnected && isExpanded && (
-                  <div className="border-t border-border/10 px-6 py-5">
-                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                      Collected Data
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      {COLLECTED_DATA[provider.id]?.map((item) => (
-                        <div key={item.label} className="flex items-center gap-3 rounded-lg bg-[#060610] border border-border/5 px-3 py-2.5">
-                          <span className="material-symbols-outlined text-base text-primary/70">
-                            {item.icon}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-sm text-muted-foreground truncate">{item.label}</p>
-                            <p className="text-base font-semibold text-foreground">{item.value}</p>
-                          </div>
+                {/* Collapsible Content — slide down */}
+                <div
+                  className="grid transition-all duration-200 ease-out"
+                  style={{ gridTemplateRows: isConnected && isExpanded ? '1fr' : '0fr' }}
+                >
+                  <div className="overflow-hidden">
+                    <div className="border-t border-border/10 px-6 pb-5 pt-4">
+                      {detailLoading[provider.id] ? (
+                        <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+                          <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                          <span className="text-sm">Loading data...</span>
                         </div>
-                      ))}
+                      ) : detailData[provider.id] ? (
+                        <DetailPanel provider={provider.id} data={detailData[provider.id]} />
+                      ) : (
+                        <p className="text-sm text-muted-foreground/50 text-center py-4">No data available</p>
+                      )}
+                      {connection?.lastSyncedAt && (
+                        <div className="mt-4 pt-3 border-t border-border/5 flex items-center justify-between text-sm text-muted-foreground/50">
+                          <span>Last synced: {formatSyncTime(connection.lastSyncedAt)}</span>
+                        </div>
+                      )}
                     </div>
-                    {connection?.lastSyncedAt && (
-                      <div className="mt-4 pt-3 border-t border-border/5 flex items-center justify-between text-sm text-muted-foreground/50">
-                        <span>Last synced: {formatSyncTime(connection.lastSyncedAt)}</span>
-                        <span>Next sync: {getNextSyncDate(connection.lastSyncedAt)}</span>
-                      </div>
-                    )}
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Connect Dialogs */}
+      <GitHubConnectDialog
+        open={dialogOpen === 'GITHUB'}
+        onOpenChange={(val) => !val && setDialogOpen(null)}
+        onConnect={async () => { await handleDialogConnect('GITHUB'); }}
+        useDummy={USE_DUMMY}
+      />
+      <SlackConnectDialog
+        open={dialogOpen === 'SLACK'}
+        onOpenChange={(val) => !val && setDialogOpen(null)}
+        onConnect={async () => { await handleDialogConnect('SLACK'); }}
+      />
+      <DiscordConnectDialog
+        open={dialogOpen === 'DISCORD'}
+        onOpenChange={(val) => !val && setDialogOpen(null)}
+        onConnect={async () => { await handleDialogConnect('DISCORD'); }}
+      />
+      <Gov24ConnectDialog
+        open={dialogOpen === 'GOV24'}
+        onOpenChange={(val) => !val && setDialogOpen(null)}
+        onVerified={async () => { await handleDialogConnect('GOV24'); }}
+      />
     </div>
   );
 }

@@ -89,6 +89,80 @@ export class DatasourceService {
     return JSON.parse(readFileSync(filePath, 'utf-8'));
   }
 
+  async getProviderData(userId: string, provider: DataSourceProvider): Promise<Record<string, any>> {
+    const conn = await this.getConnectionByProvider(userId, provider);
+    if (!conn) throw new NotFoundException(`${provider} is not connected`);
+
+    // For real GitHub connection, fetch from GitHub API
+    if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
+      return this.fetchGithubData(conn.accessToken);
+    }
+
+    // For MOCK or other providers, return fixture data
+    return this.loadFixture(provider);
+  }
+
+  private async fetchGithubData(accessToken: string): Promise<Record<string, any>> {
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'TalentTEE',
+    };
+
+    const [profileRes, reposRes] = await Promise.all([
+      fetch('https://api.github.com/user', { headers }),
+      fetch('https://api.github.com/user/repos?per_page=100&sort=updated', { headers }),
+    ]);
+
+    const profile = await profileRes.json();
+    const repos = await reposRes.json();
+
+    // Aggregate language bytes from repos
+    const languages: Record<string, number> = {};
+    for (const repo of repos) {
+      if (repo.language) {
+        languages[repo.language] = (languages[repo.language] || 0) + (repo.size || 0);
+      }
+    }
+
+    // Get contribution events (last 90 days)
+    const eventsRes = await fetch(`https://api.github.com/users/${profile.login}/events?per_page=100`, { headers });
+    const events = await eventsRes.json();
+    const pushEvents = Array.isArray(events) ? events.filter((e: any) => e.type === 'PushEvent') : [];
+    const prEvents = Array.isArray(events) ? events.filter((e: any) => e.type === 'PullRequestEvent') : [];
+
+    // Top repos by stars
+    const topRepos = (Array.isArray(repos) ? repos : [])
+      .sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+      .slice(0, 6)
+      .map((r: any) => ({
+        name: r.name,
+        description: r.description,
+        language: r.language,
+        stars: r.stargazers_count,
+        forks: r.forks_count,
+        topics: r.topics || [],
+      }));
+
+    return {
+      profile: {
+        login: profile.login,
+        name: profile.name,
+        bio: profile.bio,
+        public_repos: profile.public_repos,
+        followers: profile.followers,
+      },
+      languages,
+      repositories: topRepos,
+      contributions: {
+        total_commits_last_year: pushEvents.reduce((sum: number, e: any) => sum + (e.payload?.commits?.length || 0), 0),
+        prs_merged: prEvents.length,
+        issues_closed: 0,
+        code_reviews: 0,
+      },
+    };
+  }
+
   async collectAllData(userId: string): Promise<{
     github: Record<string, any> | null;
     slack: Record<string, any> | null;
