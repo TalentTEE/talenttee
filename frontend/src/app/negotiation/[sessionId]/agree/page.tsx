@@ -3,8 +3,48 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, USE_DUMMY } from '@/lib/api';
-import { AgreementRecord, NegotiationRound } from '@/lib/types';
+import { AgreementRecord, NegotiationRound, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
+
+function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('@/lib/types').NegotiationReasoning; isSeeker: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const structured = isStructuredReasoning(reasoning);
+
+  return (
+    <div className={`rounded-2xl px-3 py-2.5 text-sm leading-relaxed ${
+      isSeeker
+        ? 'bg-primary/10 border border-primary/10 rounded-br-md'
+        : 'bg-accent/50 border border-border/10 rounded-bl-md'
+    }`}>
+      <p className="text-foreground/90">
+        &ldquo;{structured ? reasoning.summary : reasoning}&rdquo;
+      </p>
+      {structured && reasoning.factors.length > 0 && (
+        <>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className={`material-symbols-outlined text-xs transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+              expand_more
+            </span>
+            {expanded ? 'Hide' : 'View'} factors
+          </button>
+          {expanded && (
+            <ul className="mt-1.5 space-y-1 animate-[fadeSlideUp_200ms_ease-out]">
+              {reasoning.factors.map((factor, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground/80 leading-relaxed">
+                  <span className="material-symbols-outlined text-[10px] text-primary/50 mt-0.5 shrink-0">arrow_right</span>
+                  {factor}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function AgreementPage() {
   const params = useParams();
@@ -325,13 +365,7 @@ export default function AgreementPage() {
                   <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[90%] space-y-1.5 flex flex-col ${isSeeker ? 'items-end' : 'items-start'}`}>
                       {/* Reasoning */}
-                      <div className={`rounded-2xl px-3 py-2.5 text-sm leading-relaxed ${
-                        isSeeker
-                          ? 'bg-primary/10 border border-primary/10 rounded-br-md'
-                          : 'bg-accent/50 border border-border/10 rounded-bl-md'
-                      }`}>
-                        <p className="text-foreground/90">&ldquo;{round.reasoning}&rdquo;</p>
-                      </div>
+                      <ReasoningBubble reasoning={round.reasoning} isSeeker={isSeeker} />
 
                       {/* Compact Proposal */}
                       <div className="flex flex-wrap gap-1.5 px-1">
