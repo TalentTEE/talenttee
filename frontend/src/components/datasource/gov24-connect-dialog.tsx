@@ -54,10 +54,10 @@ export function Gov24ConnectDialog({ open, onOpenChange, onVerified }: Gov24Conn
                     assured_workload
                   </span>
                 </div>
-                <DialogTitle>본인 인증</DialogTitle>
+                <DialogTitle>Identity Verification</DialogTitle>
               </div>
               <DialogDescription>
-                Gov24 데이터 연동을 위해 본인 인증을 진행해주세요. 자격증과 학력이 자동으로 확인됩니다.
+                Verify your identity to connect Gov24 data. Certifications and education will be verified automatically.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
@@ -65,13 +65,13 @@ export function Gov24ConnectDialog({ open, onOpenChange, onVerified }: Gov24Conn
                 onClick={() => handleVerify('kakao')}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FEE500] text-[#191919] font-semibold text-base hover:bg-[#FDD800] transition-all"
               >
-                카카오 인증
+                Verify with Kakao
               </button>
               <button
                 onClick={() => handleVerify('pass')}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-primary/30 text-primary font-semibold text-base hover:bg-primary/5 transition-all"
               >
-                PASS 인증
+                Verify with PASS
               </button>
             </div>
           </>
@@ -81,7 +81,7 @@ export function Gov24ConnectDialog({ open, onOpenChange, onVerified }: Gov24Conn
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-primary">progress_activity</span>
             <p className="text-sm text-muted-foreground">
-              {verifyMethod === 'kakao' ? '카카오' : 'PASS'} 인증 중...
+              Verifying with {verifyMethod === 'kakao' ? 'Kakao' : 'PASS'}...
             </p>
           </div>
         )}
@@ -89,21 +89,21 @@ export function Gov24ConnectDialog({ open, onOpenChange, onVerified }: Gov24Conn
         {step === 'verified' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-            <p className="text-sm font-medium text-foreground">인증이 완료되었습니다</p>
+            <p className="text-sm font-medium text-foreground">Verification complete</p>
           </div>
         )}
 
         {step === 'connecting' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-primary">progress_activity</span>
-            <p className="text-sm text-muted-foreground">자격증 및 학력 확인 중...</p>
+            <p className="text-sm text-muted-foreground">Verifying certifications and education...</p>
           </div>
         )}
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-            <p className="text-sm font-medium text-foreground">Gov24 연결 완료</p>
+            <p className="text-sm font-medium text-foreground">Gov24 Connected</p>
           </div>
         )}
       </DialogContent>

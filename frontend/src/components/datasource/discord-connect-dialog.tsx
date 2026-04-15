@@ -78,10 +78,10 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
                     <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
                   </svg>
                 </div>
-                <DialogTitle>Discord 연결</DialogTitle>
+                <DialogTitle>Connect Discord</DialogTitle>
               </div>
               <DialogDescription>
-                Discord 서버 활동을 분석하여 커뮤니티 기여도와 기술 토론 참여를 평가합니다
+                Analyze Discord server activity to evaluate community contributions and technical discussion participation
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
@@ -89,10 +89,10 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
                 onClick={handleLogin}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#5865F2] text-white font-semibold text-base hover:bg-[#4752c4] transition-all"
               >
-                Discord로 로그인
+                Sign in with Discord
               </button>
               <p className="text-xs text-center text-muted-foreground/60">
-                읽기 전용 권한만 요청합니다
+                Read-only permissions will be requested
               </p>
             </div>
           </>
@@ -101,16 +101,16 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
         {step === 'loading' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-[#5865F2]">progress_activity</span>
-            <p className="text-sm text-muted-foreground">Discord에 연결하는 중...</p>
+            <p className="text-sm text-muted-foreground">Connecting to Discord...</p>
           </div>
         )}
 
         {step === 'select' && (
           <>
             <DialogHeader>
-              <DialogTitle>서버 선택</DialogTitle>
+              <DialogTitle>Select Servers</DialogTitle>
               <DialogDescription>
-                분석에 포함할 서버를 선택하세요
+                Choose servers to include in analysis
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2 max-h-[320px] overflow-y-auto">
@@ -132,7 +132,7 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
                         {srv.role}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground/50 mt-0.5">{srv.members.toLocaleString()}명 멤버</p>
+                    <p className="text-xs text-muted-foreground/50 mt-0.5">{srv.members.toLocaleString()} members</p>
                   </div>
                 </label>
               ))}
@@ -142,7 +142,7 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
               disabled={selected.length === 0}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {selected.length}개 서버 연결하기
+              Connect {selected.length} servers
             </button>
           </>
         )}
@@ -150,14 +150,14 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
         {step === 'connecting' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-primary">progress_activity</span>
-            <p className="text-sm text-muted-foreground">활동 분석 중...</p>
+            <p className="text-sm text-muted-foreground">Analyzing activity...</p>
           </div>
         )}
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-            <p className="text-sm font-medium text-foreground">Discord 연결 완료</p>
+            <p className="text-sm font-medium text-foreground">Discord Connected</p>
           </div>
         )}
       </DialogContent>

@@ -86,16 +86,16 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
                     <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.607.069-.607 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
                   </svg>
                 </div>
-                <DialogTitle>GitHub 연결</DialogTitle>
+                <DialogTitle>Connect GitHub</DialogTitle>
               </div>
               <DialogDescription>
-                GitHub 계정을 연결하여 코드 기여, 기술 스택, 프로젝트 이력을 분석합니다
+                Connect your GitHub account to analyze code contributions, tech stack, and project history
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
               <div className="rounded-xl border border-border/10 bg-[#060610] px-4 py-3">
-                <p className="text-xs text-muted-foreground mb-1">요청 권한</p>
-                <p className="text-sm text-foreground">read:user, repo (읽기 전용)</p>
+                <p className="text-xs text-muted-foreground mb-1">Permissions</p>
+                <p className="text-sm text-foreground">read:user, repo (read-only)</p>
               </div>
               <button
                 onClick={handleLogin}
@@ -104,7 +104,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
                 <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                   <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.607.069-.607 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
                 </svg>
-                GitHub으로 로그인
+                Sign in with GitHub
               </button>
             </div>
           </>
@@ -113,16 +113,16 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
         {step === 'loading' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-foreground">progress_activity</span>
-            <p className="text-sm text-muted-foreground">GitHub에 연결하는 중...</p>
+            <p className="text-sm text-muted-foreground">Connecting to GitHub...</p>
           </div>
         )}
 
         {step === 'select' && (
           <>
             <DialogHeader>
-              <DialogTitle>레포지토리 선택</DialogTitle>
+              <DialogTitle>Select Repositories</DialogTitle>
               <DialogDescription>
-                AI 분석에 포함할 레포지토리를 선택하세요
+                Choose repositories to include in AI analysis
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2 max-h-[320px] overflow-y-auto">
@@ -159,7 +159,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
               disabled={selected.length === 0}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {selected.length}개 레포지토리 연결하기
+              Connect {selected.length} repositories
             </button>
           </>
         )}
@@ -167,14 +167,14 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
         {step === 'connecting' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-primary">progress_activity</span>
-            <p className="text-sm text-muted-foreground">레포지토리 분석 중...</p>
+            <p className="text-sm text-muted-foreground">Analyzing repositories...</p>
           </div>
         )}
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-            <p className="text-sm font-medium text-foreground">GitHub 연결 완료</p>
+            <p className="text-sm font-medium text-foreground">GitHub Connected</p>
           </div>
         )}
       </DialogContent>

@@ -102,11 +102,11 @@ export class ResumeService {
     const parts: string[] = [];
 
     if (resume.summary) {
-      parts.push(`요약: ${resume.summary}`);
+      parts.push(`Summary: ${resume.summary}`);
     }
 
     if (resume.skills?.length) {
-      parts.push(`기술 스택: ${resume.skills.join(', ')}`);
+      parts.push(`Tech Stack: ${resume.skills.join(', ')}`);
     }
 
     if (resume.experience?.length) {
@@ -114,14 +114,14 @@ export class ResumeService {
         (e) =>
           `${e.role} @ ${e.company} (${e.period}) - ${(e.highlights ?? []).join('; ')}`,
       );
-      parts.push(`경력:\n${expLines.join('\n')}`);
+      parts.push(`Experience:\n${expLines.join('\n')}`);
     }
 
     if (resume.education?.length) {
       const eduLines = resume.education.map(
         (e) => `${e.degree} - ${e.institution} (${e.year})`,
       );
-      parts.push(`학력:\n${eduLines.join('\n')}`);
+      parts.push(`Education:\n${eduLines.join('\n')}`);
     }
 
     return parts.join('\n\n');

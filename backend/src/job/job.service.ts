@@ -5,8 +5,8 @@ import { JobPosting } from '../entities/job-posting.entity.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/index.js';
 import type { NearAiClient } from '../common/interfaces/index.js';
 import { CreateJobDto } from './dto/create-job.dto.js';
-import { JOB_CREATION_SYSTEM_PROMPT } from './prompts/job-creation.prompt.js';
-import { BOUNDARY_SETTING_SYSTEM_PROMPT } from './prompts/boundary-setting.prompt.js';
+import { JOB_CREATION_SYSTEM_PROMPT } from './prompts/job-creation.en.prompt.js';
+import { BOUNDARY_SETTING_SYSTEM_PROMPT } from './prompts/boundary-setting.en.prompt.js';
 
 interface ChatState {
   history: { role: string; content: string }[];

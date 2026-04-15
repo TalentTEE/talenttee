@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,6 +6,16 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { DataSourceConnection } from '../entities/data-source-connection.entity.js';
 import { DataSourceProvider, DataSourceStatus } from '../common/enums/index.js';
+import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
+import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
+import {
+  GITHUB_ANALYSIS_PROMPT,
+  SLACK_ANALYSIS_PROMPT,
+  DISCORD_ANALYSIS_PROMPT,
+  GOV24_ANALYSIS_PROMPT,
+} from './prompts/datasource-analysis.prompt.js';
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 @Injectable()
 export class DatasourceService {
@@ -13,6 +23,8 @@ export class DatasourceService {
     @InjectRepository(DataSourceConnection)
     private readonly dsRepo: Repository<DataSourceConnection>,
     private readonly config: ConfigService,
+    @Inject(NEAR_AI_CLIENT)
+    private readonly aiClient: NearAiClient,
   ) {}
 
   async exchangeGithubCode(code: string): Promise<string> {
@@ -93,21 +105,42 @@ export class DatasourceService {
     const conn = await this.getConnectionByProvider(userId, provider);
     if (!conn) throw new NotFoundException(`${provider} is not connected`);
 
-    const fixture = this.loadFixture(provider);
-
-    // For real GitHub connection, fetch from GitHub API and merge fixture analysis
+    // 1. Get raw data (live GitHub or fixture)
+    let rawData: Record<string, any>;
     if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
       try {
-        const liveData = await this.fetchGithubData(conn.accessToken);
-        return { ...liveData, analysis: fixture.analysis };
+        rawData = await this.fetchGithubData(conn.accessToken);
       } catch {
-        // Token expired or GitHub API error — fall back to fixture
-        return fixture;
+        rawData = this.loadFixture(provider);
       }
+    } else {
+      rawData = this.loadFixture(provider);
     }
 
-    // For MOCK or other providers, return fixture data
-    return fixture;
+    // 2. Check analysis cache
+    const { analysis: _fixtureAnalysis, ...rawWithoutAnalysis } = rawData;
+    const isCacheFresh =
+      conn.analysisCache &&
+      conn.analysisCachedAt &&
+      Date.now() - new Date(conn.analysisCachedAt).getTime() < CACHE_TTL_MS;
+
+    if (isCacheFresh) {
+      return { ...rawWithoutAnalysis, analysis: conn.analysisCache };
+    }
+
+    // 3. Run AI analysis
+    try {
+      const analysis = await this.analyzeProviderData(provider, rawWithoutAnalysis);
+      conn.analysisCache = analysis;
+      conn.analysisCachedAt = new Date();
+      await this.dsRepo.save(conn);
+      return { ...rawWithoutAnalysis, analysis };
+    } catch (err) {
+      console.error(`AI analysis failed for ${provider}:`, err);
+      // Fall back to fixture analysis or cached (even if stale)
+      const fallback = conn.analysisCache ?? this.loadFixture(provider).analysis;
+      return { ...rawWithoutAnalysis, analysis: fallback };
+    }
   }
 
   private async fetchGithubData(accessToken: string): Promise<Record<string, any>> {
@@ -169,6 +202,40 @@ export class DatasourceService {
         code_reviews: 0,
       },
     };
+  }
+
+  async analyzeProviderData(provider: DataSourceProvider, rawData: Record<string, any>): Promise<Record<string, any>> {
+    const promptMap: Record<string, string> = {
+      [DataSourceProvider.GITHUB]: GITHUB_ANALYSIS_PROMPT,
+      [DataSourceProvider.SLACK]: SLACK_ANALYSIS_PROMPT,
+      [DataSourceProvider.DISCORD]: DISCORD_ANALYSIS_PROMPT,
+      [DataSourceProvider.GOV24]: GOV24_ANALYSIS_PROMPT,
+    };
+
+    const systemPrompt = promptMap[provider];
+    if (!systemPrompt) throw new Error(`No analysis prompt for provider: ${provider}`);
+
+    const result = await this.aiClient.chat({
+      agentId: `datasource-${provider.toLowerCase()}-analyst`,
+      systemPrompt,
+      userMessage: JSON.stringify(rawData),
+    });
+
+    const parsed = this.safeJsonParse(result.content);
+    if (!parsed) throw new Error(`Failed to parse AI analysis for ${provider}`);
+    return parsed;
+  }
+
+  private safeJsonParse(content: string): any | null {
+    try {
+      const stripped = content
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
+      return JSON.parse(stripped);
+    } catch {
+      return null;
+    }
   }
 
   async collectAllData(userId: string): Promise<{
