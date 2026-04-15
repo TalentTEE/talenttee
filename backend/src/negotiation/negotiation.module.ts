@@ -7,8 +7,7 @@ import { User } from '../entities/user.entity.js';
 import { CryptoModule } from '../crypto/crypto.module.js';
 import { NegotiationController } from './negotiation.controller.js';
 import { NegotiationService } from './negotiation.service.js';
-import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
-import { MockNearAiClient } from '../common/mocks/mock-near-ai-client.js';
+import { RealNegotiationHandoff } from './real-negotiation-handoff.js';
 import { MATCH_RESULT_QUERY } from '../common/interfaces/match-result-query.interface.js';
 import { MockMatchResultQuery } from '../common/mocks/mock-match-result-query.js';
 
@@ -20,9 +19,9 @@ import { MockMatchResultQuery } from '../common/mocks/mock-match-result-query.js
   controllers: [NegotiationController],
   providers: [
     NegotiationService,
-    { provide: NEAR_AI_CLIENT, useClass: MockNearAiClient },
+    RealNegotiationHandoff,
     { provide: MATCH_RESULT_QUERY, useClass: MockMatchResultQuery },
   ],
-  exports: [NegotiationService],
+  exports: [NegotiationService, RealNegotiationHandoff],
 })
 export class NegotiationModule {}
