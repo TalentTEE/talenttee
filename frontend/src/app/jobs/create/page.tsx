@@ -1,11 +1,19 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { chatCreateJob, createJob } from '@/lib/api';
-import { ChatMessage, JobPosting, JobChatResponse } from '@/lib/types';
+import { ChatMessage, JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
+import {
+  JobChatSession,
+  createSession,
+  deleteSession,
+  getSession,
+  listSessions,
+  saveSession,
+} from '@/lib/jobChatStorage';
 
 type Tab = 'chat' | 'form';
 
@@ -17,17 +25,70 @@ interface FormData {
   remotePolicy: string;
 }
 
+const INITIAL_AGENT_GREETING =
+  "Hi! I'm your AI hiring assistant. I'll help you create the perfect job posting. Let's start — what position are you looking to fill?";
+
 export default function CreateJobPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('chat');
 
+  // Chat state lifted so it survives tab switches
+  const [sessions, setSessions] = useState<JobChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
   useEffect(() => {
     if (user && user.role !== 'EMPLOYER') router.replace('/dashboard/seeker');
   }, [user, router]);
 
+  // Load sessions from storage once on mount
+  useEffect(() => {
+    const loaded = listSessions();
+    setSessions(loaded);
+    if (loaded.length > 0) {
+      setCurrentSessionId(loaded[0].id);
+    } else {
+      const fresh = createSession(INITIAL_AGENT_GREETING);
+      setSessions([fresh]);
+      setCurrentSessionId(fresh.id);
+    }
+  }, []);
+
+  const currentSession = currentSessionId
+    ? sessions.find((s) => s.id === currentSessionId) ?? null
+    : null;
+
+  const refreshSessions = useCallback(() => {
+    setSessions(listSessions());
+  }, []);
+
+  const handleNewSession = () => {
+    const fresh = createSession(INITIAL_AGENT_GREETING);
+    setSessions((prev) => [fresh, ...prev.filter((s) => s.id !== fresh.id)]);
+    setCurrentSessionId(fresh.id);
+  };
+
+  const handleSelectSession = (id: string) => {
+    setCurrentSessionId(id);
+  };
+
+  const handleDeleteSession = (id: string) => {
+    deleteSession(id);
+    const remaining = listSessions();
+    setSessions(remaining);
+    if (currentSessionId === id) {
+      if (remaining.length > 0) {
+        setCurrentSessionId(remaining[0].id);
+      } else {
+        const fresh = createSession(INITIAL_AGENT_GREETING);
+        setSessions([fresh]);
+        setCurrentSessionId(fresh.id);
+      }
+    }
+  };
+
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
           Create Job Posting
@@ -63,44 +124,183 @@ export default function CreateJobPage() {
         </button>
       </div>
 
-      {activeTab === 'chat' ? <ChatMode /> : <FormMode />}
+      {activeTab === 'chat' ? (
+        <div className="grid grid-cols-[260px_1fr] gap-4">
+          <ChatSidebar
+            sessions={sessions}
+            currentId={currentSessionId}
+            onSelect={handleSelectSession}
+            onNew={handleNewSession}
+            onDelete={handleDeleteSession}
+          />
+          {currentSession && (
+            <ChatMode
+              key={currentSession.id}
+              session={currentSession}
+              onSessionUpdated={refreshSessions}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="max-w-3xl">
+          <FormMode />
+        </div>
+      )}
     </div>
   );
 }
 
+/* ─────────────────────────── Chat Sidebar ─────────────────────────── */
+
+function ChatSidebar({
+  sessions,
+  currentId,
+  onSelect,
+  onNew,
+  onDelete,
+}: {
+  sessions: JobChatSession[];
+  currentId: string | null;
+  onSelect: (id: string) => void;
+  onNew: () => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-[560px]">
+      <div className="p-3 border-b border-border/10">
+        <button
+          onClick={onNew}
+          className="w-full flex items-center gap-2 justify-center px-3 py-2 rounded-lg bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all"
+        >
+          <span className="material-symbols-outlined text-base">add</span>
+          New Chat
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {sessions.length === 0 && (
+          <p className="text-xs text-muted-foreground p-3 text-center">
+            No conversations yet
+          </p>
+        )}
+        {sessions.map((s) => {
+          const isActive = s.id === currentId;
+          return (
+            <div
+              key={s.id}
+              className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${
+                isActive
+                  ? 'bg-[#FFE600]/10 text-foreground'
+                  : 'hover:bg-accent text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => onSelect(s.id)}
+            >
+              <span
+                className={`material-symbols-outlined text-base ${
+                  isActive ? 'text-[#FFE600]' : ''
+                }`}
+              >
+                {s.completedJob ? 'task_alt' : 'forum'}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm truncate">{s.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {formatRelativeTime(s.updatedAt)}
+                </p>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm('Delete this conversation?')) onDelete(s.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
+                title="Delete"
+              >
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 /* ─────────────────────────── Chat Mode ─────────────────────────── */
 
-function ChatMode() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'agent',
-      content:
-        "Hi! I'm your AI hiring assistant. I'll help you create the perfect job posting. Let's start \u2014 what position are you looking to fill?",
-    },
-  ]);
+function ChatMode({
+  session,
+  onSessionUpdated,
+}: {
+  session: JobChatSession;
+  onSessionUpdated: () => void;
+}) {
+  const [messages, setMessages] = useState<ChatMessage[]>(session.messages);
+  const [backendSessionId, setBackendSessionId] = useState<string | undefined>(
+    session.backendSessionId,
+  );
+  const [createdJob, setCreatedJob] = useState<JobPosting | null>(
+    session.completedJob ?? null,
+  );
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [createdJob, setCreatedJob] = useState<JobPosting | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
 
+  // Smart auto-scroll: only snap to bottom if user was already near the bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    const el = scrollRef.current;
+    if (!el || !shouldAutoScrollRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, isLoading]);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    shouldAutoScrollRef.current = distanceFromBottom < 80;
+  };
+
+  // Persist to storage whenever key state changes
+  useEffect(() => {
+    const persisted = getSession(session.id);
+    if (!persisted) return;
+    saveSession({
+      ...persisted,
+      messages,
+      backendSessionId,
+      completedJob: createdJob ?? undefined,
+    });
+    onSessionUpdated();
+  }, [messages, backendSessionId, createdJob, session.id, onSessionUpdated]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
+    if (!trimmed || isLoading || createdJob) return;
 
     const userMessage: ChatMessage = { role: 'user', content: trimmed };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput('');
     setIsLoading(true);
+    shouldAutoScrollRef.current = true;
 
     try {
-      const response: JobChatResponse = await chatCreateJob(updatedMessages);
+      const { sessionId, response } = await chatCreateJob(
+        updatedMessages,
+        backendSessionId,
+      );
+      setBackendSessionId(sessionId);
 
       if (response.complete && response.jobPosting) {
         setMessages((prev) => [
@@ -141,10 +341,11 @@ function ChatMode() {
   return (
     <div className="space-y-4">
       {/* Chat Window */}
-      <div className="rounded-2xl border border-border/10 bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-[560px]">
         <div
           ref={scrollRef}
-          className="h-[420px] overflow-y-auto p-6 space-y-4"
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-6 space-y-4"
         >
           {messages.map((msg, i) => (
             <div
@@ -170,7 +371,7 @@ function ChatMode() {
                 </div>
                 {/* Bubble */}
                 <div
-                  className={`px-4 py-3 rounded-2xl text-base leading-relaxed ${
+                  className={`px-4 py-3 rounded-2xl text-base leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
                       ? 'bg-[#FFE600] text-[#0a0a0a] rounded-br-md'
                       : 'bg-accent text-foreground rounded-bl-md'
@@ -190,9 +391,18 @@ function ChatMode() {
                 </div>
                 <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-accent text-muted-foreground text-base">
                   <span className="flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce"
+                      style={{ animationDelay: '0ms' }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce"
+                      style={{ animationDelay: '150ms' }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce"
+                      style={{ animationDelay: '300ms' }}
+                    />
                   </span>
                 </div>
               </div>
@@ -208,7 +418,7 @@ function ChatMode() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your answer..."
+              placeholder={createdJob ? 'Job posting ready — start a new chat to create another' : 'Type your answer...'}
               disabled={isLoading || !!createdJob}
               className="flex-1 bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all disabled:opacity-50"
             />

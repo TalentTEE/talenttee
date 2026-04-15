@@ -238,13 +238,21 @@ export async function getJobs(): Promise<JobPosting[]> {
   return apiFetch('/jobs');
 }
 
-// Module-level state for multi-turn chat session continuity
-let jobChatSessionId: string | undefined;
+export interface ChatCreateJobResult {
+  sessionId: string;
+  response: JobChatResponse;
+}
 
-export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatResponse> {
+export async function chatCreateJob(
+  messages: ChatMessage[],
+  backendSessionId?: string,
+): Promise<ChatCreateJobResult> {
   if (USE_DUMMY) {
     if (messages.length >= 6) {
-      return { complete: true, jobPosting: DUMMY_JOBS[0] };
+      return {
+        sessionId: backendSessionId ?? 'dummy-session',
+        response: { complete: true, jobPosting: DUMMY_JOBS[0] },
+      };
     }
     const questions = [
       'What position are you hiring for? (e.g. Senior Backend Developer)',
@@ -253,23 +261,24 @@ export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatRes
       "What's your maximum salary budget? This will be your negotiation ceiling — candidates won't see this number.",
       'What is the remote work policy? (Full Office / Hybrid / Full Remote)',
     ];
-    return { complete: false, question: questions[Math.min(messages.length, questions.length - 1)] };
+    return {
+      sessionId: backendSessionId ?? 'dummy-session',
+      response: {
+        complete: false,
+        question: questions[Math.min(messages.length, questions.length - 1)],
+      },
+    };
   }
   // Backend expects { message: string, sessionId?: string }
   // Backend returns { sessionId: string, response: JobChatResponse }
-  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
-  const wrapped = await apiFetch<{ sessionId: string; response: JobChatResponse }>('/jobs/chat', {
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+  return apiFetch<ChatCreateJobResult>('/jobs/chat', {
     method: 'POST',
     body: JSON.stringify({
       message: lastUserMsg?.content ?? '',
-      sessionId: jobChatSessionId,
+      sessionId: backendSessionId,
     }),
   });
-  jobChatSessionId = wrapped.sessionId;
-  if (wrapped.response.complete) {
-    jobChatSessionId = undefined; // reset for next job
-  }
-  return wrapped.response;
 }
 
 export async function createJob(jobData: Partial<JobPosting>): Promise<JobPosting> {

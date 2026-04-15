@@ -109,9 +109,9 @@ describe('API — Dummy mode', () => {
 
   describe('chatCreateJob', () => {
     it('returns a question when messages < 6', async () => {
-      const result = await chatCreateJob([{ role: 'user', content: 'Hello' }]);
-      expect(result.complete).toBe(false);
-      expect(result.question).toBeTruthy();
+      const { response } = await chatCreateJob([{ role: 'user', content: 'Hello' }]);
+      expect(response.complete).toBe(false);
+      expect(response.question).toBeTruthy();
     });
 
     it('returns complete with jobPosting when messages >= 6', async () => {
@@ -119,10 +119,10 @@ describe('API — Dummy mode', () => {
         role: 'user' as const,
         content: `Message ${i}`,
       }));
-      const result = await chatCreateJob(msgs);
-      expect(result.complete).toBe(true);
-      expect(result.jobPosting).toBeTruthy();
-      expect(result.jobPosting!.title).toBe('Senior Backend Developer');
+      const { response } = await chatCreateJob(msgs);
+      expect(response.complete).toBe(true);
+      expect(response.jobPosting).toBeTruthy();
+      expect(response.jobPosting!.title).toBe('Senior Backend Developer');
     });
   });
 
