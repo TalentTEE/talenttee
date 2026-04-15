@@ -12,7 +12,7 @@ export class ResumeController {
   async generate(@Req() req) {
     const userId = req.user.id;
     const resume = await this.resumeService.generate(userId);
-    return { id: resume.id, status: resume.status, message: '이력서 생성이 시작되었습니다.' };
+    return { id: resume.id, status: resume.status, message: 'Resume generation started.' };
   }
 
   @Get('me')

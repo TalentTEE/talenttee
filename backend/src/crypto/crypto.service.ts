@@ -14,7 +14,7 @@ export class CryptoService implements OnModuleInit {
   onModuleInit() {
     const seedHex = process.env.SERVER_KEYPAIR_SEED;
     if (seedHex) {
-      // 환경변수 시드로 결정적 keypair 생성 — 재시작해도 동일 키
+      // Deterministic keypair from env seed — same key across restarts
       const seed = Buffer.from(createHash('sha256').update(seedHex).digest().subarray(0, 32));
       this.serverKeyPair = nacl.sign.keyPair.fromSeed(seed);
       this.logger.log('Server Ed25519 keypair derived from SERVER_KEYPAIR_SEED (persistent)');

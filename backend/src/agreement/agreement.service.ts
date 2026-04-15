@@ -110,8 +110,8 @@ export class AgreementService {
         },
         seeker_account: session.seeker?.nearAccountId || '',
         employer_account: session.employer?.nearAccountId || '',
-        seeker_signature: [],  // 해커톤: cosmetic
-        employer_signature: [], // 해커톤: cosmetic
+        seeker_signature: [],  // hackathon: cosmetic
+        employer_signature: [], // hackathon: cosmetic
       },
       deposit: '0',
       gas: '30000000000000',

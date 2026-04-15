@@ -7,7 +7,7 @@ import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ESCROW_PAYMENT } from '../common/interfaces/escrow-payment.interface.js';
 import type { EscrowPayment } from '../common/interfaces/escrow-payment.interface.js';
-import { DETAIL_REPORT_PROMPT } from './prompts/detail-report.prompt.js';
+import { DETAIL_REPORT_PROMPT } from './prompts/detail-report.en.prompt.js';
 
 const PROFILE_ACCESS_COST = '1000000000000000000000000'; // 1 NEAR
 
@@ -30,7 +30,7 @@ export class ProfileService {
 
     const balance = await this.escrowPayment.checkBalance(employerAccountId);
     if (BigInt(balance) < BigInt(PROFILE_ACCESS_COST)) {
-      throw new ForbiddenException('에스크로 잔액이 부족합니다. 먼저 입금해주세요.');
+      throw new ForbiddenException('Insufficient escrow balance. Please deposit first.');
     }
 
     const { txHash } = await this.escrowPayment.payForProfile(employerAccountId, PROFILE_ACCESS_COST);
@@ -48,11 +48,11 @@ export class ProfileService {
   async getReport(employerId: string, seekerId: string): Promise<Record<string, any>> {
     const grant = await this.grantRepo.findOne({ where: { employerId, seekerId } });
     if (!grant) {
-      throw new ForbiddenException('열람 권한이 없습니다. 먼저 프로필 열람을 요청하세요.');
+      throw new ForbiddenException('No access permission. Please request profile access first.');
     }
 
     const resume = await this.resumeRepo.findOne({ where: { userId: seekerId } });
-    if (!resume) throw new NotFoundException('구직자의 이력서를 찾을 수 없습니다.');
+    if (!resume) throw new NotFoundException('Candidate resume not found.');
 
     const result = await this.aiClient.chat({
       agentId: 'profile-reporter',

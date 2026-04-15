@@ -30,7 +30,7 @@ export class MatchService {
   async matchForSeeker(seekerId: string, limit = 5): Promise<MatchResult[]> {
     const resume = await this.resumeRepo.findOne({ where: { userId: seekerId } });
     if (!resume || !resume.embedding) {
-      throw new NotFoundException('이력서 또는 임베딩이 없습니다. 먼저 이력서를 생성하세요.');
+      throw new NotFoundException('Resume or embedding not found. Please generate a resume first.');
     }
 
     // Step 1: ANN — pgvector cosine similarity Top-20
@@ -88,7 +88,7 @@ export class MatchService {
   async matchForJob(jobId: string, limit = 5): Promise<MatchResult[]> {
     const job = await this.jobRepo.findOne({ where: { id: jobId } });
     if (!job || !job.embedding) {
-      throw new NotFoundException('공고 또는 임베딩이 없습니다.');
+      throw new NotFoundException('Job posting or embedding not found.');
     }
 
     // Step 1: ANN
@@ -144,16 +144,16 @@ export class MatchService {
 
   async agree(matchId: string, userId: string, role: string): Promise<MatchResult> {
     const match = await this.matchRepo.findOne({ where: { id: matchId } });
-    if (!match) throw new NotFoundException('매칭 결과를 찾을 수 없습니다.');
+    if (!match) throw new NotFoundException('Match result not found.');
 
     if (role === 'SEEKER' && match.seekerId !== userId) {
-      throw new ForbiddenException('본인의 매칭만 동의할 수 있습니다.');
+      throw new ForbiddenException('You can only agree to your own matches.');
     }
 
     if (role === 'EMPLOYER') {
       const job = await this.jobRepo.findOne({ where: { id: match.jobId } });
       if (!job || job.employerId !== userId) {
-        throw new ForbiddenException('본인의 공고에 대한 매칭만 동의할 수 있습니다.');
+        throw new ForbiddenException('You can only agree to matches for your own job postings.');
       }
     }
 
@@ -185,7 +185,7 @@ export class MatchService {
     negotiationSessionId: string | null;
   }> {
     const match = await this.matchRepo.findOne({ where: { id: matchId } });
-    if (!match) throw new NotFoundException('매칭 결과를 찾을 수 없습니다.');
+    if (!match) throw new NotFoundException('Match result not found.');
     return {
       id: match.id,
       seekerAgreed: match.seekerAgreed,

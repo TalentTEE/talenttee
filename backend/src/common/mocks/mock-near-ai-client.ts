@@ -9,9 +9,8 @@ export class MockNearAiClient implements NearAiClient {
     userMessage: string;
     conversationHistory?: { role: string; content: string }[];
   }): Promise<{ content: string }> {
-    const isEmployer = params.systemPrompt.includes('채용담당자');
-    const roundMatch = params.userMessage.match(/라운드\s*(\d+)/i)
-      || params.userMessage.match(/round\s*(\d+)/i);
+    const isEmployer = params.systemPrompt.includes('employer');
+    const roundMatch = params.userMessage.match(/round\s*(\d+)/i);
     const round = roundMatch ? parseInt(roundMatch[1], 10) : 1;
 
     if (isEmployer) {
@@ -31,13 +30,13 @@ export class MockNearAiClient implements NearAiClient {
         actor: 'EMPLOYER_AGENT',
         proposal: {
           salary: 68_000_000,
-          remotePolicy: '주3일 재택',
-          workingHours: '유연근무',
+          remotePolicy: 'Remote 3 days/week',
+          workingHours: 'Flexible hours',
           title: 'Senior Backend Engineer',
           startDate: '2026-07-01',
           probationMonths: 3,
         },
-        reasoning: '구직자의 시장가치와 경험을 고려하여 최종 제안합니다.',
+        reasoning: 'Final offer considering the candidate market value and experience.',
         decision: 'ACCEPT',
       };
     }
@@ -47,13 +46,13 @@ export class MockNearAiClient implements NearAiClient {
       actor: 'EMPLOYER_AGENT',
       proposal: {
         salary,
-        remotePolicy: round >= 2 ? '주3일 재택' : '주2일 재택',
-        workingHours: '유연근무',
+        remotePolicy: round >= 2 ? 'Remote 3 days/week' : 'Remote 2 days/week',
+        workingHours: 'Flexible hours',
         title: 'Senior Backend Engineer',
         startDate: '2026-07-01',
         probationMonths: 3,
       },
-      reasoning: `예산 범위 내에서 ${round}차 제안입니다.`,
+      reasoning: `Proposal #${round} within budget range.`,
       decision: 'COUNTER',
     };
   }
@@ -81,13 +80,13 @@ export class MockNearAiClient implements NearAiClient {
       actor: 'SEEKER_AGENT',
       proposal: {
         salary,
-        remotePolicy: '주3일 재택',
-        workingHours: '유연근무',
+        remotePolicy: 'Remote 3 days/week',
+        workingHours: 'Flexible hours',
         title: 'Senior Backend Engineer',
         startDate: '2026-07-01',
         probationMonths: 3,
       },
-      reasoning: `시장가치 분석 기반 ${round}차 카운터 제안입니다.`,
+      reasoning: `Counter-proposal #${round} based on market value analysis.`,
       decision: 'COUNTER',
     };
   }

@@ -63,6 +63,6 @@ export class DatasourceController {
   async sync(@Req() req) {
     const userId = req.user.id;
     const data = await this.datasourceService.collectAllData(userId);
-    return { message: '동기화 완료', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
+    return { message: 'Sync complete', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
   }
 }
