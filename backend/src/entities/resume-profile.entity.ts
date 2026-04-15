@@ -26,10 +26,10 @@ export class ResumeProfile {
   @Column({ type: 'text', array: true, nullable: true })
   skills: string[];
 
-  @Column({ type: 'jsonb', array: true, nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   experience: Record<string, any>[];
 
-  @Column({ type: 'jsonb', array: true, nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   education: Record<string, any>[];
 
   @Column({ name: 'market_value_min', type: 'bigint', nullable: true })
