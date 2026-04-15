@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { chatCreateJob, createJob } from '@/lib/api';
 import { ChatMessage, JobPosting, JobChatResponse } from '@/lib/types';
+import { formatSalary } from '@/lib/format';
 
 type Tab = 'chat' | 'form';
 
@@ -419,12 +420,6 @@ function FormMode() {
 /* ─────────────────────────── Job Preview Card ─────────────────────────── */
 
 function JobPreviewCard({ job }: { job: JobPosting }) {
-  const formatSalary = (value: number) => {
-    if (value >= 10000) {
-      return `${(value / 10000).toFixed(0)}\ub9cc`;
-    }
-    return value.toLocaleString();
-  };
 
   return (
     <div className="rounded-2xl border border-[#FFE600]/20 bg-card p-6 space-y-5">
@@ -467,7 +462,7 @@ function JobPreviewCard({ job }: { job: JobPosting }) {
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Max Salary Budget</p>
           <p className="text-base font-semibold text-foreground">
-            Up to {formatSalary(job.salaryMax)} KRW
+            Up to {formatSalary(job.salaryMax)}
           </p>
         </div>
       </div>
