@@ -7,14 +7,14 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
   if (!resume) {
     return (
       <div className="bg-card rounded-2xl border border-border/10 p-6">
-        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-3">My Resume</h3>
-        <p className="text-base text-muted-foreground mb-4">No resume generated yet.</p>
+        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-3">Analysis</h3>
+        <p className="text-base text-muted-foreground mb-4">No analysis generated yet.</p>
         <Link
-          href="/resume"
+          href="/analysis"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#BF5AF2] text-white text-base font-bold hover:bg-[#BF5AF2]/90 transition-all"
         >
           <span className="material-symbols-outlined text-base">auto_awesome</span>
-          Generate Resume
+          Generate Analysis
         </Link>
       </div>
     );
@@ -23,7 +23,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
   return (
     <div className="bg-card rounded-2xl border border-border/10 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Resume</h3>
+        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Analysis</h3>
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium ${
           resume.status === 'COMPLETE'
             ? 'bg-[#BF5AF2]/10 text-[#BF5AF2]'
@@ -50,7 +50,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
       </p>
       <div className="flex gap-2">
         <Link
-          href="/resume"
+          href="/analysis"
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-foreground text-base font-medium hover:bg-accent transition-all border border-border/10"
         >
           <span className="material-symbols-outlined text-base">visibility</span>

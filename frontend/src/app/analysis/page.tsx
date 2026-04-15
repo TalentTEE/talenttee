@@ -122,7 +122,7 @@ export default function ResumePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
-            AI Resume
+            Analysis
           </h1>
           <p className="text-base text-muted-foreground mt-1">
             AI-generated professional profile based on your connected data
@@ -138,14 +138,14 @@ export default function ResumePage() {
             <span className="material-symbols-outlined text-base">
               auto_awesome
             </span>
-            Generate Resume
+            Generate Analysis
           </button>
         )}
       </div>
 
       {/* AI Nudge */}
       {!resume && !generating && (
-        <AINudge id="resume-none" message="Your data sources are ready. Generate your AI resume now — it takes about 30 seconds." />
+        <AINudge id="resume-none" message="Your data sources are ready. Generate your AI analysis now — it takes about 30 seconds." />
       )}
       {generating && (
         <AINudge id="resume-gen" message="AI is analyzing your professional history across all connected sources..." />
@@ -161,14 +161,14 @@ export default function ResumePage() {
             rocket_launch
           </span>
           <div className="flex-1">
-            <p className="text-base font-semibold text-foreground">Resume ready! AI can now match you with jobs.</p>
-            <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking to start automatic matching and negotiation.</p>
+            <p className="text-base font-semibold text-foreground">Analysis ready! AI will automatically match and negotiate for you.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking from the dashboard to start.</p>
           </div>
           <button
-            onClick={() => router.push('/matching')}
+            onClick={() => router.push('/dashboard/seeker')}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all"
           >
-            View Matches
+            Go to Dashboard
             <span className="material-symbols-outlined text-base">arrow_forward</span>
           </button>
         </div>
@@ -266,7 +266,7 @@ export default function ResumePage() {
 
         {!generating && !resume && !loading && (
           <div className="mt-6 text-base text-muted-foreground">
-            Connect your data sources and click &quot;Generate Resume&quot; to
+            Connect your data sources and click &quot;Generate Analysis&quot; to
             get started.
           </div>
         )}

@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${inter.variable} ${manrope.variable} dark h-full antialiased`}
+      className={`${inter.variable} ${manrope.variable} dark antialiased`}
     >
       <head>
         <link
@@ -35,7 +35,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
+      <body className="min-h-screen bg-background text-foreground font-sans">
         <OfflineBanner />
         <Providers>{children}</Providers>
       </body>

@@ -3,8 +3,48 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, USE_DUMMY } from '@/lib/api';
-import { AgreementRecord, NegotiationRound } from '@/lib/types';
+import { AgreementRecord, NegotiationRound, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
+
+function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('@/lib/types').NegotiationReasoning; isSeeker: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const structured = isStructuredReasoning(reasoning);
+
+  return (
+    <div className={`rounded-2xl px-3 py-2.5 text-sm leading-relaxed ${
+      isSeeker
+        ? 'bg-primary/10 border border-primary/10 rounded-br-md'
+        : 'bg-accent/50 border border-border/10 rounded-bl-md'
+    }`}>
+      <p className="text-foreground/90">
+        &ldquo;{structured ? reasoning.summary : reasoning}&rdquo;
+      </p>
+      {structured && reasoning.factors.length > 0 && (
+        <>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className={`material-symbols-outlined text-xs transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+              expand_more
+            </span>
+            {expanded ? 'Hide' : 'View'} factors
+          </button>
+          {expanded && (
+            <ul className="mt-1.5 space-y-1 animate-[fadeSlideUp_200ms_ease-out]">
+              {reasoning.factors.map((factor, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground/80 leading-relaxed">
+                  <span className="material-symbols-outlined text-[10px] text-primary/50 mt-0.5 shrink-0">arrow_right</span>
+                  {factor}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function AgreementPage() {
   const params = useParams();
@@ -99,7 +139,7 @@ export default function AgreementPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)] overflow-hidden">
+    <div className="space-y-6">
       {/* Page Title */}
       <div className="mb-6 shrink-0">
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
@@ -110,9 +150,9 @@ export default function AgreementPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0 flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Left Column: Agreement Details ── */}
-        <div className="space-y-6 overflow-y-auto pr-2 scrollbar-thin">
+        <div className="space-y-6">
           {/* Success Banner */}
           <div className="bg-primary/5 rounded-2xl border border-primary/20 p-6 text-center">
             <div className="w-14 h-14 rounded-full bg-primary/10 mx-auto mb-3 flex items-center justify-center">
@@ -269,7 +309,7 @@ export default function AgreementPage() {
         </div>
 
         {/* ── Right Column: Negotiation Conversation ── */}
-        <div className="bg-card rounded-2xl border border-border/10 p-5 flex flex-col overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border/10 p-5">
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
               forum
@@ -299,7 +339,7 @@ export default function AgreementPage() {
           )}
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+          <div className="space-y-3">
             {rounds.length === 0 && (
               <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
                 No negotiation rounds available.
@@ -325,13 +365,7 @@ export default function AgreementPage() {
                   <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[90%] space-y-1.5 flex flex-col ${isSeeker ? 'items-end' : 'items-start'}`}>
                       {/* Reasoning */}
-                      <div className={`rounded-2xl px-3 py-2.5 text-sm leading-relaxed ${
-                        isSeeker
-                          ? 'bg-primary/10 border border-primary/10 rounded-br-md'
-                          : 'bg-accent/50 border border-border/10 rounded-bl-md'
-                      }`}>
-                        <p className="text-foreground/90">&ldquo;{round.reasoning}&rdquo;</p>
-                      </div>
+                      <ReasoningBubble reasoning={round.reasoning} isSeeker={isSeeker} />
 
                       {/* Compact Proposal */}
                       <div className="flex flex-wrap gap-1.5 px-1">
