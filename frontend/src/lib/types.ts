@@ -134,13 +134,29 @@ export interface NegotiationProposal {
   stockOptions?: string;
 }
 
+export interface NegotiationReasoning {
+  summary: string;
+  factors: string[];
+}
+
+export function isStructuredReasoning(
+  reasoning: string | NegotiationReasoning,
+): reasoning is NegotiationReasoning {
+  return (
+    typeof reasoning === 'object' &&
+    reasoning !== null &&
+    'summary' in reasoning &&
+    'factors' in reasoning
+  );
+}
+
 export interface NegotiationRound {
   id: string;
   sessionId: string;
   round: number;
   actor: 'SEEKER_AGENT' | 'EMPLOYER_AGENT';
   proposal: NegotiationProposal;
-  reasoning: string;
+  reasoning: string | NegotiationReasoning;
   decision: 'COUNTER' | 'ACCEPT' | 'REJECT';
 }
 

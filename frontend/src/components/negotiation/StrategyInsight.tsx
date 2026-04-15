@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { type NegotiationReasoning, isStructuredReasoning } from '@/lib/types';
 
 interface StrategyInsightProps {
-  reasoning: string;
+  reasoning: string | NegotiationReasoning;
 }
 
 export function StrategyInsight({ reasoning }: StrategyInsightProps) {
   const [open, setOpen] = useState(false);
+
+  const structured = isStructuredReasoning(reasoning);
 
   return (
     <div className="rounded-xl border border-border/10 overflow-hidden">
@@ -27,9 +30,20 @@ export function StrategyInsight({ reasoning }: StrategyInsightProps) {
       </button>
       {open && (
         <div className="px-3 pb-3 animate-[fadeSlideUp_200ms_ease-out]">
-          <p className="text-sm text-muted-foreground/80 leading-relaxed italic">
-            &ldquo;{reasoning}&rdquo;
-          </p>
+          {structured ? (
+            <ul className="space-y-1.5">
+              {reasoning.factors.map((factor, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground/80 leading-relaxed">
+                  <span className="material-symbols-outlined text-xs text-primary/50 mt-1 shrink-0">arrow_right</span>
+                  {factor}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground/80 leading-relaxed italic">
+              &ldquo;{reasoning}&rdquo;
+            </p>
+          )}
         </div>
       )}
     </div>
