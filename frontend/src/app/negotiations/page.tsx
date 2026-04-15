@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getNegotiationSessions, getSeekerMatches, getEmployerMatches } from '@/lib/api';
+import { getNegotiationSessions, getSeekerMatches, getEmployerMatches, getJobs } from '@/lib/api';
 import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
 
 const NEON_PINK = '#FF2DF1';
@@ -16,16 +16,18 @@ export default function NegotiationsPage() {
 
   useEffect(() => {
     if (!user) return;
+    const matchPromise = user.role === 'SEEKER'
+      ? getSeekerMatches()
+      : getJobs().then(jobs => jobs.length > 0 ? getEmployerMatches(jobs[0].id) : []);
+
     Promise.all([
       getNegotiationSessions(),
-      user.role === 'SEEKER'
-        ? getSeekerMatches()
-        : getEmployerMatches('job-1'),
+      matchPromise,
     ]).then(([s, m]) => {
       setSessions(s);
       setMatches(m);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, [user]);
 
   const matchByJobId = new Map(matches.map((m) => [m.jobId, m]));

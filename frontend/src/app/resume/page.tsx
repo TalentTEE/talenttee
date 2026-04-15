@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getResume, generateResume, getResumeStatus, USE_DUMMY } from '@/lib/api';
+import { getResume, generateResume, getResumeStatus, getDatasourceStatus, USE_DUMMY } from '@/lib/api';
 import { ResumeProfile } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
 
@@ -35,12 +35,32 @@ export default function ResumePage() {
   const [simulatedStatus, setSimulatedStatus] =
     useState<ResumeProfile['status'] | null>(null);
 
+  const autoGenTriggered = useRef(false);
+
   useEffect(() => {
     if (!user) return;
-    getResume()
-      .then(setResume)
-      .catch(() => setResume(null))
-      .finally(() => setLoading(false));
+    Promise.all([
+      getResume().then(setResume).catch(() => setResume(null)),
+      getDatasourceStatus(),
+    ]).then(([, datasources]) => {
+      const hasConnected = datasources.some(
+        (d) => d.status === 'CONNECTED' || d.status === 'MOCK'
+      );
+      // Auto-generate if datasources connected but no resume yet
+      if (hasConnected && !autoGenTriggered.current) {
+        getResume()
+          .then((r) => {
+            if (!r || r.status !== 'COMPLETE') {
+              autoGenTriggered.current = true;
+              handleGenerate();
+            }
+          })
+          .catch(() => {
+            autoGenTriggered.current = true;
+            handleGenerate();
+          });
+      }
+    }).finally(() => setLoading(false));
   }, [user]);
 
   const handleGenerate = useCallback(async () => {
@@ -135,6 +155,26 @@ export default function ResumePage() {
       )}
       {isComplete && resume?.marketValueMin && resume?.marketValueMax && (
         <AINudge id="resume-done" message={`Your market value is estimated at $${resume.marketValueMin.toLocaleString()}–$${resume.marketValueMax.toLocaleString()} based on your profile analysis.`} />
+      )}
+
+      {/* Auto-navigate CTA after completion */}
+      {isComplete && (
+        <div className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+            rocket_launch
+          </span>
+          <div className="flex-1">
+            <p className="text-base font-semibold text-foreground">Resume ready! AI can now match you with jobs.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking to start automatic matching and negotiation.</p>
+          </div>
+          <button
+            onClick={() => router.push('/matching')}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all"
+          >
+            View Matches
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
+        </div>
       )}
 
       {/* Progress Section */}

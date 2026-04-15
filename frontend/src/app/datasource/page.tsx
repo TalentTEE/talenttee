@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
+import { getDatasourceStatus, connectDatasourceMock, connectGithubOAuth, generateResume, USE_DUMMY } from '@/lib/api';
 import { DataSourceConnection } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
 
@@ -181,6 +181,9 @@ export default function DatasourcePage() {
 
       setConnectPhases((prev) => ({ ...prev, [provider]: 'done' }));
       await new Promise((r) => setTimeout(r, 1000));
+
+      // Auto-trigger resume generation after first datasource connection
+      generateResume().catch(() => {/* resume generation is fire-and-forget */});
     } catch (err) {
       console.error('Failed to connect datasource:', err);
     } finally {
@@ -268,7 +271,7 @@ export default function DatasourcePage() {
         <AINudge id="ds-three" message="One more source to go. Gov24 verifies your credentials on-chain." />
       )}
       {connectedCount >= 4 && (
-        <AINudge id="ds-all" message="All sources connected. Your AI profile updates automatically every day." />
+        <AINudge id="ds-all" message="All sources connected. Your AI resume is being generated automatically — check it on the Resume page." ctaLabel="View Resume" ctaHref="/resume" />
       )}
 
       {/* Auto-sync banner */}
