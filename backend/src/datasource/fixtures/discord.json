@@ -21,5 +21,23 @@
       "messages_count": 123,
       "helpful_answers": 23
     }
-  ]
+  ],
+  "analysis": {
+    "communityImpact": {
+      "totalServers": 3,
+      "totalMessages": 924,
+      "totalHelpful": 157,
+      "helpfulRatio": 17
+    },
+    "traits": [
+      { "trait": "Technical Mentoring", "level": 88, "evidence": "TypeScript Korea moderator. Top contributor with 89 helpful answers" },
+      { "trait": "Blockchain Expertise", "level": 82, "evidence": "NEAR Korea Core Contributor. 45 answers on smart contract questions" },
+      { "trait": "Community Leadership", "level": 85, "evidence": "Active in 3 servers, holding leadership roles in 2 (Moderator, Core Contributor)" }
+    ],
+    "expertise": [
+      { "domain": "TypeScript/JavaScript", "confidence": 92, "source": "TypeScript Korea moderator, 567 messages" },
+      { "domain": "NEAR/Blockchain", "confidence": 78, "source": "NEAR Korea Core Contributor, 234 messages" },
+      { "domain": "Web3 Development", "confidence": 70, "source": "Web3 Builders member, 123 messages" }
+    ]
+  }
 }

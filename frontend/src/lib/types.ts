@@ -185,63 +185,45 @@ export interface EncryptedNegotiationRound {
 }
 
 /* ── Datasource Detail Types ── */
+export interface SkillLevel { name: string; level: number; evidence: string; }
+export interface TraitLevel { trait: string; level: number; evidence: string; }
+
 export interface GitHubData {
-  profile: {
-    login: string;
-    name: string;
-    bio: string;
-    public_repos: number;
-    followers: number;
-  };
+  profile: { login: string; name: string; bio: string; public_repos: number; followers: number; };
   languages: Record<string, number>;
-  repositories: {
-    name: string;
-    description: string;
-    language: string;
-    stars: number;
-    forks: number;
-    topics: string[];
-  }[];
-  contributions: {
-    total_commits_last_year: number;
-    prs_merged: number;
-    issues_closed: number;
-    code_reviews: number;
+  repositories: { name: string; description: string; language: string; stars: number; forks: number; topics: string[]; }[];
+  contributions: { total_commits_last_year: number; prs_merged: number; issues_closed: number; code_reviews: number; };
+  analysis?: {
+    skills: SkillLevel[];
+    workPatterns: { trait: string; description: string; }[];
+    projects: { name: string; role: string; skills: string[]; impact: string; }[];
   };
 }
 
 export interface SlackData {
-  messages: {
-    id: string;
-    channel: string;
-    text: string;
-    timestamp: string;
-  }[];
+  messages: { id: string; channel: string; text: string; timestamp: string; }[];
+  analysis?: {
+    communicationStyle: { clarity: number; technicalDepth: number; proactiveness: number; };
+    traits: TraitLevel[];
+    workAreas: { area: string; messageCount: number; keywords: string[]; }[];
+  };
 }
 
 export interface DiscordData {
-  activities: {
-    id: string;
-    server: string;
-    role: string;
-    messages_count: number;
-    helpful_answers: number;
-  }[];
+  activities: { id: string; server: string; role: string; messages_count: number; helpful_answers: number; }[];
+  analysis?: {
+    communityImpact: { totalServers: number; totalMessages: number; totalHelpful: number; helpfulRatio: number; };
+    traits: TraitLevel[];
+    expertise: { domain: string; confidence: number; source: string; }[];
+  };
 }
 
 export interface Gov24Data {
-  certificates: {
-    name: string;
-    issuer: string;
-    issued_date: string;
-    status: string;
-  }[];
-  education: {
-    institution: string;
-    degree: string;
-    graduation_year: number;
-    status: string;
-  }[];
+  certificates: { name: string; issuer: string; issued_date: string; status: string; }[];
+  education: { institution: string; degree: string; graduation_year: number; status: string; }[];
+  analysis?: {
+    qualifications: TraitLevel[];
+  };
 }
 
 export type DatasourceDetail = GitHubData | SlackData | DiscordData | Gov24Data;
