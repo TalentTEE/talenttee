@@ -73,8 +73,8 @@ export function JobSeekingToggle({ initialActive = false, onToggle }: JobSeeking
           <div className="flex items-start gap-2 mb-3">
             <span className="material-symbols-outlined text-base text-primary mt-0.5">info</span>
             <p className="text-base text-foreground leading-relaxed">
-              구직 활동을 켜면 AI가 자동으로 매칭하고, 매칭된 공고에 대해 <strong>자동으로 협상을 진행</strong>합니다.
-              협상 중 개입하거나 최종 합의만 직접 승인/거절할 수 있습니다.
+              When you turn on Job Seeking, AI will automatically match you with jobs and <strong>negotiate on your behalf</strong>.
+              You can intervene at any time or approve/reject the final agreement.
             </p>
           </div>
           <div className="flex gap-2 justify-end">

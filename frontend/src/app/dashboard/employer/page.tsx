@@ -21,10 +21,12 @@ export default function EmployerDashboard() {
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      getEscrowBalance(user.nearAccountId).then(setEscrow),
-      getJobs().then(setJobs),
-      getEmployerMatches('job-1').then(setMatches),
-      getNegotiationSessions().then(setSessions),
+      getEscrowBalance(user.nearAccountId).then(setEscrow).catch(() => {}),
+      getJobs().then(j => {
+        setJobs(j);
+        if (j.length > 0) return getEmployerMatches(j[0].id).then(setMatches);
+      }).catch(() => {}),
+      getNegotiationSessions().then(setSessions).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [user]);
 

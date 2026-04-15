@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions, getEmployerMatches } from '@/lib/api';
+import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions, getEmployerMatches, getJobs } from '@/lib/api';
 import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession } from '@/lib/types';
 import { useAgentStatus, AgentStatus } from './useAgentStatus';
 
@@ -53,7 +53,12 @@ export function AgentStatusProvider({ children }: { children: ReactNode }) {
         );
       } else {
         promises.push(
-          getEmployerMatches('job-1').then(setMatches).catch(() => setMatches([])),
+          getJobs().then(jobs => {
+            if (jobs.length > 0) {
+              return getEmployerMatches(jobs[0].id).then(setMatches);
+            }
+            setMatches([]);
+          }).catch(() => setMatches([])),
         );
       }
 
