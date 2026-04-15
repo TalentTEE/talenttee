@@ -464,6 +464,109 @@ function Gov24Detail({ data }: { data: Gov24Data }) {
   );
 }
 
+/* ── Ability Summary ── */
+
+interface AbilityItem {
+  name: string;
+  level: number;
+  evidence: string;
+  sources: string[];
+}
+
+function collectAbilities(detailData: Record<string, DatasourceDetail>): AbilityItem[] {
+  const map = new Map<string, AbilityItem>();
+
+  const merge = (name: string, level: number, evidence: string, source: string) => {
+    const key = name.toLowerCase();
+    const existing = map.get(key);
+    if (existing) {
+      if (level > existing.level) {
+        existing.level = level;
+        existing.evidence = evidence;
+      }
+      if (!existing.sources.includes(source)) existing.sources.push(source);
+    } else {
+      map.set(key, { name, level, evidence, sources: [source] });
+    }
+  };
+
+  for (const [provider, data] of Object.entries(detailData)) {
+    if (provider === 'GITHUB' && 'repositories' in data) {
+      const d = data as GitHubData;
+      d.analysis?.skills.forEach((s) => merge(s.name, s.level, s.evidence, 'GitHub'));
+    }
+    if (provider === 'SLACK' && 'messages' in data) {
+      const d = data as SlackData;
+      d.analysis?.traits.forEach((t) => merge(t.trait, t.level, t.evidence, 'Slack'));
+    }
+    if (provider === 'DISCORD' && 'activities' in data) {
+      const d = data as DiscordData;
+      d.analysis?.traits.forEach((t) => merge(t.trait, t.level, t.evidence, 'Discord'));
+      d.analysis?.expertise.forEach((e) => merge(e.domain, e.confidence, e.source, 'Discord'));
+    }
+    if (provider === 'GOV24' && 'certificates' in data) {
+      const d = data as Gov24Data;
+      d.analysis?.qualifications.forEach((q) => merge(q.trait, q.level, q.evidence, 'Gov24'));
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.level - a.level);
+}
+
+function AbilitySummary({ detailData }: { detailData: Record<string, DatasourceDetail> }) {
+  const [showAll, setShowAll] = useState(false);
+  const abilities = collectAbilities(detailData);
+  const sourceCount = Object.keys(detailData).length;
+
+  if (abilities.length === 0) return null;
+
+  const visible = showAll ? abilities : abilities.slice(0, 6);
+
+  return (
+    <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 to-transparent p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+            emoji_events
+          </span>
+          <h2 className="font-[var(--font-manrope)] text-lg font-bold text-foreground">My Abilities</h2>
+        </div>
+        <span className="text-sm text-muted-foreground">
+          Based on {sourceCount} {sourceCount === 1 ? 'source' : 'sources'}
+        </span>
+      </div>
+
+      <div className="space-y-4">
+        {visible.map((ability) => (
+          <div key={ability.name}>
+            <LevelBar label={ability.name} level={ability.level} evidence={ability.evidence} />
+            <div className="flex gap-1.5 mt-1.5">
+              {ability.sources.map((src) => (
+                <span key={src} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                  {src}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {abilities.length > 6 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="flex items-center gap-1.5 mt-4 text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+        >
+          <span className="material-symbols-outlined text-sm transition-transform duration-200"
+            style={{ transform: showAll ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            expand_more
+          </span>
+          {showAll ? 'Show less' : `Show all ${abilities.length} abilities`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function DetailPanel({ provider, data }: { provider: string; data: DatasourceDetail }) {
   if (provider === 'GITHUB' && 'repositories' in data) return <GitHubDetail data={data as GitHubData} />;
   if (provider === 'SLACK' && 'messages' in data) return <SlackDetail data={data as SlackData} />;
@@ -522,6 +625,23 @@ export default function DatasourcePage() {
       getDatasourceStatus().then(setConnections);
     }
   }, []);
+
+  /* Auto-load detail data for connected providers (for AbilitySummary) */
+  useEffect(() => {
+    const connected = connections.filter((c) => c.status === 'CONNECTED' || c.status === 'MOCK');
+    if (connected.length === 0) return;
+
+    Promise.all(
+      connected.map(async (c) => {
+        if (detailData[c.provider]) return;
+        try {
+          const data = await getDatasourceData(c.provider);
+          setDetailData((prev) => ({ ...prev, [c.provider]: data }));
+        } catch {}
+      })
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connections]);
 
   /* Dialog-based connect handlers */
   const handleDialogConnect = useCallback(async (provider: string) => {
@@ -658,6 +778,11 @@ export default function DatasourcePage() {
             style={{ width: `${(connectedCount / PROVIDERS.length) * 100}%` }} />
         </div>
       </div>
+
+      {/* Ability Summary */}
+      {connectedCount > 0 && Object.keys(detailData).length > 0 && (
+        <AbilitySummary detailData={detailData} />
+      )}
 
       {/* Provider List — Collapsible Sections */}
       {loading ? (
