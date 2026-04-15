@@ -27,4 +27,10 @@ export class DataSourceConnection {
 
   @Column({ name: 'last_synced_at', type: 'timestamptz', nullable: true })
   lastSyncedAt: Date;
+
+  @Column({ name: 'analysis_cache', type: 'jsonb', nullable: true })
+  analysisCache: Record<string, any>;
+
+  @Column({ name: 'analysis_cached_at', type: 'timestamptz', nullable: true })
+  analysisCachedAt: Date;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { JobPosting } from '@/lib/types';
+import { formatSalary } from '@/lib/format';
 import Link from 'next/link';
 
 export function JobList({ jobs }: { jobs: JobPosting[] }) {
@@ -10,9 +11,9 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Job Postings</h3>
         <Link
           href="/jobs/create"
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-all"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FFE600] text-[#0a0a0a] text-sm font-bold hover:bg-[#FFE600]/90 transition-all"
         >
-          <span className="material-symbols-outlined text-sm">add</span>
+          <span className="material-symbols-outlined text-base">add</span>
           New Posting
         </Link>
       </div>
@@ -20,29 +21,29 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
         {jobs.map((j) => (
           <div key={j.id} className="flex items-center justify-between p-3 rounded-xl bg-accent/50 border border-border/5 hover:bg-accent transition-all">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-lg">work</span>
+              <div className="w-10 h-10 rounded-lg bg-[#FFE600]/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#FFE600] text-lg">work</span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">{j.title}</p>
+                <p className="text-base font-semibold text-foreground">{j.title}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className={`inline-flex items-center gap-1 text-xs font-medium ${
-                    j.status === 'ACTIVE' ? 'text-primary' : 'text-muted-foreground'
+                  <span className={`inline-flex items-center gap-1 text-sm font-medium ${
+                    j.status === 'ACTIVE' ? 'text-[#FFE600]' : 'text-muted-foreground'
                   }`}>
                     <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                     {j.status}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {(j.salaryMin / 10000).toLocaleString()}M ~ {(j.salaryMax / 10000).toLocaleString()}M KRW
+                  <span className="text-sm text-muted-foreground">
+                    {formatSalary(j.salaryMin)} ~ {formatSalary(j.salaryMax)}
                   </span>
                 </div>
               </div>
             </div>
             <div className="flex gap-2">
-              <button className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-foreground hover:bg-accent transition-all border border-border/10">
+              <button className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-accent transition-all border border-border/10">
                 Edit
               </button>
-              <button className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+              <button className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
                 Close
               </button>
             </div>

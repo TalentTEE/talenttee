@@ -46,10 +46,21 @@ describe('API — Dummy mode', () => {
   });
 
   describe('getDatasourceStatus', () => {
-    it('returns dummy datasource array with 4 providers', async () => {
+    it('returns empty array initially (fresh demo state)', async () => {
+      localStorage.removeItem('dummy_datasources');
       const ds = await getDatasourceStatus();
-      expect(ds).toHaveLength(4);
-      expect(ds.map(d => d.provider)).toEqual(['GITHUB', 'SLACK', 'DISCORD', 'GOV24']);
+      expect(ds).toHaveLength(0);
+    });
+
+    it('returns persisted datasources from localStorage', async () => {
+      const saved = [
+        { id: 'ds-1', userId: 'user-1', provider: 'GITHUB', status: 'MOCK', lastSyncedAt: '2026-04-11T08:00:00Z' },
+      ];
+      localStorage.setItem('dummy_datasources', JSON.stringify(saved));
+      const ds = await getDatasourceStatus();
+      expect(ds).toHaveLength(1);
+      expect(ds[0].provider).toBe('GITHUB');
+      localStorage.removeItem('dummy_datasources');
     });
   });
 

@@ -21,7 +21,7 @@ import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
 import { setupHereWallet } from '@near-wallet-selector/here-wallet';
 import { setupEthereumWallets } from '@near-wallet-selector/ethereum-wallets';
 import { createConfig, http } from '@wagmi/core';
-import { mainnet } from 'viem/chains';
+import { type Chain } from 'viem';
 
 import '@near-wallet-selector/modal-ui/styles.css';
 
@@ -31,10 +31,36 @@ const NEAR_NETWORK =
 const ESCROW_CONTRACT_ID =
   process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID || 'escrow.testnet';
 
+/* ── NEAR Protocol chain definitions for wagmi/viem ── */
+const nearTestnet = {
+  id: 398,
+  name: 'NEAR Protocol Testnet',
+  nativeCurrency: { name: 'NEAR', symbol: 'NEAR', decimals: 24 },
+  rpcUrls: {
+    default: { http: ['https://eth-rpc.testnet.near.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'NEAR Explorer', url: 'https://testnet.nearblocks.io' },
+  },
+  testnet: true,
+} as const satisfies Chain;
+
+const nearMainnet = {
+  id: 397,
+  name: 'NEAR Protocol',
+  nativeCurrency: { name: 'NEAR', symbol: 'NEAR', decimals: 24 },
+  rpcUrls: {
+    default: { http: ['https://eth-rpc.mainnet.near.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'NEAR Explorer', url: 'https://nearblocks.io' },
+  },
+} as const satisfies Chain;
+
 /* ── Wagmi config for EVM wallet detection (MetaMask, etc.) ── */
 const wagmiConfig = createConfig({
-  chains: [mainnet],
-  transports: { [mainnet.id]: http() },
+  chains: [nearMainnet, nearTestnet],
+  transports: { [nearMainnet.id]: http(), [nearTestnet.id]: http() },
 });
 
 /* ── Context ── */
@@ -59,6 +85,7 @@ export function WalletSelectorProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let observer: MutationObserver | null = null;
 
     async function init() {
       const sel = await setupWalletSelector({
@@ -93,6 +120,20 @@ export function WalletSelectorProvider({ children }: { children: ReactNode }) {
         setSignedAccountId(accountId || null);
       });
 
+      // Auto-reset modal on wallet connection error:
+      // When a user cancels or fails, the modal shows an error view.
+      // We detect it and reset back to the wallet list.
+      observer = new MutationObserver(() => {
+        const errorEl = document.querySelector(
+          '.nws-modal-wrapper .error-wrapper'
+        );
+        if (errorEl) {
+          m.hide();
+          setTimeout(() => m.show(), 100);
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
       setSelector(sel);
       setModal(m);
     }
@@ -100,6 +141,7 @@ export function WalletSelectorProvider({ children }: { children: ReactNode }) {
     init();
     return () => {
       cancelled = true;
+      observer?.disconnect();
     };
   }, []);
 

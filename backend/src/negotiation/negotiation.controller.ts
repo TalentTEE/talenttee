@@ -39,6 +39,11 @@ export class NegotiationController {
     return this.negotiationService.getRounds(id);
   }
 
+  @Get('sessions/:id/rounds/decrypted')
+  async getDecryptedRounds(@Param('id') id: string) {
+    return this.negotiationService.getDecryptedRounds(id);
+  }
+
   @Post('sessions/:id/intervene')
   async intervene(@Param('id') id: string, @Req() req, @Body() dto: InterveneDto) {
     await this.negotiationService.intervene(id, req.user.id, dto.direction);

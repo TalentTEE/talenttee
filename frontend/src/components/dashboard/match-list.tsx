@@ -30,7 +30,7 @@ export function MatchList({
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">
           Top {role === 'SEEKER' ? 'Job' : 'Candidate'} Matches
         </h3>
-        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{matches.length} results</span>
+        <span className="text-sm text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{matches.length} results</span>
       </div>
       <div className="space-y-3">
         {matches.map((m) => {
@@ -51,14 +51,14 @@ export function MatchList({
                     strokeLinecap="round"
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary">{score}%</span>
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-primary">{score}%</span>
               </div>
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{m.jobTitle} - {m.companyName}</p>
+                <p className="text-base font-semibold text-foreground truncate">{m.jobTitle} - {m.companyName}</p>
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {m.seekerSkills.slice(0, 3).map((s) => (
-                    <span key={s} className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground font-medium">{s}</span>
+                    <span key={s} className="px-1.5 py-0.5 rounded text-sm bg-muted text-muted-foreground font-medium">{s}</span>
                   ))}
                 </div>
               </div>
@@ -67,17 +67,17 @@ export function MatchList({
                 {session && state ? (
                   <Link
                     href={`/negotiation/${session.id}`}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 ${state.className}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all hover:opacity-80 ${state.className}`}
                   >
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>{state.icon}</span>
+                    <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>{state.icon}</span>
                     {state.label}
                     {session.state !== 'AGREED' && session.state !== 'FAILED' && session.state !== 'MAX_ROUNDS' && (
-                      <span className="text-[10px] font-medium opacity-70">R{session.currentRound}/{session.maxRounds}</span>
+                      <span className="text-sm font-medium opacity-70">R{session.currentRound}/{session.maxRounds}</span>
                     )}
                   </Link>
                 ) : (
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground bg-muted">
-                    <span className="material-symbols-outlined text-sm">schedule</span>
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground bg-muted">
+                    <span className="material-symbols-outlined text-base">schedule</span>
                     Waiting
                   </span>
                 )}
@@ -85,7 +85,7 @@ export function MatchList({
             </div>
           );
         })}
-        {matches.length === 0 && <p className="text-sm text-muted-foreground">No matching results.</p>}
+        {matches.length === 0 && <p className="text-base text-muted-foreground">No matching results.</p>}
       </div>
     </div>
   );

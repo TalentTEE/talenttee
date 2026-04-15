@@ -25,9 +25,9 @@ export const DUMMY_RESUME: ResumeProfile = {
   summary: 'TypeScript full-stack developer with 3 years of experience in React/Next.js frontend and NestJS backend. Active open-source contributor.',
   strengths: ['TypeScript full-stack capability', 'Open-source contributions (GitHub 500+)', 'SaaS service experience'],
   improvementAreas: ['Limited large-scale traffic experience', 'No mobile development experience'],
-  marketValueMin: 60000000,
-  marketValueMax: 75000000,
-  marketValueReasoning: 'Based on 3 years of TypeScript full-stack experience, open-source activity, and SaaS background. Positioned above average salary of 65M for similar roles.',
+  marketValueMin: 90000,
+  marketValueMax: 120000,
+  marketValueReasoning: 'Based on 3 years of TypeScript full-stack experience, open-source activity, and SaaS background. Positioned above average salary of $95K for similar roles.',
   negotiationPoints: {
     strengths: ['High demand for TypeScript full-stack', 'Verified skills through open-source', 'SaaS operations experience'],
     weaknesses: ['Limited high-traffic operations experience', 'No leadership/management experience'],

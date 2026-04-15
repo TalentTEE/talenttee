@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getResume, generateResume, getResumeStatus, USE_DUMMY } from '@/lib/api';
+import { getResume, generateResume, getResumeStatus, getDatasourceStatus, USE_DUMMY } from '@/lib/api';
 import { ResumeProfile } from '@/lib/types';
+import { AINudge } from '@/components/ui/AINudge';
 
 const STEPS = [
   { key: 'COLLECTING', label: 'Collecting', icon: 'cloud_download' },
@@ -16,13 +17,7 @@ function stepIndex(status: ResumeProfile['status']): number {
   return STEPS.findIndex((s) => s.key === status);
 }
 
-function formatCurrency(value: number | null): string {
-  if (value === null) return '-';
-  if (value >= 100_000_000) {
-    return `${(value / 100_000_000).toFixed(1)}억`;
-  }
-  return `${(value / 10_000).toLocaleString()}만`;
-}
+import { formatCurrency } from '@/lib/format';
 
 export default function ResumePage() {
   const { user } = useAuth();
@@ -37,12 +32,32 @@ export default function ResumePage() {
   const [simulatedStatus, setSimulatedStatus] =
     useState<ResumeProfile['status'] | null>(null);
 
+  const autoGenTriggered = useRef(false);
+
   useEffect(() => {
     if (!user) return;
-    getResume()
-      .then(setResume)
-      .catch(() => setResume(null))
-      .finally(() => setLoading(false));
+    Promise.all([
+      getResume().then(setResume).catch(() => setResume(null)),
+      getDatasourceStatus(),
+    ]).then(([, datasources]) => {
+      const hasConnected = datasources.some(
+        (d) => d.status === 'CONNECTED' || d.status === 'MOCK'
+      );
+      // Auto-generate if datasources connected but no resume yet
+      if (hasConnected && !autoGenTriggered.current) {
+        getResume()
+          .then((r) => {
+            if (!r || r.status !== 'COMPLETE') {
+              autoGenTriggered.current = true;
+              handleGenerate();
+            }
+          })
+          .catch(() => {
+            autoGenTriggered.current = true;
+            handleGenerate();
+          });
+      }
+    }).finally(() => setLoading(false));
   }, [user]);
 
   const handleGenerate = useCallback(async () => {
@@ -109,7 +124,7 @@ export default function ResumePage() {
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
             AI Resume
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-base text-muted-foreground mt-1">
             AI-generated professional profile based on your connected data
             sources.
           </p>
@@ -118,7 +133,7 @@ export default function ResumePage() {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-base">
               auto_awesome
@@ -128,8 +143,39 @@ export default function ResumePage() {
         )}
       </div>
 
+      {/* AI Nudge */}
+      {!resume && !generating && (
+        <AINudge id="resume-none" message="Your data sources are ready. Generate your AI resume now — it takes about 30 seconds." />
+      )}
+      {generating && (
+        <AINudge id="resume-gen" message="AI is analyzing your professional history across all connected sources..." />
+      )}
+      {isComplete && resume?.marketValueMin && resume?.marketValueMax && (
+        <AINudge id="resume-done" message={`Your market value is estimated at $${resume.marketValueMin.toLocaleString()}–$${resume.marketValueMax.toLocaleString()} based on your profile analysis.`} />
+      )}
+
+      {/* Auto-navigate CTA after completion */}
+      {isComplete && (
+        <div className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+            rocket_launch
+          </span>
+          <div className="flex-1">
+            <p className="text-base font-semibold text-foreground">Resume ready! AI can now match you with jobs.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Turn on Job Seeking to start automatic matching and negotiation.</p>
+          </div>
+          <button
+            onClick={() => router.push('/matching')}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all"
+          >
+            View Matches
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
+        </div>
+      )}
+
       {/* Progress Section */}
-      <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+      <div className="rounded-2xl border border-border/10 bg-card p-6">
         <h2 className="font-[var(--font-manrope)] font-bold text-foreground mb-6">
           Generation Progress
         </h2>
@@ -156,7 +202,7 @@ export default function ResumePage() {
                         ? 'bg-emerald-500/10 text-emerald-400'
                         : isActive
                           ? 'bg-primary/10 text-primary'
-                          : 'bg-[#262626] text-muted-foreground/40'
+                          : 'bg-muted text-muted-foreground/40'
                     }`}
                   >
                     <span
@@ -173,7 +219,7 @@ export default function ResumePage() {
                     </span>
                   </div>
                   <span
-                    className={`text-xs font-medium ${
+                    className={`text-sm font-medium ${
                       isDone
                         ? 'text-emerald-400'
                         : isActive
@@ -187,7 +233,7 @@ export default function ResumePage() {
 
                 {/* Connector line */}
                 {idx < STEPS.length - 1 && (
-                  <div className="flex-1 mx-3 h-0.5 rounded-full overflow-hidden bg-[#262626]">
+                  <div className="flex-1 mx-3 h-0.5 rounded-full overflow-hidden bg-muted">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         idx < currentStepIdx
@@ -206,7 +252,7 @@ export default function ResumePage() {
 
         {/* Status message */}
         {generating && (
-          <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="mt-6 flex items-center gap-2 text-base text-muted-foreground">
             <span className="material-symbols-outlined text-base text-primary animate-spin">
               progress_activity
             </span>
@@ -219,7 +265,7 @@ export default function ResumePage() {
         )}
 
         {!generating && !resume && !loading && (
-          <div className="mt-6 text-sm text-muted-foreground">
+          <div className="mt-6 text-base text-muted-foreground">
             Connect your data sources and click &quot;Generate Resume&quot; to
             get started.
           </div>
@@ -232,7 +278,7 @@ export default function ResumePage() {
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-border/10 bg-[#1a1919] p-6 h-40 animate-pulse"
+              className="rounded-2xl border border-border/10 bg-card p-6 h-40 animate-pulse"
             />
           ))}
         </div>
@@ -242,10 +288,10 @@ export default function ResumePage() {
       {isComplete && resume && (
         <div className="space-y-6">
           {/* AI Summary */}
-          <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+          <div className="rounded-2xl border border-border/10 bg-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <span
-                className="material-symbols-outlined text-lg text-primary"
+                className="material-symbols-outlined text-lg text-[#00F0FF]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 auto_awesome
@@ -254,16 +300,16 @@ export default function ResumePage() {
                 AI Summary
               </h2>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-base text-muted-foreground leading-relaxed">
               {resume.summary}
             </p>
           </div>
 
           {/* Market Value */}
-          <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+          <div className="rounded-2xl border border-border/10 bg-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <span
-                className="material-symbols-outlined text-lg text-primary"
+                className="material-symbols-outlined text-lg text-[#39FF14]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 trending_up
@@ -273,24 +319,24 @@ export default function ResumePage() {
               </h2>
             </div>
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="font-[var(--font-manrope)] text-3xl font-extrabold text-primary">
+              <span className="font-[var(--font-manrope)] text-3xl font-extrabold text-[#39FF14]">
                 {formatCurrency(resume.marketValueMin)} -{' '}
                 {formatCurrency(resume.marketValueMax)}
               </span>
-              <span className="text-sm text-muted-foreground">/ year</span>
+              <span className="text-base text-muted-foreground">/ year</span>
             </div>
             {resume.marketValueReasoning && (
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-base text-muted-foreground leading-relaxed">
                 {resume.marketValueReasoning}
               </p>
             )}
           </div>
 
           {/* Skills */}
-          <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+          <div className="rounded-2xl border border-border/10 bg-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <span
-                className="material-symbols-outlined text-lg text-primary"
+                className="material-symbols-outlined text-lg text-[#BF5AF2]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 code
@@ -303,7 +349,7 @@ export default function ResumePage() {
               {resume.skills.map((skill) => (
                 <span
                   key={skill}
-                  className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium border border-primary/20"
+                  className="px-3 py-1.5 rounded-lg bg-[#BF5AF2]/10 text-[#BF5AF2] text-base font-medium border border-[#BF5AF2]/20"
                 >
                   {skill}
                 </span>
@@ -312,10 +358,10 @@ export default function ResumePage() {
           </div>
 
           {/* Experience */}
-          <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+          <div className="rounded-2xl border border-border/10 bg-card p-6">
             <div className="flex items-center gap-2 mb-6">
               <span
-                className="material-symbols-outlined text-lg text-primary"
+                className="material-symbols-outlined text-lg text-[#FF2DF1]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 work
@@ -329,23 +375,23 @@ export default function ResumePage() {
                 <div key={idx} className="relative flex gap-4">
                   {/* Timeline */}
                   <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 rounded-full bg-primary border-2 border-[#1a1919] z-10" />
+                    <div className="w-3 h-3 rounded-full bg-[#FF2DF1] border-2 border-card z-10" />
                     {idx < resume.experience.length - 1 && (
-                      <div className="w-0.5 flex-1 bg-[#262626]" />
+                      <div className="w-0.5 flex-1 bg-muted" />
                     )}
                   </div>
 
                   {/* Content */}
                   <div className="pb-8 last:pb-0 flex-1">
-                    <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-sm">
+                    <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-base">
                       {exp.role}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5 mb-2">
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-base text-muted-foreground">
                         {exp.company}
                       </span>
                       <span className="text-muted-foreground/30">|</span>
-                      <span className="text-xs text-muted-foreground/60">
+                      <span className="text-sm text-muted-foreground/60">
                         {exp.period}
                       </span>
                     </div>
@@ -353,9 +399,9 @@ export default function ResumePage() {
                       {exp.highlights.map((highlight, hIdx) => (
                         <li
                           key={hIdx}
-                          className="flex items-start gap-2 text-sm text-muted-foreground"
+                          className="flex items-start gap-2 text-base text-muted-foreground"
                         >
-                          <span className="text-primary/40 mt-1 text-xs">
+                          <span className="text-[#FF2DF1]/40 mt-1 text-sm">
                             &#9679;
                           </span>
                           {highlight}
@@ -369,10 +415,10 @@ export default function ResumePage() {
           </div>
 
           {/* Education */}
-          <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+          <div className="rounded-2xl border border-border/10 bg-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <span
-                className="material-symbols-outlined text-lg text-primary"
+                className="material-symbols-outlined text-lg text-[#FFE600]"
                 style={{ fontVariationSettings: "'FILL' 1" }}
               >
                 school
@@ -385,17 +431,17 @@ export default function ResumePage() {
               {resume.education.map((edu, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3 rounded-xl bg-[#201f1f]"
+                  className="flex items-center justify-between p-3 rounded-xl bg-accent"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-base font-semibold text-foreground">
                       {edu.degree}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {edu.institution}
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground/60 font-medium">
+                  <span className="text-sm text-muted-foreground/60 font-medium">
                     {edu.year}
                   </span>
                 </div>
@@ -406,7 +452,7 @@ export default function ResumePage() {
           {/* Strengths & Improvement Areas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Strengths */}
-            <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+            <div className="rounded-2xl border border-border/10 bg-card p-6">
               <div className="flex items-center gap-2 mb-4">
                 <span
                   className="material-symbols-outlined text-lg text-emerald-400"
@@ -419,13 +465,13 @@ export default function ResumePage() {
                 </h2>
               </div>
               <ul className="space-y-2">
-                {resume.strengths.map((s, idx) => (
+                {(resume.strengths ?? []).map((s, idx) => (
                   <li
                     key={idx}
-                    className="flex items-start gap-2 text-sm text-muted-foreground"
+                    className="flex items-start gap-2 text-base text-muted-foreground"
                   >
                     <span className="text-emerald-400 mt-0.5">
-                      <span className="material-symbols-outlined text-sm">
+                      <span className="material-symbols-outlined text-base">
                         check
                       </span>
                     </span>
@@ -436,10 +482,10 @@ export default function ResumePage() {
             </div>
 
             {/* Improvement Areas */}
-            <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+            <div className="rounded-2xl border border-border/10 bg-card p-6">
               <div className="flex items-center gap-2 mb-4">
                 <span
-                  className="material-symbols-outlined text-lg text-amber-400"
+                  className="material-symbols-outlined text-lg text-[#FF2DF1]"
                   style={{ fontVariationSettings: "'FILL' 1" }}
                 >
                   lightbulb
@@ -449,13 +495,13 @@ export default function ResumePage() {
                 </h2>
               </div>
               <ul className="space-y-2">
-                {resume.improvementAreas.map((area, idx) => (
+                {(resume.improvementAreas ?? []).map((area, idx) => (
                   <li
                     key={idx}
-                    className="flex items-start gap-2 text-sm text-muted-foreground"
+                    className="flex items-start gap-2 text-base text-muted-foreground"
                   >
-                    <span className="text-amber-400 mt-0.5">
-                      <span className="material-symbols-outlined text-sm">
+                    <span className="text-[#FF2DF1] mt-0.5">
+                      <span className="material-symbols-outlined text-base">
                         arrow_forward
                       </span>
                     </span>
@@ -468,10 +514,10 @@ export default function ResumePage() {
 
           {/* Negotiation Points */}
           {resume.negotiationPoints && (
-            <div className="rounded-2xl border border-border/10 bg-[#1a1919] p-6">
+            <div className="rounded-2xl border border-border/10 bg-card p-6">
               <div className="flex items-center gap-2 mb-4">
                 <span
-                  className="material-symbols-outlined text-lg text-primary"
+                  className="material-symbols-outlined text-lg text-[#00F0FF]"
                   style={{ fontVariationSettings: "'FILL' 1" }}
                 >
                   handshake
@@ -482,17 +528,17 @@ export default function ResumePage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3">
+                  <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3">
                     Leverage Points
                   </h3>
                   <ul className="space-y-2">
                     {resume.negotiationPoints.strengths.map((s, idx) => (
                       <li
                         key={idx}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                        className="flex items-start gap-2 text-base text-muted-foreground"
                       >
                         <span className="text-emerald-400 mt-0.5">
-                          <span className="material-symbols-outlined text-sm">
+                          <span className="material-symbols-outlined text-base">
                             add_circle
                           </span>
                         </span>
@@ -502,17 +548,17 @@ export default function ResumePage() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3">
+                  <h3 className="text-sm font-semibold text-[#FFE600] uppercase tracking-wider mb-3">
                     Watch Out For
                   </h3>
                   <ul className="space-y-2">
                     {resume.negotiationPoints.weaknesses.map((w, idx) => (
                       <li
                         key={idx}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                        className="flex items-start gap-2 text-base text-muted-foreground"
                       >
-                        <span className="text-amber-400 mt-0.5">
-                          <span className="material-symbols-outlined text-sm">
+                        <span className="text-[#FFE600] mt-0.5">
+                          <span className="material-symbols-outlined text-base">
                             warning
                           </span>
                         </span>

@@ -43,7 +43,7 @@ export class NearAiCloudClient implements NearAiClient {
     const response = await this.client.chat.completions.create({
       model: this.chatModel,
       messages,
-    });
+    }, { timeout: 60_000 });
 
     const content = response.choices[0]?.message?.content ?? '';
     return { content };
@@ -55,7 +55,7 @@ export class NearAiCloudClient implements NearAiClient {
     const response = await this.client.embeddings.create({
       model: this.embedModel,
       input: inputs,
-    });
+    }, { timeout: 60_000 });
 
     return response.data
       .sort((a, b) => a.index - b.index)
