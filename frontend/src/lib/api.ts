@@ -15,7 +15,7 @@ import { DUMMY_AGREEMENT } from './dummy/agreement';
 import { DUMMY_ESCROW, DUMMY_ESCROW_PAYMENTS } from './dummy/escrow';
 
 export const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 let apiErrorHandler: ((status: number) => void) | null = null;
 
