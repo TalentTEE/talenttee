@@ -13,6 +13,7 @@ import { DatasourceModule } from './datasource/datasource.module.js';
 import { ResumeModule } from './resume/resume.module.js';
 import { MatchModule } from './match/match.module.js';
 import { ProfileModule } from './profile/profile.module.js';
+import { SeekerModule } from './seeker/seeker.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -31,6 +32,7 @@ import { AppService } from './app.service.js';
     AgreementModule,
     MatchModule,
     ProfileModule,
+    SeekerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
