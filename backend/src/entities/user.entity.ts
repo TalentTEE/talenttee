@@ -18,6 +18,9 @@ export class User {
   @Column({ name: 'public_key', type: 'varchar', length: 128 })
   publicKey: string;
 
+  @Column({ name: 'job_seeking', type: 'boolean', default: false })
+  jobSeeking: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
