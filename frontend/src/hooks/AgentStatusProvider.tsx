@@ -48,8 +48,13 @@ export function AgentStatusProvider({ children }: { children: ReactNode }) {
       if (user.role === 'SEEKER') {
         promises.push(
           getDatasourceStatus().then(setDatasources).catch(() => {}),
-          getResume().then(setResume).catch(() => setResume(null)),
-          getSeekerMatches().then(setMatches).catch(() => setMatches([])),
+          getResume().then((r) => {
+            setResume(r);
+            if (r?.status === 'COMPLETE') {
+              return getSeekerMatches().then(setMatches).catch(() => setMatches([]));
+            }
+            setMatches([]);
+          }).catch(() => { setResume(null); setMatches([]); }),
         );
       } else {
         promises.push(

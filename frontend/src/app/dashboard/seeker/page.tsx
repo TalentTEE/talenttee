@@ -24,8 +24,13 @@ export default function SeekerDashboard() {
     if (!user) return;
     Promise.all([
       getDatasourceStatus().then(setDatasources),
-      getResume().then(setResume).catch(() => setResume(null)),
-      getSeekerMatches().then(setMatches).catch(() => setMatches([])),
+      getResume().then((r) => {
+        setResume(r);
+        if (r?.status === 'COMPLETE') {
+          return getSeekerMatches().then(setMatches).catch(() => setMatches([]));
+        }
+        setMatches([]);
+      }).catch(() => { setResume(null); setMatches([]); }),
       getNegotiationSessions().then(setSessions).catch(() => setSessions([])),
     ]).finally(() => setLoading(false));
   }, [user]);

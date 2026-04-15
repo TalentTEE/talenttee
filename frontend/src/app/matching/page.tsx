@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getSeekerMatches, getEmployerMatches, accessProfile, agreeMatch, getJobs } from '@/lib/api';
+import { getSeekerMatches, getEmployerMatches, accessProfile, agreeMatch, getJobs, getResume } from '@/lib/api';
 import { MatchResultDisplay, ProfileReport } from '@/lib/types';
 
 function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
@@ -223,7 +223,7 @@ export default function MatchingPage() {
     setLoading(true);
     const fetchMatches = isEmployer
       ? getJobs().then(jobs => jobs.length > 0 ? getEmployerMatches(jobs[0].id) : [])
-      : getSeekerMatches();
+      : getResume().then(r => r?.status === 'COMPLETE' ? getSeekerMatches() : []).catch(() => []);
 
     fetchMatches.then(setMatches).catch(() => setMatches([])).finally(() => setLoading(false));
   }, [user, isEmployer]);

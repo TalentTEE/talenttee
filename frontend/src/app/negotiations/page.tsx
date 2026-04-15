@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getNegotiationSessions, getSeekerMatches, getEmployerMatches, getJobs } from '@/lib/api';
+import { getNegotiationSessions, getSeekerMatches, getEmployerMatches, getJobs, getResume } from '@/lib/api';
 import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
 
 const NEON_PINK = '#FF2DF1';
@@ -17,7 +17,7 @@ export default function NegotiationsPage() {
   useEffect(() => {
     if (!user) return;
     const matchPromise = user.role === 'SEEKER'
-      ? getSeekerMatches()
+      ? getResume().then(r => r?.status === 'COMPLETE' ? getSeekerMatches() : []).catch(() => [])
       : getJobs().then(jobs => jobs.length > 0 ? getEmployerMatches(jobs[0].id) : []);
 
     Promise.all([
