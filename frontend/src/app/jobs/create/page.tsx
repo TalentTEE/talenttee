@@ -176,7 +176,7 @@ function ChatSidebar({
           New Chat
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div data-lenis-prevent className="flex-1 overflow-y-auto p-2 space-y-1">
         {sessions.length === 0 && (
           <p className="text-xs text-muted-foreground p-3 text-center">
             No conversations yet
@@ -341,11 +341,12 @@ function ChatMode({
   return (
     <div className="space-y-4">
       {/* Chat Window */}
-      <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-[560px]">
+      <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-[560px] min-h-0">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-6 space-y-4"
+          data-lenis-prevent
+          className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4"
         >
           {messages.map((msg, i) => (
             <div
