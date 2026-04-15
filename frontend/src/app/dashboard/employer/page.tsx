@@ -7,6 +7,7 @@ import { EscrowAccount, JobPosting, MatchResultDisplay, NegotiationSession } fro
 import { EscrowBalance } from '@/components/dashboard/escrow-balance';
 import { JobList } from '@/components/dashboard/job-list';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
+import { AIActionCard } from '@/components/dashboard/AIActionCard';
 import { SkeletonGrid } from '@/components/ui/skeleton-card';
 
 export default function EmployerDashboard() {
@@ -20,10 +21,12 @@ export default function EmployerDashboard() {
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      getEscrowBalance(user.nearAccountId).then(setEscrow),
-      getJobs().then(setJobs),
-      getEmployerMatches('job-1').then(setMatches),
-      getNegotiationSessions().then(setSessions),
+      getEscrowBalance(user.nearAccountId).then(setEscrow).catch(() => {}),
+      getJobs().then(j => {
+        setJobs(j);
+        if (j.length > 0) return getEmployerMatches(j[0].id).then(setMatches);
+      }).catch(() => {}),
+      getNegotiationSessions().then(setSessions).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [user]);
 
@@ -34,7 +37,7 @@ export default function EmployerDashboard() {
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
             Welcome back
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your talent pipeline</p>
+          <p className="text-base text-muted-foreground mt-1">Manage your talent pipeline</p>
         </div>
         <SkeletonGrid count={3} lines={3} />
       </div>
@@ -47,11 +50,20 @@ export default function EmployerDashboard() {
         <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
           Welcome back, {user?.nearAccountId?.split('.')[0] || 'Employer'}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your talent pipeline</p>
+        <p className="text-base text-muted-foreground mt-1">Manage your talent pipeline</p>
       </div>
-      <EscrowBalance escrow={escrow} />
-      <JobList jobs={jobs} />
-      <NegotiationList sessions={sessions} matches={matches} />
+      <div className="animate-[fadeSlideUp_300ms_ease-out_both]">
+        <AIActionCard datasources={[]} resume={null} matches={matches} sessions={sessions} role="EMPLOYER" />
+      </div>
+      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
+        <EscrowBalance escrow={escrow} />
+      </div>
+      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
+        <JobList jobs={jobs} />
+      </div>
+      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
+        <NegotiationList sessions={sessions} matches={matches} />
+      </div>
     </div>
   );
 }

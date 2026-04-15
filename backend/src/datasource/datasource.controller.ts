@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
@@ -43,6 +43,14 @@ export class DatasourceController {
     return this.datasourceService.connectMock(userId, provider);
   }
 
+  @Get('me/:provider/data')
+  @UseGuards(JwtGuard)
+  async getProviderData(@Req() req, @Param('provider') provider: string) {
+    const userId = req.user.id;
+    const normalizedProvider = provider.toUpperCase() as DataSourceProvider;
+    return this.datasourceService.getProviderData(userId, normalizedProvider);
+  }
+
   @Get('status')
   @UseGuards(JwtGuard)
   async getStatus(@Req() req) {
@@ -55,6 +63,6 @@ export class DatasourceController {
   async sync(@Req() req) {
     const userId = req.user.id;
     const data = await this.datasourceService.collectAllData(userId);
-    return { message: '동기화 완료', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
+    return { message: 'Sync complete', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
   }
 }

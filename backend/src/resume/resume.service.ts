@@ -6,9 +6,9 @@ import { DatasourceService } from '../datasource/datasource.service.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ResumeStatus } from '../common/enums/index.js';
-import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.prompt.js';
-import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.prompt.js';
-import { MARKET_VALUE_PROMPT } from './prompts/market-value.prompt.js';
+import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.en.prompt.js';
+import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.en.prompt.js';
+import { MARKET_VALUE_PROMPT } from './prompts/market-value.en.prompt.js';
 
 @Injectable()
 export class ResumeService {
@@ -102,11 +102,11 @@ export class ResumeService {
     const parts: string[] = [];
 
     if (resume.summary) {
-      parts.push(`요약: ${resume.summary}`);
+      parts.push(`Summary: ${resume.summary}`);
     }
 
     if (resume.skills?.length) {
-      parts.push(`기술 스택: ${resume.skills.join(', ')}`);
+      parts.push(`Tech Stack: ${resume.skills.join(', ')}`);
     }
 
     if (resume.experience?.length) {
@@ -114,14 +114,14 @@ export class ResumeService {
         (e) =>
           `${e.role} @ ${e.company} (${e.period}) - ${(e.highlights ?? []).join('; ')}`,
       );
-      parts.push(`경력:\n${expLines.join('\n')}`);
+      parts.push(`Experience:\n${expLines.join('\n')}`);
     }
 
     if (resume.education?.length) {
       const eduLines = resume.education.map(
         (e) => `${e.degree} - ${e.institution} (${e.year})`,
       );
-      parts.push(`학력:\n${eduLines.join('\n')}`);
+      parts.push(`Education:\n${eduLines.join('\n')}`);
     }
 
     return parts.join('\n\n');

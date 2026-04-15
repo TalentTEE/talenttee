@@ -1,7 +1,7 @@
 {
   "profile": {
     "login": "demo-developer",
-    "name": "김개발",
+    "name": "Dev Kim",
     "bio": "Full-stack developer passionate about Web3",
     "public_repos": 42,
     "followers": 128
@@ -44,5 +44,38 @@
     "prs_merged": 123,
     "issues_closed": 67,
     "code_reviews": 89
+  },
+  "analysis": {
+    "skills": [
+      { "name": "TypeScript/JavaScript", "level": 92, "evidence": "Primary language, 67% of total codebase. Used across frontend (React) and backend (NestJS)" },
+      { "name": "Rust/Smart Contract", "level": 75, "evidence": "DeFi protocol development on NEAR. Smart contract design and implementation" },
+      { "name": "AI/ML Integration", "level": 68, "evidence": "AI tool development with OpenAI API. Prompt engineering and pipeline construction" },
+      { "name": "Frontend Architecture", "level": 88, "evidence": "Component library maintainer (156 stars). Next.js and Tailwind-based architecture" }
+    ],
+    "workPatterns": [
+      { "trait": "Consistent Contributions", "description": "847 commits/year, averaging 16.3 per week" },
+      { "trait": "Active Code Reviewer", "description": "89 reviews completed. 72% review-to-PR ratio, team-oriented collaboration" },
+      { "trait": "Open Source Impact", "description": "279 total stars, 80 forks across projects. High community adoption" }
+    ],
+    "projects": [
+      {
+        "name": "DeFi Swap Protocol",
+        "role": "Lead Developer",
+        "skills": ["Rust", "NEAR Protocol", "Smart Contract"],
+        "impact": "Designed & built decentralized token swap protocol. Forked by 12 developers"
+      },
+      {
+        "name": "AI Resume Builder",
+        "role": "Full-stack Developer",
+        "skills": ["TypeScript", "NestJS", "OpenAI API"],
+        "impact": "AI-powered resume generation tool. Achieved 89 stars, 23 forks"
+      },
+      {
+        "name": "React Dashboard Kit",
+        "role": "Library Author",
+        "skills": ["React", "Next.js", "Tailwind CSS"],
+        "impact": "Enterprise dashboard component library. Highest adoption rate (156 stars)"
+      }
+    ]
   }
 }

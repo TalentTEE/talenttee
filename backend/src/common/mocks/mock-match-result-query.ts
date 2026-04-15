@@ -16,9 +16,9 @@ export class MockMatchResultQuery implements MatchResultQuery {
       }),
       marketValueMin: 60_000_000,
       marketValueMax: 80_000_000,
-      strengths: ['블록체인 경험', 'NestJS 전문성', '5년차 백엔드'],
-      weaknesses: ['프론트엔드 경험 부족', '대규모 트래픽 경험 없음'],
-      preferences: '원격근무 선호, 연봉 6,500만 이상 희망, 수습기간 3개월 이하',
+      strengths: ['Blockchain experience', 'NestJS expertise', '5 years backend'],
+      weaknesses: ['Limited frontend experience', 'No large-scale traffic experience'],
+      preferences: 'Prefers remote work, salary 65M+ KRW, probation 3 months or less',
     };
   }
 }

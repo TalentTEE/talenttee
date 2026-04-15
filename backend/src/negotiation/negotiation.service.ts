@@ -2,6 +2,7 @@ import { Injectable, Inject, Logger, NotFoundException, ConflictException } from
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
+import bs58 from 'bs58';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { JobPosting } from '../entities/job-posting.entity.js';
@@ -14,8 +15,8 @@ import { MATCH_RESULT_QUERY } from '../common/interfaces/match-result-query.inte
 import type { MatchResultQuery } from '../common/interfaces/match-result-query.interface.js';
 import { CryptoService } from '../crypto/crypto.service.js';
 import { getActorForState, transition, isTerminal } from './negotiation-engine.js';
-import { buildSeekerPrompt } from './prompts/seeker-agent.prompt.js';
-import { buildEmployerPrompt } from './prompts/employer-agent.prompt.js';
+import { buildSeekerPrompt } from './prompts/seeker-agent.en.prompt.js';
+import { buildEmployerPrompt } from './prompts/employer-agent.en.prompt.js';
 
 @Injectable()
 export class NegotiationService {
@@ -97,13 +98,13 @@ export class NegotiationService {
   async intervene(sessionId: string, userId: string, direction: string): Promise<void> {
     const session = await this.getSession(sessionId);
     const role = session.seekerId === userId ? 'SEEKER' : 'EMPLOYER';
-    // NOTE: In-memory only — 서버 재시작 시 소실
+    // NOTE: In-memory only — lost on server restart
     this.interventions.set(`${sessionId}:${role}`, direction);
   }
 
   private parsePublicKey(key: string): Uint8Array {
     if (key.startsWith('ed25519:')) {
-      return Buffer.from(key.slice(8), 'base64');
+      return bs58.decode(key.slice(8));
     }
     return Buffer.from(key, 'hex');
   }
@@ -143,11 +144,11 @@ export class NegotiationService {
         // Build prompt based on actor
         let systemPrompt: string;
         const historyStr = roundHistory.length > 0
-          ? roundHistory.map(r => `라운드 ${r.round} (${r.actor}): ${r.decision} — 연봉 ${r.proposal.salary}`).join('\n')
-          : '첫 라운드입니다.';
+          ? roundHistory.map(r => `Round ${r.round} (${r.actor}): ${r.decision} — salary ${r.proposal.salary}`).join('\n')
+          : 'This is the first round.';
         const lastOffer = roundHistory.length > 0
           ? JSON.stringify(roundHistory[roundHistory.length - 1].proposal)
-          : '초기 제안 없음';
+          : 'No initial offer';
 
         if (actor === NegotiationActor.EMPLOYER_AGENT) {
           systemPrompt = buildEmployerPrompt({
@@ -177,7 +178,7 @@ export class NegotiationService {
         const result = await this.aiClient.chat({
           agentId: actor === NegotiationActor.EMPLOYER_AGENT ? 'employer-agent' : 'seeker-agent',
           systemPrompt,
-          userMessage: `라운드 ${session.currentRound} 진행해주세요.`,
+          userMessage: `Please proceed with round ${session.currentRound}.`,
         });
 
         let parsed: AgentResponse;
@@ -188,7 +189,7 @@ export class NegotiationService {
           const retry = await this.aiClient.chat({
             agentId: actor === NegotiationActor.EMPLOYER_AGENT ? 'employer-agent' : 'seeker-agent',
             systemPrompt,
-            userMessage: `이전 응답이 올바른 JSON이 아닙니다. 반드시 JSON 형식으로만 응답하세요. 라운드 ${session.currentRound}`,
+            userMessage: `Previous response was not valid JSON. Please respond only in JSON format. Round ${session.currentRound}`,
           });
           parsed = JSON.parse(retry.content);
         }
@@ -229,6 +230,45 @@ export class NegotiationService {
     }
 
     this.logger.log(`Session ${session.id} finished: ${session.state}`);
+  }
+
+  async getDecryptedRounds(sessionId: string): Promise<any[]> {
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId },
+      relations: ['seeker'],
+    });
+    if (!session) throw new NotFoundException('Session not found');
+    if (!session.seeker?.publicKey) throw new NotFoundException('Seeker public key not found');
+
+    const seekerPubKey = this.parsePublicKey(session.seeker.publicKey);
+    const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, session.sessionKeyNonce);
+
+    const rounds = await this.getRounds(sessionId);
+    return rounds.map(round => {
+      try {
+        const decrypted = this.cryptoService.decrypt(sessionKey, round.encryptedData);
+        const data = JSON.parse(decrypted);
+        return {
+          id: round.id,
+          sessionId: round.sessionId,
+          round: round.round,
+          actor: round.actor,
+          proposal: data.proposal,
+          reasoning: data.reasoning,
+          decision: round.decision,
+        };
+      } catch {
+        return {
+          id: round.id,
+          sessionId: round.sessionId,
+          round: round.round,
+          actor: round.actor,
+          proposal: null,
+          reasoning: 'Decryption failed',
+          decision: round.decision,
+        };
+      }
+    });
   }
 
   async decryptRounds(sessionId: string, sessionKeyHex: string): Promise<any[]> {

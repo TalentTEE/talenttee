@@ -40,8 +40,8 @@ const MOCK_RESUME = {
   summary: 'TypeScript full-stack developer with 3 years experience.',
   strengths: ['TypeScript full-stack capability'],
   improvementAreas: ['Limited large-scale traffic experience'],
-  marketValueMin: 60000000,
-  marketValueMax: 75000000,
+  marketValueMin: 90000,
+  marketValueMax: 120000,
   marketValueReasoning: 'Based on 3 years of TypeScript experience.',
   negotiationPoints: {
     strengths: ['High demand for TypeScript full-stack'],
@@ -96,8 +96,8 @@ describe('ResumePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Estimated Market Value')).toBeInTheDocument();
-      // 60000000 → 6,000만, 75000000 → 7,500만
-      expect(screen.getByText(/6,000만/)).toBeInTheDocument();
+      // 90000 → $90,000, 120000 → $120,000
+      expect(screen.getByText(/\$90,000/)).toBeInTheDocument();
     });
   });
 

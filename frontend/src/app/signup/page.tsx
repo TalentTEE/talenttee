@@ -57,21 +57,24 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0e0e0e] px-6 py-12 selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-12 selection:bg-primary selection:text-primary-foreground">
       {/* Back link */}
       <div className="w-full max-w-xl mb-8">
         {step === 'role' ? (
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground transition-colors"
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Back to Home
           </Link>
         ) : (
           <button
-            onClick={() => { setStep('role'); setError(null); }}
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => {
+              setStep('role');
+              setError(null);
+            }}
+            className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground transition-colors"
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Choose a different role
@@ -104,7 +107,7 @@ export default function SignupPage() {
             <h2 className="font-[var(--font-manrope)] text-xl font-bold text-foreground mb-2">
               Job Seeker
             </h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <p className="text-muted-foreground text-base leading-relaxed">
               Find opportunities and let AI negotiate the best terms for you.
             </p>
           </button>
@@ -119,7 +122,7 @@ export default function SignupPage() {
             <h2 className="font-[var(--font-manrope)] text-xl font-bold text-foreground mb-2">
               Employer
             </h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <p className="text-muted-foreground text-base leading-relaxed">
               Discover verified talent and streamline your hiring process.
             </p>
           </button>
@@ -132,10 +135,10 @@ export default function SignupPage() {
           <div className="rounded-2xl border border-border/10 bg-card p-8">
             {/* Selected role badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <span className="material-symbols-outlined text-primary text-sm">
+              <span className="material-symbols-outlined text-primary text-base">
                 {selectedRole === 'SEEKER' ? 'person_search' : 'corporate_fare'}
               </span>
-              <span className="text-primary text-sm font-semibold">
+              <span className="text-primary text-base font-semibold">
                 {selectedRole === 'SEEKER' ? 'Job Seeker' : 'Employer'}
               </span>
             </div>
@@ -143,7 +146,7 @@ export default function SignupPage() {
             <button
               onClick={handleConnectWallet}
               disabled={isSubmitting || !modal}
-              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -165,7 +168,7 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-base text-center">
               {error}
             </div>
           )}
@@ -173,7 +176,7 @@ export default function SignupPage() {
       )}
 
       {/* Footer link */}
-      <p className="mt-8 text-sm text-muted-foreground">
+      <p className="mt-8 text-base text-muted-foreground">
         Already have an account?{' '}
         <Link href="/login" className="text-primary hover:underline font-medium">
           Log in
