@@ -51,9 +51,9 @@ function getSeekerAction(
       return {
         icon: 'description',
         message: 'Your data is ready',
-        detail: 'Let AI generate your professional resume.',
-        ctaLabel: 'Generate Resume',
-        ctaHref: '/resume',
+        detail: 'Let AI generate your professional analysis.',
+        ctaLabel: 'Generate Analysis',
+        ctaHref: '/analysis',
         stage: 'analyze',
         animating: false,
       };
@@ -63,7 +63,7 @@ function getSeekerAction(
       message: 'AI is analyzing your profile',
       detail: `Processing data from ${connected.length} source${connected.length > 1 ? 's' : ''}...`,
       ctaLabel: 'View Progress',
-      ctaHref: '/resume',
+      ctaHref: '/analysis',
       stage: 'analyze',
       animating: true,
     };
@@ -72,10 +72,10 @@ function getSeekerAction(
   if (resume.status === 'COMPLETE' && matches.length === 0 && activeSessions.length === 0) {
     return {
       icon: 'travel_explore',
-      message: 'Your AI resume is live',
+      message: 'Your AI analysis is live',
       detail: 'Waiting for employer matches...',
-      ctaLabel: 'View Resume',
-      ctaHref: '/resume',
+      ctaLabel: 'View Analysis',
+      ctaHref: '/analysis',
       stage: 'match',
       animating: true,
     };

@@ -104,8 +104,8 @@ export function useAgentStatus(input: AgentStatusInput): AgentStatus {
       activities.push({
         id: 'resume-done',
         icon: 'description',
-        text: 'Resume analysis completed',
-        href: '/resume',
+        text: 'Profile analysis completed',
+        href: '/analysis',
         timestamp: new Date(Date.now() - 120000),
       });
     }
