@@ -93,13 +93,21 @@ export class DatasourceService {
     const conn = await this.getConnectionByProvider(userId, provider);
     if (!conn) throw new NotFoundException(`${provider} is not connected`);
 
-    // For real GitHub connection, fetch from GitHub API
+    const fixture = this.loadFixture(provider);
+
+    // For real GitHub connection, fetch from GitHub API and merge fixture analysis
     if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
-      return this.fetchGithubData(conn.accessToken);
+      try {
+        const liveData = await this.fetchGithubData(conn.accessToken);
+        return { ...liveData, analysis: fixture.analysis };
+      } catch {
+        // Token expired or GitHub API error — fall back to fixture
+        return fixture;
+      }
     }
 
     // For MOCK or other providers, return fixture data
-    return this.loadFixture(provider);
+    return fixture;
   }
 
   private async fetchGithubData(accessToken: string): Promise<Record<string, any>> {
