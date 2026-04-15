@@ -75,6 +75,11 @@ export async function verifyNearAuth(params: {
 }
 
 // === Job Seeking Status ===
+export async function getJobSeekingStatus(): Promise<{ jobSeeking: boolean }> {
+  if (USE_DUMMY) return { jobSeeking: false };
+  return apiFetch('/seeker/job-seeking-status');
+}
+
 export async function updateJobSeekingStatus(active: boolean): Promise<void> {
   if (USE_DUMMY) return;
   await apiFetch('/seeker/job-seeking-status', {
@@ -274,6 +279,16 @@ export async function getSeekerMatches(): Promise<MatchResultDisplay[]> {
 export async function getEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {
   if (USE_DUMMY) return DUMMY_EMPLOYER_MATCHES;
   return apiFetch(`/match/job/${jobId}`);
+}
+
+export async function refreshSeekerMatches(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me/refresh', { method: 'POST' });
+}
+
+export async function refreshEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_EMPLOYER_MATCHES;
+  return apiFetch(`/match/job/${jobId}/refresh`, { method: 'POST' });
 }
 
 export async function agreeMatch(matchId: string): Promise<void> {

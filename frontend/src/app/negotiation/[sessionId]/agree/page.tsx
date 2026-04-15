@@ -152,7 +152,7 @@ export default function AgreementPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0 flex-1">
         {/* ── Left Column: Agreement Details ── */}
-        <div className="space-y-6 overflow-y-auto pr-2 scrollbar-thin">
+        <div className="space-y-6 min-h-0 overflow-y-auto pr-2">
           {/* Success Banner */}
           <div className="bg-primary/5 rounded-2xl border border-primary/20 p-6 text-center">
             <div className="w-14 h-14 rounded-full bg-primary/10 mx-auto mb-3 flex items-center justify-center">
@@ -309,7 +309,7 @@ export default function AgreementPage() {
         </div>
 
         {/* ── Right Column: Negotiation Conversation ── */}
-        <div className="bg-card rounded-2xl border border-border/10 p-5 flex flex-col overflow-hidden">
+        <div className="bg-card rounded-2xl border border-border/10 p-5 flex flex-col min-h-0 overflow-hidden">
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
               forum
@@ -339,7 +339,7 @@ export default function AgreementPage() {
           )}
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
             {rounds.length === 0 && (
               <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
                 No negotiation rounds available.
