@@ -2,6 +2,7 @@ import { Injectable, Inject, Logger, NotFoundException, ConflictException } from
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
+import bs58 from 'bs58';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { JobPosting } from '../entities/job-posting.entity.js';
@@ -103,7 +104,7 @@ export class NegotiationService {
 
   private parsePublicKey(key: string): Uint8Array {
     if (key.startsWith('ed25519:')) {
-      return Buffer.from(key.slice(8), 'base64');
+      return bs58.decode(key.slice(8));
     }
     return Buffer.from(key, 'hex');
   }
@@ -229,6 +230,45 @@ export class NegotiationService {
     }
 
     this.logger.log(`Session ${session.id} finished: ${session.state}`);
+  }
+
+  async getDecryptedRounds(sessionId: string): Promise<any[]> {
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId },
+      relations: ['seeker'],
+    });
+    if (!session) throw new NotFoundException('Session not found');
+    if (!session.seeker?.publicKey) throw new NotFoundException('Seeker public key not found');
+
+    const seekerPubKey = this.parsePublicKey(session.seeker.publicKey);
+    const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, session.sessionKeyNonce);
+
+    const rounds = await this.getRounds(sessionId);
+    return rounds.map(round => {
+      try {
+        const decrypted = this.cryptoService.decrypt(sessionKey, round.encryptedData);
+        const data = JSON.parse(decrypted);
+        return {
+          id: round.id,
+          sessionId: round.sessionId,
+          round: round.round,
+          actor: round.actor,
+          proposal: data.proposal,
+          reasoning: data.reasoning,
+          decision: round.decision,
+        };
+      } catch {
+        return {
+          id: round.id,
+          sessionId: round.sessionId,
+          round: round.round,
+          actor: round.actor,
+          proposal: null,
+          reasoning: 'Decryption failed',
+          decision: round.decision,
+        };
+      }
+    });
   }
 
   async decryptRounds(sessionId: string, sessionKeyHex: string): Promise<any[]> {

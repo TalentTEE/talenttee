@@ -302,7 +302,7 @@ export async function getNegotiationSession(sessionId: string): Promise<Negotiat
 
 export async function getNegotiationRounds(sessionId: string): Promise<NegotiationRound[]> {
   if (USE_DUMMY) return DUMMY_ROUNDS.filter(r => r.sessionId === sessionId);
-  return apiFetch(`/negotiation/sessions/${sessionId}/rounds`);
+  return apiFetch(`/negotiation/sessions/${sessionId}/rounds/decrypted`);
 }
 
 export async function sendIntervention(sessionId: string, direction: string): Promise<void> {

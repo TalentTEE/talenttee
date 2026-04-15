@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getAgreement, approveAgreement, USE_DUMMY } from '@/lib/api';
+import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord } from '@/lib/types';
 
 function formatSalary(value: number): string {
@@ -23,13 +23,43 @@ export default function AgreementPage() {
 
   useEffect(() => {
     if (!sessionId) return;
-    getAgreement(sessionId).then((data) => {
-      setAgreement(data);
-      if (data.onChainTxHash) {
-        setTxHash(data.onChainTxHash);
-        setApproved(true);
-      }
-    });
+    getAgreement(sessionId)
+      .then((data) => {
+        setAgreement(data);
+        if (data.onChainTxHash) {
+          setTxHash(data.onChainTxHash);
+          setApproved(true);
+        }
+      })
+      .catch(async () => {
+        // No agreement record yet — build from negotiation rounds
+        try {
+          const [session, rounds] = await Promise.all([
+            getNegotiationSession(sessionId),
+            getNegotiationRounds(sessionId),
+          ]);
+          const lastRound = rounds[rounds.length - 1];
+          if (lastRound?.proposal) {
+            setAgreement({
+              sessionId,
+              agreementHash: `pending-${sessionId.slice(0, 8)}`,
+              summary: {
+                positionTitle: lastRound.proposal.title || 'N/A',
+                agreedSalary: lastRound.proposal.salary || 0,
+                startDate: lastRound.proposal.startDate || 'TBD',
+                negotiationRounds: session.currentRound || rounds.length,
+                remotePolicy: lastRound.proposal.remotePolicy || 'N/A',
+                probationMonths: lastRound.proposal.probationMonths || 0,
+              },
+              seekerApproved: false,
+              employerApproved: false,
+              onChainTxHash: null,
+            });
+          }
+        } catch {
+          // Both paths failed — stay in loading (shouldn't normally happen)
+        }
+      });
   }, [sessionId]);
 
   const handleApprove = async () => {
