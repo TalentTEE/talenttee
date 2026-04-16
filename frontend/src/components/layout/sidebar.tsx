@@ -10,7 +10,7 @@ import { AgentActivityStream } from './AgentActivityStream';
 const seekerLinks = [
   { href: '/dashboard/seeker', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
   { href: '/datasource', label: 'Data Sources', icon: 'database', neonColor: '#00F0FF' },
-  { href: '/resume', label: 'Insights', icon: 'insights', neonColor: '#BF5AF2' },
+  { href: '/analysis', label: 'Analysis', icon: 'insights', neonColor: '#BF5AF2' },
   { href: '/negotiations', label: 'Negotiations', icon: 'handshake', neonColor: '#FF2DF1' },
 ];
 
@@ -44,8 +44,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          'fixed top-[65px] left-0 z-50 h-[calc(100vh-65px)] w-56 bg-sidebar border-r border-border/10 p-4 flex flex-col transition-transform duration-300 ease-in-out',
-          'lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-56 bg-sidebar border-r border-border/10 p-4 flex flex-col transition-transform duration-300 ease-in-out',
+          'lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

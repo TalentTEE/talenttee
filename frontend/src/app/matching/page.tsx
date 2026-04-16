@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getSeekerMatches, getEmployerMatches, accessProfile, agreeMatch, getJobs, getResume } from '@/lib/api';
+import { getSeekerMatches, getEmployerMatches, accessProfile, getJobs } from '@/lib/api';
 import { MatchResultDisplay, ProfileReport } from '@/lib/types';
 
 function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
@@ -210,11 +211,11 @@ function ProfileModal({
 
 export default function MatchingPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [matches, setMatches] = useState<MatchResultDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileReport, setProfileReport] = useState<ProfileReport | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
-  const [agreedIds, setAgreedIds] = useState<Set<string>>(new Set());
 
   const isEmployer = user?.role === 'EMPLOYER';
 
@@ -223,7 +224,7 @@ export default function MatchingPage() {
     setLoading(true);
     const fetchMatches = isEmployer
       ? getJobs().then(jobs => jobs.length > 0 ? getEmployerMatches(jobs[0].id) : [])
-      : getResume().then(r => r?.status === 'COMPLETE' ? getSeekerMatches() : []).catch(() => []);
+      : getSeekerMatches().catch(() => []);
 
     fetchMatches.then(setMatches).catch(() => setMatches([])).finally(() => setLoading(false));
   }, [user, isEmployer]);
@@ -237,15 +238,6 @@ export default function MatchingPage() {
       alert(err instanceof Error ? err.message : 'Failed to access profile. Please check your escrow balance.');
     } finally {
       setProfileLoading(false);
-    }
-  };
-
-  const handleAgree = async (matchId: string) => {
-    try {
-      await agreeMatch(matchId);
-      setAgreedIds((prev) => new Set(prev).add(matchId));
-    } catch {
-      // handle error silently for now
     }
   };
 
@@ -285,7 +277,6 @@ export default function MatchingPage() {
       <div className="space-y-4">
         {matches.map((match) => {
           const score = Math.round(match.rerankScore * 100);
-          const isAgreed = agreedIds.has(match.id);
 
           return (
             <div
@@ -336,19 +327,19 @@ export default function MatchingPage() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2 shrink-0">
-                  {isAgreed ? (
-                    <div className="flex items-center gap-1 px-4 py-2 rounded-xl bg-primary/10 text-primary text-base font-bold">
-                      <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                      Agreed
-                    </div>
-                  ) : (
+                  {match.negotiationSessionId ? (
                     <button
-                      onClick={() => handleAgree(match.id)}
+                      onClick={() => router.push(`/negotiation/${match.negotiationSessionId}`)}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all duration-300"
                     >
-                      <span className="material-symbols-outlined text-base">handshake</span>
-                      Agree
+                      <span className="material-symbols-outlined text-base">forum</span>
+                      View Negotiation
                     </button>
+                  ) : (
+                    <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted text-muted-foreground text-base font-semibold">
+                      <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      Pending
+                    </div>
                   )}
 
                   {isEmployer && (
@@ -361,11 +352,6 @@ export default function MatchingPage() {
                       View Profile
                     </button>
                   )}
-
-                  <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-base text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300">
-                    <span className="material-symbols-outlined text-base">close</span>
-                    Decline
-                  </button>
                 </div>
               </div>
             </div>

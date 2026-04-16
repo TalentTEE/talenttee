@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MatchResult } from '../entities/match-result.entity.js';
 import { JobPosting } from '../entities/job-posting.entity.js';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
+import { User } from '../entities/user.entity.js';
 import { ResumeModule } from '../resume/resume.module.js';
 import { NegotiationModule } from '../negotiation/negotiation.module.js';
 import { MatchController } from './match.controller.js';
@@ -12,7 +13,7 @@ import { RealNegotiationHandoff } from '../negotiation/real-negotiation-handoff.
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MatchResult, JobPosting, ResumeProfile]),
+    TypeOrmModule.forFeature([MatchResult, JobPosting, ResumeProfile, User]),
     ResumeModule,
     NegotiationModule,
   ],

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getNegotiationSession, getNegotiationRounds } from '@/lib/api';
-import { NegotiationSession, NegotiationRound } from '@/lib/types';
+import { NegotiationSession, NegotiationRound, isStructuredReasoning } from '@/lib/types';
 import { ThinkingAnimation } from '@/components/negotiation/ThinkingAnimation';
 import { StrategyInsight } from '@/components/negotiation/StrategyInsight';
 import { formatSalary } from '@/lib/format';
@@ -161,9 +161,25 @@ export default function NegotiationMonitorPage() {
                       ? 'bg-[#FF2DF1]/10 border border-[#FF2DF1]/10 rounded-br-md'
                       : 'bg-card border border-border/10 rounded-bl-md'
                   }`}>
-                    <p className="text-base text-foreground/90 leading-relaxed">
-                      &ldquo;{round.reasoning}&rdquo;
-                    </p>
+                    {isStructuredReasoning(round.reasoning) ? (
+                      <>
+                        <p className="text-base text-foreground/90 leading-relaxed mb-2">
+                          &ldquo;{round.reasoning.summary}&rdquo;
+                        </p>
+                        <ul className="space-y-1">
+                          {round.reasoning.factors.map((factor, fi) => (
+                            <li key={fi} className="flex items-start gap-1.5 text-sm text-muted-foreground leading-relaxed">
+                              <span className="material-symbols-outlined text-xs text-primary/50 mt-1 shrink-0">arrow_right</span>
+                              {factor}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <p className="text-base text-foreground/90 leading-relaxed">
+                        &ldquo;{round.reasoning}&rdquo;
+                      </p>
+                    )}
                   </div>
 
                   {/* Proposal Card */}

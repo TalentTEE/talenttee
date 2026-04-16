@@ -75,6 +75,11 @@ export async function verifyNearAuth(params: {
 }
 
 // === Job Seeking Status ===
+export async function getJobSeekingStatus(): Promise<{ jobSeeking: boolean }> {
+  if (USE_DUMMY) return { jobSeeking: false };
+  return apiFetch('/seeker/job-seeking-status');
+}
+
 export async function updateJobSeekingStatus(active: boolean): Promise<void> {
   if (USE_DUMMY) return;
   await apiFetch('/seeker/job-seeking-status', {
@@ -238,10 +243,21 @@ export async function getJobs(): Promise<JobPosting[]> {
   return apiFetch('/jobs');
 }
 
-export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatResponse> {
+export interface ChatCreateJobResult {
+  sessionId: string;
+  response: JobChatResponse;
+}
+
+export async function chatCreateJob(
+  messages: ChatMessage[],
+  backendSessionId?: string,
+): Promise<ChatCreateJobResult> {
   if (USE_DUMMY) {
     if (messages.length >= 6) {
-      return { complete: true, jobPosting: DUMMY_JOBS[0] };
+      return {
+        sessionId: backendSessionId ?? 'dummy-session',
+        response: { complete: true, jobPosting: DUMMY_JOBS[0] },
+      };
     }
     const questions = [
       'What position are you hiring for? (e.g. Senior Backend Developer)',
@@ -250,19 +266,34 @@ export async function chatCreateJob(messages: ChatMessage[]): Promise<JobChatRes
       "What's your maximum salary budget? This will be your negotiation ceiling — candidates won't see this number.",
       'What is the remote work policy? (Full Office / Hybrid / Full Remote)',
     ];
-    return { complete: false, question: questions[Math.min(messages.length, questions.length - 1)] };
+    return {
+      sessionId: backendSessionId ?? 'dummy-session',
+      response: {
+        complete: false,
+        question: questions[Math.min(messages.length, questions.length - 1)],
+      },
+    };
   }
   // Backend expects { message: string, sessionId?: string }
-  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
-  return apiFetch('/jobs/chat', {
+  // Backend returns { sessionId: string, response: JobChatResponse }
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+  return apiFetch<ChatCreateJobResult>('/jobs/chat', {
     method: 'POST',
-    body: JSON.stringify({ message: lastUserMsg?.content ?? '' }),
+    body: JSON.stringify({
+      message: lastUserMsg?.content ?? '',
+      sessionId: backendSessionId,
+    }),
   });
 }
 
 export async function createJob(jobData: Partial<JobPosting>): Promise<JobPosting> {
   if (USE_DUMMY) return { ...DUMMY_JOBS[0], ...jobData } as JobPosting;
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(jobData) });
+}
+
+export async function publishJob(jobId: string): Promise<JobPosting> {
+  if (USE_DUMMY) return { ...DUMMY_JOBS[0], id: jobId, status: 'ACTIVE' } as JobPosting;
+  return apiFetch(`/jobs/${jobId}/publish`, { method: 'POST' });
 }
 
 // === Matching ===
@@ -274,6 +305,16 @@ export async function getSeekerMatches(): Promise<MatchResultDisplay[]> {
 export async function getEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {
   if (USE_DUMMY) return DUMMY_EMPLOYER_MATCHES;
   return apiFetch(`/match/job/${jobId}`);
+}
+
+export async function refreshSeekerMatches(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me/refresh', { method: 'POST' });
+}
+
+export async function refreshEmployerMatches(jobId: string): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_EMPLOYER_MATCHES;
+  return apiFetch(`/match/job/${jobId}/refresh`, { method: 'POST' });
 }
 
 export async function agreeMatch(matchId: string): Promise<void> {

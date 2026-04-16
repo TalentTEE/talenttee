@@ -52,7 +52,14 @@ Respond ONLY in the following JSON format:
     "startDate": "YYYY-MM-DD",
     "probationMonths": number
   },
-  "reasoning": "explanation",
+  "reasoning": {
+    "summary": "One sentence summarizing your decision",
+    "factors": ["factor 1", "factor 2", "factor 3"]
+  },
   "decision": "COUNTER or ACCEPT or REJECT"
-}`;
+}
+
+Reasoning rules:
+- "summary": exactly 1 sentence explaining the overall decision
+- "factors": array of 2-4 specific reasons, each a single sentence`;
 }
