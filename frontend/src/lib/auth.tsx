@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { User, UserRole } from './types';
-import { getDummyUser, requestChallenge, verifyNearAuth } from './api';
+import { getDummyUser, requestChallenge, verifyNearAuth, devLogin as devLoginApi } from './api';
 import { useWallet } from './wallet-selector';
 
 const ACCOUNTS_KEY = 'registeredAccounts';
@@ -33,6 +33,8 @@ interface AuthContextType {
   /** Legacy dummy login */
   login: (role: UserRole) => Promise<void>;
   loginWithNear: (nearAccountId: string, role: UserRole) => Promise<void>;
+  /** Dev-only login bypass — no wallet required */
+  devLogin: (nearAccountId: string, role: UserRole) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -43,6 +45,7 @@ const AuthContext = createContext<AuthContextType>({
   loginByAccount: async () => {},
   login: async () => {},
   loginWithNear: async () => {},
+  devLogin: async () => {},
   logout: () => {},
   isLoading: true,
 });
@@ -121,12 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Use pre-fetched nonce if available; fallback to on-demand fetch
-    let nonce = nonceRef.current;
-    if (!nonce) {
-      const challenge = await requestChallenge();
-      nonce = challenge.nonce;
-    }
+    // Always fetch a fresh nonce to avoid expiry issues (pre-fetched nonce
+    // from page load may be >5 min old if the user took time connecting wallet).
+    const { nonce } = await requestChallenge();
     nonceRef.current = null;
 
     // Use Wallet Selector signMessage (NEP-413)
@@ -222,6 +222,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await doLogin(nearAccountId, 'signup', role);
   };
 
+  /** Dev-only login: calls backend dev-login endpoint, no wallet needed */
+  const devLogin = async (nearAccountId: string, role: UserRole) => {
+    const { jwt, user: apiUser } = await devLoginApi({ nearAccountId, role });
+    const userData: User = {
+      id: apiUser.id,
+      nearAccountId: apiUser.nearAccountId,
+      role: apiUser.role as UserRole,
+      publicKey: apiUser.publicKey,
+      createdAt: apiUser.createdAt,
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('jwt', jwt);
+    saveAccountRole(nearAccountId, role);
+    setUser(userData);
+  };
+
   const logout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('jwt');
@@ -229,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signup, loginByAccount, login, loginWithNear, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, signup, loginByAccount, login, loginWithNear, devLogin, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

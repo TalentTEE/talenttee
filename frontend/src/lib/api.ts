@@ -37,7 +37,12 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     apiErrorHandler?.(res.status);
-    throw new Error(`API Error: ${res.status}`);
+    let detail = '';
+    try {
+      const body = await res.json();
+      detail = body.message || JSON.stringify(body);
+    } catch { /* ignore parse errors */ }
+    throw new Error(detail || `API Error: ${res.status}`);
   }
   return res.json();
 }
@@ -70,6 +75,17 @@ export async function verifyNearAuth(params: {
   intent?: 'login' | 'signup';
 }): Promise<{ jwt: string; user: User }> {
   return apiFetch('/auth/near/verify', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+// === Auth (Dev Login) ===
+export async function devLogin(params: {
+  nearAccountId: string;
+  role: string;
+}): Promise<{ jwt: string; user: User }> {
+  return apiFetch('/auth/near/dev-login', {
     method: 'POST',
     body: JSON.stringify(params),
   });

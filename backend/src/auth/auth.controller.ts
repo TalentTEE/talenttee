@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Body, UnauthorizedException, BadRequestException, NotFoundException, Logger,
+  Controller, Post, Body, UnauthorizedException, BadRequestException, NotFoundException, ForbiddenException, Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { UserRole } from '../common/enums/index.js';
@@ -9,6 +9,33 @@ export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
   constructor(private readonly authService: AuthService) { }
+
+  /** Dev-only login bypass — no wallet signature required. Disabled in production. */
+  @Post('dev-login')
+  async devLogin(
+    @Body() body: { nearAccountId: string; role: string },
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('Dev login is not available in production');
+    }
+
+    const { nearAccountId, role } = body;
+    if (!nearAccountId || !role) {
+      throw new BadRequestException('nearAccountId and role are required');
+    }
+
+    const roleValue = role === 'EMPLOYER' ? UserRole.EMPLOYER
+      : role === 'SEEKER' ? UserRole.SEEKER
+        : null;
+    if (!roleValue) {
+      throw new BadRequestException('role must be SEEKER or EMPLOYER');
+    }
+
+    const user = await this.authService.findOrCreateUser(nearAccountId, roleValue, 'ed25519:dev-key');
+    const jwt = this.authService.generateJwt(user);
+    this.logger.warn(`DEV LOGIN: ${nearAccountId} as ${roleValue}`);
+    return { jwt, user };
+  }
 
   @Post('challenge')
   async challenge() {
@@ -28,11 +55,13 @@ export class AuthController {
   ) {
     const isValidChallenge = this.authService.validateChallenge(body.nonce);
     if (!isValidChallenge) {
+      this.logger.warn(`Challenge validation failed for ${body.nearAccountId} — nonce may be expired or already used`);
       throw new UnauthorizedException('Invalid or expired challenge nonce');
     }
 
     const isValidSig = this.authService.verifyNearSignature(body.nonce, body.signature, body.publicKey);
     if (!isValidSig) {
+      this.logger.warn(`Signature verification failed for ${body.nearAccountId} — publicKey: ${body.publicKey?.slice(0, 20)}...`);
       throw new UnauthorizedException('Ed25519 signature verification failed');
     }
 
@@ -48,12 +77,15 @@ export class AuthController {
         throw new BadRequestException('role is required for signup and must be SEEKER or EMPLOYER');
       }
 
-      // Idempotent signup: if user already exists, return existing without overwriting role.
+      // Idempotent signup: if user already exists, return existing.
+      // If the requested role differs, reject — role change requires a separate flow.
       const existing = await this.authService.findUser(body.nearAccountId);
       if (existing) {
-        this.logger.warn(
-          `signup attempt for already-registered account: ${body.nearAccountId} — returning existing user without role change`,
-        );
+        if (existing.role !== roleValue) {
+          throw new BadRequestException(
+            `This account is already registered as ${existing.role}. Please log in instead.`,
+          );
+        }
         const jwt = this.authService.generateJwt(existing);
         return { jwt, user: existing };
       }
