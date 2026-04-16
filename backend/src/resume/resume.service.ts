@@ -1,17 +1,15 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
 import { DatasourceService } from '../datasource/datasource.service.js';
-import { GithubSyncService } from '../datasource/github/github-sync.service.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ResumeStatus } from '../common/enums/index.js';
 import { MATCH_EVENTS } from '../common/events/match.events.js';
 import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.en.prompt.js';
 import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.en.prompt.js';
-import { RESUME_INCREMENTAL_PROMPT } from './prompts/resume-incremental.prompt.js';
 import { MARKET_VALUE_PROMPT } from './prompts/market-value.en.prompt.js';
 
 @Injectable()
@@ -23,19 +21,13 @@ export class ResumeService {
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
     private readonly eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => GithubSyncService))
-    private readonly githubSyncService: GithubSyncService,
   ) {}
 
   /* ---------------------------------------------------------- *
    * Public API
    * ---------------------------------------------------------- */
 
-  async generate(userId: string, mode: 'full' | 'incremental' = 'full'): Promise<ResumeProfile> {
-    if (mode === 'incremental') {
-      return this.generateIncremental(userId);
-    }
-
+  async generate(userId: string): Promise<ResumeProfile> {
     let resume = await this.resumeRepo.findOne({ where: { userId } });
 
     if (!resume) {
@@ -52,22 +44,6 @@ export class ResumeService {
     // fire-and-forget
     this.runPipeline(resume.id, userId).catch((err) => {
       console.error(`Resume pipeline failed for ${userId}:`, err);
-    });
-
-    return resume;
-  }
-
-  async generateIncremental(userId: string): Promise<ResumeProfile> {
-    let resume = await this.resumeRepo.findOne({ where: { userId } });
-    if (!resume || !resume.parsedData) {
-      return this.generate(userId);
-    }
-
-    resume.status = ResumeStatus.ANALYZING;
-    resume = await this.resumeRepo.save(resume);
-
-    this.runIncrementalPipeline(resume.id, userId).catch((err) => {
-      console.error(`Incremental resume pipeline failed for ${userId}:`, err);
     });
 
     return resume;
@@ -264,72 +240,6 @@ export class ResumeService {
       await this.resumeRepo.update(resumeId, {
         status: ResumeStatus.ERROR,
       });
-      throw err;
-    }
-  }
-
-  private async runIncrementalPipeline(resumeId: string, userId: string): Promise<void> {
-    try {
-      const resume = await this.resumeRepo.findOne({ where: { id: resumeId } });
-      if (!resume) throw new Error('Resume not found');
-
-      const newActivity = await this.githubSyncService.buildActivityForAI(userId);
-
-      const incrementalResult = await this.aiClient.chat({
-        agentId: 'resume-updater',
-        systemPrompt: RESUME_INCREMENTAL_PROMPT,
-        userMessage: JSON.stringify({
-          existingResume: resume.parsedData,
-          newActivity,
-        }),
-      });
-
-      const parsed = this.safeJsonParse(incrementalResult.content);
-
-      if (parsed) {
-        await this.resumeRepo.update(resumeId, {
-          parsedData: parsed,
-          skills: parsed.skills ?? resume.skills,
-          experience: parsed.experience ?? resume.experience,
-          education: parsed.education ?? resume.education,
-          summary: parsed.summary ?? resume.summary,
-          negotiationPoints: {
-            strengths: parsed.strengths ?? [],
-            improvement_areas: parsed.improvement_areas ?? [],
-          },
-        });
-      }
-
-      const updatedResume = await this.resumeRepo.findOne({ where: { id: resumeId } });
-      if (updatedResume) {
-        const textForEmbed = this.buildResumeText(updatedResume);
-        const embeddings = await this.aiClient.embed(textForEmbed);
-        if (embeddings.length > 0) {
-          await this.resumeRepo.update(resumeId, {
-            embedding: JSON.stringify(embeddings[0]),
-          });
-        }
-
-        const marketResult = await this.aiClient.chat({
-          agentId: 'market-value-analyst',
-          systemPrompt: MARKET_VALUE_PROMPT,
-          userMessage: textForEmbed,
-        });
-        const marketParsed = this.safeJsonParse(marketResult.content);
-        if (marketParsed) {
-          await this.resumeRepo.update(resumeId, {
-            marketValueMin: marketParsed.marketValueMin,
-            marketValueMax: marketParsed.marketValueMax,
-            marketValueReasoning: marketParsed.reasoning,
-            negotiationPoints: marketParsed.negotiationPoints,
-          });
-        }
-      }
-
-      await this.githubSyncService.updateCheckpointAfterResume(userId);
-      await this.resumeRepo.update(resumeId, { status: ResumeStatus.COMPLETE });
-    } catch (err) {
-      await this.resumeRepo.update(resumeId, { status: ResumeStatus.ERROR });
       throw err;
     }
   }

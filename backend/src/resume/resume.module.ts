@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
 import { DatasourceModule } from '../datasource/datasource.module.js';
@@ -8,7 +8,7 @@ import { ResumeService } from './resume.service.js';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ResumeProfile]),
-    forwardRef(() => DatasourceModule),
+    DatasourceModule,
   ],
   controllers: [ResumeController],
   providers: [ResumeService],

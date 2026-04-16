@@ -3,7 +3,6 @@ import {
   MatchResult, MatchResultDisplay, MatchContext, ProfileReport, NegotiationSession, NegotiationRound,
   EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
-  GithubRepository, GithubSyncStatus,
 } from './types';
 import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
 import { getDummyDatasources, addDummyDatasource } from './dummy/datasources';
@@ -214,30 +213,6 @@ export async function getDatasourceData(provider: string): Promise<DatasourceDet
     return fixtures[provider] ?? fixtures.GITHUB;
   }
   return apiFetch(`/datasource/me/${provider.toLowerCase()}/data`);
-}
-
-// === GitHub Sync ===
-export async function getGithubRepos(): Promise<GithubRepository[]> {
-  if (USE_DUMMY) return [];
-  return apiFetch('/datasource/github/repos');
-}
-
-export async function toggleGithubRepo(repoId: string, isActive: boolean): Promise<GithubRepository> {
-  return apiFetch(`/datasource/github/repos/${repoId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ isActive }),
-  });
-}
-
-export async function startGithubSync(forceResume = false): Promise<{ jobId: string }> {
-  return apiFetch('/datasource/github/sync', {
-    method: 'POST',
-    body: JSON.stringify({ forceResume }),
-  });
-}
-
-export async function getGithubSyncStatus(): Promise<GithubSyncStatus> {
-  return apiFetch('/datasource/github/sync/status');
 }
 
 // === Resume ===

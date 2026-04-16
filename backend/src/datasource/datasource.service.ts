@@ -14,7 +14,6 @@ import {
   DISCORD_ANALYSIS_PROMPT,
   GOV24_ANALYSIS_PROMPT,
 } from './prompts/datasource-analysis.prompt.js';
-import { GithubSyncService } from './github/github-sync.service.js';
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -26,7 +25,6 @@ export class DatasourceService {
     private readonly config: ConfigService,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
-    private readonly githubSyncService: GithubSyncService,
   ) {}
 
   async exchangeGithubCode(code: string): Promise<string> {
@@ -81,10 +79,7 @@ export class DatasourceService {
   }
 
   async getStatus(userId: string): Promise<DataSourceConnection[]> {
-    return this.dsRepo.find({
-      where: { userId },
-      select: ['id', 'userId', 'provider', 'status', 'lastSyncedAt'],
-    });
+    return this.dsRepo.find({ where: { userId } });
   }
 
   async getConnectionByProvider(userId: string, provider: DataSourceProvider): Promise<DataSourceConnection | null> {
@@ -254,14 +249,10 @@ export class DatasourceService {
 
     for (const conn of connections) {
       const key = conn.provider.toLowerCase();
-      if (conn.provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED) {
-        result[key] = await this.githubSyncService.buildActivityForAI(userId);
-      } else {
-        try {
-          result[key] = await this.getProviderData(userId, conn.provider);
-        } catch {
-          result[key] = this.loadFixture(conn.provider);
-        }
+      try {
+        result[key] = await this.getProviderData(userId, conn.provider);
+      } catch {
+        result[key] = this.loadFixture(conn.provider);
       }
     }
 
