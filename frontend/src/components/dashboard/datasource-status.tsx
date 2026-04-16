@@ -181,7 +181,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
   return (
     <div className="bg-card rounded-2xl border border-border/10 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Data Sources</h3>
+        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Profile</h3>
         <Link href="/datasource" className="text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 font-medium transition-colors">
           Manage
         </Link>

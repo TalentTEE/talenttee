@@ -10,7 +10,7 @@ import { SidebarJobSeekToggle } from './sidebar-job-seek-toggle';
 
 const seekerLinks = [
   { href: '/dashboard/seeker', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
-  { href: '/datasource', label: 'Data Sources', icon: 'database', neonColor: '#00F0FF' },
+  { href: '/datasource', label: 'My Profile', icon: 'person', neonColor: '#00F0FF' },
   { href: '/negotiations', label: 'Negotiations', icon: 'handshake', neonColor: '#FF2DF1' },
 ];
 
