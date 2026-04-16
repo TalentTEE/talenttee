@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { useAgentStatusContext } from '@/hooks/AgentStatusProvider';
 import { AgentActivityStream } from './AgentActivityStream';
+import { SidebarJobSeekToggle } from './sidebar-job-seek-toggle';
 
 const seekerLinks = [
   { href: '/dashboard/seeker', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
@@ -76,6 +77,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             );
           })}
         </nav>
+        {user?.role === 'SEEKER' && <SidebarJobSeekToggle />}
         <AgentActivityStream activities={agentStatus.activities} />
       </aside>
     </>
