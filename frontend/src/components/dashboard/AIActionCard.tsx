@@ -38,8 +38,8 @@ function getSeekerAction(
     return {
       icon: 'rocket_launch',
       message: "Let's get started",
-      detail: 'Connect your data sources to let AI analyze your skills.',
-      ctaLabel: 'Connect Data Source',
+      detail: 'Connect your GitHub to let AI analyze your skills.',
+      ctaLabel: 'Connect GitHub',
       ctaHref: '/datasource',
       stage: 'connect',
       animating: false,
@@ -51,9 +51,9 @@ function getSeekerAction(
       return {
         icon: 'description',
         message: 'Your data is ready',
-        detail: 'Let AI generate your professional analysis.',
-        ctaLabel: 'Generate Analysis',
-        ctaHref: '/analysis',
+        detail: 'Let AI generate your professional resume.',
+        ctaLabel: 'Generate Resume',
+        ctaHref: '/resume',
         stage: 'analyze',
         animating: false,
       };
@@ -63,7 +63,7 @@ function getSeekerAction(
       message: 'AI is analyzing your profile',
       detail: `Processing data from ${connected.length} source${connected.length > 1 ? 's' : ''}...`,
       ctaLabel: 'View Progress',
-      ctaHref: '/analysis',
+      ctaHref: '/resume',
       stage: 'analyze',
       animating: true,
     };
@@ -72,29 +72,16 @@ function getSeekerAction(
   if (resume.status === 'COMPLETE' && matches.length === 0 && activeSessions.length === 0) {
     return {
       icon: 'travel_explore',
-      message: 'Your AI analysis is live',
+      message: 'Your AI resume is live',
       detail: 'Waiting for employer matches...',
-      ctaLabel: 'View Analysis',
-      ctaHref: '/analysis',
+      ctaLabel: 'View Resume',
+      ctaHref: '/resume',
       stage: 'match',
       animating: true,
     };
   }
 
   if (matches.length > 0 && sessions.length === 0) {
-    // If any match already has a negotiation session, show negotiating state
-    const negotiatingMatch = matches.find((m) => m.negotiationSessionId);
-    if (negotiatingMatch) {
-      return {
-        icon: 'handshake',
-        message: 'AI is negotiating on your behalf',
-        detail: 'Your agent is working on the best offer.',
-        ctaLabel: 'Watch Live',
-        ctaHref: `/negotiation/${negotiatingMatch.negotiationSessionId}`,
-        stage: 'negotiate',
-        animating: true,
-      };
-    }
     return {
       icon: 'groups',
       message: `${matches.length} new match${matches.length > 1 ? 'es' : ''} found!`,
@@ -152,18 +139,6 @@ function getEmployerAction(
   const agreedSessions = sessions.filter((s) => s.state === 'AGREED');
 
   if (matches.length > 0 && sessions.length === 0) {
-    const negotiatingMatch = matches.find((m) => m.negotiationSessionId);
-    if (negotiatingMatch) {
-      return {
-        icon: 'handshake',
-        message: 'AI is negotiating with candidate',
-        detail: 'Your agent is working on the best terms.',
-        ctaLabel: 'Monitor',
-        ctaHref: `/negotiation/${negotiatingMatch.negotiationSessionId}`,
-        stage: 'negotiate',
-        animating: true,
-      };
-    }
     return {
       icon: 'groups',
       message: `Found ${matches.length} matching seeker${matches.length > 1 ? 's' : ''}`,
@@ -210,36 +185,20 @@ function getEmployerAction(
   };
 }
 
-const stageColors: Record<PipelineStage, string> = {
-  connect: '#00F0FF',
-  analyze: '#BF5AF2',
-  match: '#39FF14',
-  negotiate: '#FF2DF1',
-  agree: '#FFE600',
-};
-
 export function AIActionCard({ datasources, resume, matches, sessions, role }: AIActionCardProps) {
   const action =
     role === 'SEEKER'
       ? getSeekerAction(datasources, resume, matches, sessions)
       : getEmployerAction(sessions, matches);
 
-  const neon = stageColors[action.stage];
-
   return (
-    <div
-      className="rounded-2xl border p-5 space-y-4"
-      style={{
-        borderColor: `color-mix(in srgb, ${neon} 20%, transparent)`,
-        background: `linear-gradient(to right, color-mix(in srgb, ${neon} 5%, transparent), color-mix(in srgb, ${neon} 10%, transparent))`,
-      }}
-    >
+    <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 p-5 space-y-4">
       <div className="flex items-start gap-4">
         {/* AI Icon */}
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${neon} 10%, transparent)` }}>
+        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <span
-            className={`material-symbols-outlined text-xl ${action.animating ? 'animate-pulse' : ''}`}
-            style={{ fontVariationSettings: "'FILL' 1", color: neon }}
+            className={`material-symbols-outlined text-primary text-xl ${action.animating ? 'animate-pulse' : ''}`}
+            style={{ fontVariationSettings: "'FILL' 1" }}
           >
             {action.icon}
           </span>
@@ -247,17 +206,16 @@ export function AIActionCard({ datasources, resume, matches, sessions, role }: A
 
         {/* Message */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-base">
+          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-sm">
             {action.message}
           </h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{action.detail}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{action.detail}</p>
         </div>
 
         {/* CTA */}
         <Link
           href={action.ctaHref}
-          className="shrink-0 px-4 py-2 rounded-xl text-base font-semibold transition-all hover:brightness-90"
-          style={{ backgroundColor: neon, color: '#0a0a0a' }}
+          className="shrink-0 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all"
         >
           {action.ctaLabel}
         </Link>
