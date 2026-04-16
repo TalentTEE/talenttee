@@ -115,7 +115,7 @@ export function useAgentStatus(input: AgentStatusInput): AgentStatus {
         id: 'datasource',
         icon: 'database',
         text: `${connected.length} data source${connected.length > 1 ? 's' : ''} connected`,
-        href: '/datasource',
+        href: '/dashboard/seeker',
         timestamp: new Date(Date.now() - 300000),
       });
     }

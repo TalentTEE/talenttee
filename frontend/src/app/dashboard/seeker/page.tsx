@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
 import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions } from '@/lib/api';
 import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession } from '@/lib/types';
@@ -29,6 +29,10 @@ export default function SeekerDashboard() {
       getNegotiationSessions().then(setSessions).catch(() => setSessions([])),
     ]).finally(() => setLoading(false));
   }, [user]);
+
+  const refreshDatasources = useCallback(() => {
+    getDatasourceStatus().then(setDatasources);
+  }, []);
 
   if (loading) {
     return (
@@ -62,7 +66,7 @@ export default function SeekerDashboard() {
             <AIActionCard datasources={datasources} resume={resume} matches={matches} sessions={sessions} role="SEEKER" />
           </div>
           <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
-            <DatasourceStatus connections={datasources} />
+            <DatasourceStatus connections={datasources} onConnect={refreshDatasources} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
             <ResumeSummary resume={resume} />
@@ -83,7 +87,7 @@ export default function SeekerDashboard() {
             <MarketValueCard resume={resume} />
           </div>
           <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
-            <DatasourceStatus connections={datasources} />
+            <DatasourceStatus connections={datasources} onConnect={refreshDatasources} />
           </div>
         </>
       )}
