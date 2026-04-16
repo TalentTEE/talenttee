@@ -223,7 +223,7 @@ export default function DatasourcePage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
-            Data Sources
+            My Profile
           </h1>
           <p className="text-base text-muted-foreground mt-1">
             {connectedCount} of {PROVIDERS.length} connected
