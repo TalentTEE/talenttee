@@ -6,6 +6,7 @@ export interface SeekerProfile {
   marketValueMax: number;
   strengths: string[];
   weaknesses: string[];
+  softSkills: string[];
   preferences: string;
 }
 

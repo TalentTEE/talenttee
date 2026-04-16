@@ -26,6 +26,9 @@ export class ResumeProfile {
   @Column({ type: 'text', array: true, nullable: true })
   skills: string[];
 
+  @Column({ name: 'soft_skills', type: 'text', array: true, nullable: true })
+  softSkills: string[];
+
   @Column({ type: 'jsonb', nullable: true })
   experience: Record<string, any>[];
 
