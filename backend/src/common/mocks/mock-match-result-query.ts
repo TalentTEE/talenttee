@@ -18,6 +18,7 @@ export class MockMatchResultQuery implements MatchResultQuery {
       marketValueMax: 80_000_000,
       strengths: ['Blockchain experience', 'NestJS expertise', '5 years backend'],
       weaknesses: ['Limited frontend experience', 'No large-scale traffic experience'],
+      softSkills: ['Team collaboration', 'Technical mentoring', 'Clear communication', 'Initiative'],
       preferences: 'Prefers remote work, salary 65M+ KRW, probation 3 months or less',
     };
   }
