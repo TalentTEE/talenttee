@@ -4,6 +4,7 @@ import { useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
+import { connectGithubOAuth } from '@/lib/api';
 
 interface GitHubConnectDialogProps {
   open: boolean;
@@ -43,8 +44,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
 
   function handleLogin() {
     if (!useDummy) {
-      // Real OAuth — redirect handled by parent
-      onOpenChange(false);
+      connectGithubOAuth();
       return;
     }
     setStep('loading');
