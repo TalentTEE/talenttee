@@ -365,6 +365,11 @@ export async function approveAgreement(sessionId: string): Promise<void> {
   await apiFetch(`/negotiation/sessions/${sessionId}/approve`, { method: 'POST' });
 }
 
+export async function rejectAgreement(sessionId: string): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch(`/negotiation/sessions/${sessionId}/reject`, { method: 'POST' });
+}
+
 // === Agreement ===
 export async function getAgreement(sessionId: string): Promise<AgreementRecord> {
   if (USE_DUMMY) return DUMMY_AGREEMENT;

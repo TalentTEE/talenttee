@@ -30,10 +30,17 @@ export class AgreementService {
 
   async approve(sessionId: string, userId: string): Promise<{ status: string; txParams?: any }> {
     return this.sessionRepo.manager.transaction(async (manager) => {
+      // Lock the session row first (no relations to avoid outer join + FOR UPDATE conflict)
+      const locked = await manager.findOne(NegotiationSession, {
+        where: { id: sessionId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!locked) throw new NotFoundException('Session not found');
+
+      // Then load relations separately (no lock)
       const session = await manager.findOne(NegotiationSession, {
         where: { id: sessionId },
         relations: ['seeker', 'employer', 'job'],
-        lock: { mode: 'pessimistic_write' },
       });
       if (!session) throw new NotFoundException('Session not found');
       if (session.state !== NegotiationState.AGREED) {
@@ -116,6 +123,22 @@ export class AgreementService {
       deposit: '0',
       gas: '30000000000000',
     };
+  }
+
+  async reject(sessionId: string, userId: string): Promise<{ status: string }> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.state !== NegotiationState.AGREED) {
+      throw new ConflictException('Session is not in AGREED state');
+    }
+    const isSeeker = session.seekerId === userId;
+    const isEmployer = session.employerId === userId;
+    if (!isSeeker && !isEmployer) throw new ForbiddenException('Not a participant');
+
+    session.state = NegotiationState.FAILED;
+    await this.sessionRepo.save(session);
+    this.logger.log(`Session ${sessionId} rejected by ${isSeeker ? 'seeker' : 'employer'} ${userId}`);
+    return { status: 'rejected' };
   }
 
   async confirmTx(sessionId: string, txHash: string): Promise<void> {
