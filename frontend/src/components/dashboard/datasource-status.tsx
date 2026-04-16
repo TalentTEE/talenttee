@@ -177,7 +177,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
   const connectionMap = new Map(connections.map((c) => [c.provider, c]));
 
   return (
-    <div className="bg-card rounded-2xl border border-[#00F0FF]/20 p-6">
+    <div className="bg-card rounded-2xl border border-border/20 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Value</h3>
         <Link href="/datasource" className="text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 font-medium transition-colors">
