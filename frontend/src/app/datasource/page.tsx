@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { DataSourceConnection } from '@/lib/types';
 import { ResumeProfile } from '@/lib/types';
 import {
-  getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth,
+  getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth, disconnectDatasource,
   getResume, generateResume, getResumeStatus, USE_DUMMY,
 } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -138,9 +138,15 @@ export default function DatasourcePage() {
     }
   }, [connected, addToast]);
 
-  const handleDisconnect = () => {
-    addToast('Disconnect coming soon.', 'info');
-  };
+  const handleDisconnect = useCallback(async (provider: string) => {
+    try {
+      await disconnectDatasource(provider);
+      await fetchConnections();
+      addToast(`${provider} disconnected.`, 'success');
+    } catch {
+      addToast(`Failed to disconnect ${provider}.`, 'error');
+    }
+  }, [fetchConnections, addToast]);
 
   function formatTime(dateStr?: string) {
     if (!dateStr) return null;
@@ -363,7 +369,7 @@ export default function DatasourcePage() {
                         {isSyncing ? 'Syncing...' : 'Resync'}
                       </button>
                       <button
-                        onClick={handleDisconnect}
+                        onClick={() => handleDisconnect(provider.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-sm">link_off</span>

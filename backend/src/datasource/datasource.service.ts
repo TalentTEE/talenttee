@@ -82,6 +82,12 @@ export class DatasourceService {
     return this.dsRepo.find({ where: { userId } });
   }
 
+  async disconnect(userId: string, provider: DataSourceProvider): Promise<void> {
+    const conn = await this.dsRepo.findOne({ where: { userId, provider } });
+    if (!conn) throw new NotFoundException(`${provider} is not connected`);
+    await this.dsRepo.remove(conn);
+  }
+
   async getConnectionByProvider(userId: string, provider: DataSourceProvider): Promise<DataSourceConnection | null> {
     return this.dsRepo.findOne({ where: { userId, provider } });
   }
