@@ -7,8 +7,14 @@ import { getEscrowBalance, getEscrowPayments } from '@/lib/api';
 import { getEscrowBalanceOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
-import { utils } from 'near-api-js';
 import { actionCreators } from '@near-js/transactions';
+
+/** Convert a NEAR amount string (e.g. "1.5") to yoctoNEAR string */
+function parseNearAmount(amount: string): string {
+  const [whole, fraction = ''] = amount.split('.');
+  const padded = fraction.padEnd(24, '0').slice(0, 24);
+  return `${whole}${padded}`.replace(/^0+/, '') || '0';
+}
 
 const ESCROW_CONTRACT_ID =
   process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID || 'escrow.testnet';
@@ -84,8 +90,7 @@ export default function EscrowPage() {
         setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
         const wallet = await selector.wallet();
-        const yoctoAmount = utils.format.parseNearAmount(depositAmount);
-        if (!yoctoAmount) throw new Error('Invalid amount');
+        const yoctoAmount = parseNearAmount(depositAmount);
 
         await wallet.signAndSendTransaction({
           receiverId: ESCROW_CONTRACT_ID,
@@ -128,7 +133,7 @@ export default function EscrowPage() {
         setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
         const wallet = await selector.wallet();
-        const allowance = utils.format.parseNearAmount('5') || '0';
+        const allowance = parseNearAmount('5');
 
         await wallet.signAndSendTransaction({
           receiverId: user.nearAccountId,
