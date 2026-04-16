@@ -249,7 +249,11 @@ export class DatasourceService {
 
     for (const conn of connections) {
       const key = conn.provider.toLowerCase();
-      result[key] = this.loadFixture(conn.provider);
+      try {
+        result[key] = await this.getProviderData(userId, conn.provider);
+      } catch {
+        result[key] = this.loadFixture(conn.provider);
+      }
     }
 
     return result as any;

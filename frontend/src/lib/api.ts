@@ -66,7 +66,8 @@ export async function verifyNearAuth(params: {
   publicKey: string;
   signature: string;
   nonce: string;
-  role: string;
+  role?: string;
+  intent?: 'login' | 'signup';
 }): Promise<{ jwt: string; user: User }> {
   return apiFetch('/auth/near/verify', {
     method: 'POST',
@@ -322,6 +323,11 @@ export async function agreeMatch(matchId: string): Promise<void> {
   await apiFetch(`/match/${matchId}/agree`, { method: 'POST' });
 }
 
+export async function retrySeekerNegotiate(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me/retry-negotiate', { method: 'POST' });
+}
+
 // === Profile ===
 export async function accessProfile(seekerId: string): Promise<ProfileReport> {
   if (USE_DUMMY) return DUMMY_PROFILE_REPORT;
@@ -357,6 +363,11 @@ export async function sendIntervention(sessionId: string, direction: string): Pr
 export async function approveAgreement(sessionId: string): Promise<void> {
   if (USE_DUMMY) return;
   await apiFetch(`/negotiation/sessions/${sessionId}/approve`, { method: 'POST' });
+}
+
+export async function rejectAgreement(sessionId: string): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch(`/negotiation/sessions/${sessionId}/reject`, { method: 'POST' });
 }
 
 // === Agreement ===

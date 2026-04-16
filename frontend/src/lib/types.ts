@@ -92,6 +92,8 @@ export interface MatchResultDisplay extends MatchResult {
   seekerExperienceYears: string;
   jobTitle: string;
   companyName: string;
+  jobRequiredSkills: string[];
+  jobPreferredSkills: string[];
 }
 
 export interface ProfileReport {

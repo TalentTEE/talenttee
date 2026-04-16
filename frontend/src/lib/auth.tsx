@@ -93,83 +93,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     prefetchChallenge();
   }, []);
 
-  const doLogin = async (nearAccountId: string, role: UserRole) => {
+  const NOT_REGISTERED_MESSAGE = 'Account not registered. Please sign up first.';
+
+  const doLogin = async (
+    nearAccountId: string,
+    intent: 'login' | 'signup',
+    role?: UserRole,
+  ) => {
     const useDummy = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
     if (useDummy) {
-      const dummyUser = await getDummyUser(role, nearAccountId);
+      // Dummy mode bypasses the backend, but must NOT silently default to SEEKER.
+      // For login intent without a registry entry, throw the same error as prod
+      // so the bug cannot be reintroduced in demos.
+      let effectiveRole = role;
+      if (!effectiveRole) {
+        const registry = getAccountRegistry();
+        effectiveRole = registry[nearAccountId];
+      }
+      if (!effectiveRole) {
+        throw new Error(NOT_REGISTERED_MESSAGE);
+      }
+      const dummyUser = await getDummyUser(effectiveRole, nearAccountId);
       const userData = { ...dummyUser, nearAccountId };
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('jwt', 'dummy-jwt-token');
       setUser(userData);
-    } else {
-      // Use pre-fetched nonce if available; fallback to on-demand fetch
-      let nonce = nonceRef.current;
-      if (!nonce) {
-        const challenge = await requestChallenge();
-        nonce = challenge.nonce;
-      }
-      nonceRef.current = null;
-
-      // Use Wallet Selector signMessage (NEP-413)
-      if (!selector) throw new Error('Wallet not initialized');
-      const wallet = await selector.wallet();
-      if (!wallet.signMessage) {
-        throw new Error('This wallet does not support message signing (NEP-413). Please use a compatible wallet.');
-      }
-
-      const nonceBuffer = Buffer.from(nonce, 'hex');
-      const signed = await wallet.signMessage({
-        message: nonce,
-        recipient: 'talent-tee',
-        nonce: nonceBuffer,
-      });
-      if (!signed) throw new Error('Signing cancelled');
-
-      const signature = typeof signed.signature === 'string'
-        ? signed.signature
-        : Buffer.from(signed.signature).toString('base64');
-      const publicKey = signed.publicKey;
-
-      const { jwt, user: apiUser } = await verifyNearAuth({
-        nearAccountId,
-        publicKey,
-        signature,
-        nonce,
-        role,
-      });
-
-      const userData: User = {
-        id: apiUser.id,
-        nearAccountId: apiUser.nearAccountId,
-        role: apiUser.role as UserRole,
-        publicKey: apiUser.publicKey,
-        createdAt: apiUser.createdAt,
-      };
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('jwt', jwt);
-      setUser(userData);
-
-      // Pre-fetch next nonce for subsequent logins
-      prefetchChallenge();
+      return;
     }
+
+    // Use pre-fetched nonce if available; fallback to on-demand fetch
+    let nonce = nonceRef.current;
+    if (!nonce) {
+      const challenge = await requestChallenge();
+      nonce = challenge.nonce;
+    }
+    nonceRef.current = null;
+
+    // Use Wallet Selector signMessage (NEP-413)
+    if (!selector) throw new Error('Wallet not initialized');
+    const wallet = await selector.wallet();
+    if (!wallet.signMessage) {
+      throw new Error('This wallet does not support message signing (NEP-413). Please use a compatible wallet.');
+    }
+
+    const nonceBuffer = Buffer.from(nonce, 'hex');
+    const signed = await wallet.signMessage({
+      message: nonce,
+      recipient: 'talent-tee',
+      nonce: nonceBuffer,
+    });
+    if (!signed) throw new Error('Signing cancelled');
+
+    const signature = typeof signed.signature === 'string'
+      ? signed.signature
+      : Buffer.from(signed.signature).toString('base64');
+    const publicKey = signed.publicKey;
+
+    // Only include role when the caller provided one (signup path).
+    // Login intent must NEVER send a role — backend is the source of truth.
+    const verifyPayload: Parameters<typeof verifyNearAuth>[0] = {
+      nearAccountId,
+      publicKey,
+      signature,
+      nonce,
+      intent,
+    };
+    if (role !== undefined) {
+      verifyPayload.role = role;
+    }
+
+    let response: Awaited<ReturnType<typeof verifyNearAuth>>;
+    try {
+      response = await verifyNearAuth(verifyPayload);
+    } catch (e) {
+      // Normalize backend "not registered" 404 into a stable, user-facing error.
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.toLowerCase().includes('not registered')) {
+        throw new Error(NOT_REGISTERED_MESSAGE);
+      }
+      throw e;
+    }
+
+    const { jwt, user: apiUser } = response;
+    const userData: User = {
+      id: apiUser.id,
+      nearAccountId: apiUser.nearAccountId,
+      role: apiUser.role as UserRole,
+      publicKey: apiUser.publicKey,
+      createdAt: apiUser.createdAt,
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('jwt', jwt);
+    setUser(userData);
+
+    // Pre-fetch next nonce for subsequent logins
+    prefetchChallenge();
   };
 
   /** Signup: register role + log in */
   const signup = async (nearAccountId: string, role: UserRole) => {
     saveAccountRole(nearAccountId, role);
-    await doLogin(nearAccountId, role);
+    await doLogin(nearAccountId, 'signup', role);
   };
 
-  /** Login by account ID — looks up stored role, falls back to backend lookup */
+  /** Login by account ID — backend is authoritative for role. Never sends a role. */
   const loginByAccount = async (nearAccountId: string) => {
-    const registry = getAccountRegistry();
-    // Use stored role if available; otherwise fall back to SEEKER.
-    // The backend's findOrCreateUser returns the real role for existing users,
-    // so the fallback value only matters for truly new accounts.
-    const role = registry[nearAccountId] || ('SEEKER' as UserRole);
-    await doLogin(nearAccountId, role);
-    // After successful login, persist the actual role from the backend response
-    // so future logins on this browser don't need the fallback.
+    await doLogin(nearAccountId, 'login');
+    // After successful login, cache the role returned by the backend for this browser.
     const stored = localStorage.getItem('user');
     if (stored) {
       const userData = JSON.parse(stored);
@@ -179,17 +209,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /** Legacy: dummy login by role */
+  /** Legacy: dummy login by role — treat as signup since role is explicit */
   const login = async (role: UserRole) => {
     const accountId = role === 'SEEKER' ? 'alice.testnet' : 'bob.testnet';
     saveAccountRole(accountId, role);
-    await doLogin(accountId, role);
+    await doLogin(accountId, 'signup', role);
   };
 
-  /** Legacy: login with explicit NEAR account + role */
+  /** Legacy: login with explicit NEAR account + role — treat as signup since role is explicit */
   const loginWithNear = async (nearAccountId: string, role: UserRole) => {
     saveAccountRole(nearAccountId, role);
-    await doLogin(nearAccountId, role);
+    await doLogin(nearAccountId, 'signup', role);
   };
 
   const logout = () => {
