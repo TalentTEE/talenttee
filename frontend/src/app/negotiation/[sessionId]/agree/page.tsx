@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord, NegotiationRound, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
+import { useAuth } from '@/lib/auth';
 
 type FlowState = 'idle' | 'approving' | 'waiting' | 'completed' | 'rejected';
 
@@ -51,6 +52,7 @@ function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('
 export default function AgreementPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const sessionId = params.sessionId as string;
 
   const [agreement, setAgreement] = useState<AgreementRecord | null>(null);
@@ -78,8 +80,13 @@ export default function AgreementPage() {
         } else if (data.seekerApproved && data.employerApproved) {
           setFlowState('completed');
           if (data.onChainTxHash) setTxHash(data.onChainTxHash);
-        } else if (data.seekerApproved || data.employerApproved) {
-          setFlowState('waiting');
+        } else {
+          // Check if *I* already approved — if so, waiting for the other party
+          const myApproval = user?.role === 'SEEKER' ? data.seekerApproved : data.employerApproved;
+          if (myApproval) {
+            setFlowState('waiting');
+          }
+          // Otherwise stay 'idle' — show approve/reject buttons
         }
       })
       .catch(async () => {
