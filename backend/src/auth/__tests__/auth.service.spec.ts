@@ -72,6 +72,44 @@ describe('AuthService', () => {
     });
   });
 
+  describe('findUser', () => {
+    it('should return null when user not found', async () => {
+      mockUserRepo.findOne.mockResolvedValue(null);
+
+      const result = await service.findUser('nobody.testnet');
+      expect(result).toBeNull();
+      expect(mockUserRepo.create).not.toHaveBeenCalled();
+      expect(mockUserRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('should return user when found (no write calls made)', async () => {
+      const existing = { id: 'uuid-1', nearAccountId: 'alice.testnet', role: UserRole.SEEKER };
+      mockUserRepo.findOne.mockResolvedValue(existing);
+
+      const result = await service.findUser('alice.testnet');
+      expect(result).toEqual(existing);
+      expect(mockUserRepo.create).not.toHaveBeenCalled();
+      expect(mockUserRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createUser', () => {
+    it('should create and save user with the given role', async () => {
+      const newUser = { id: 'uuid-3', nearAccountId: 'carol.testnet', role: UserRole.EMPLOYER, publicKey: 'ed25519:key3' };
+      mockUserRepo.create.mockReturnValue(newUser);
+      mockUserRepo.save.mockResolvedValue(newUser);
+
+      const result = await service.createUser('carol.testnet', UserRole.EMPLOYER, 'ed25519:key3');
+      expect(result).toEqual(newUser);
+      expect(mockUserRepo.create).toHaveBeenCalledWith({
+        nearAccountId: 'carol.testnet',
+        role: UserRole.EMPLOYER,
+        publicKey: 'ed25519:key3',
+      });
+      expect(mockUserRepo.save).toHaveBeenCalled();
+    });
+  });
+
   describe('generateJwt', () => {
     it('should sign JWT with correct payload', () => {
       const user = { id: 'uuid-123', nearAccountId: 'alice.testnet', role: UserRole.SEEKER, publicKey: 'ed25519:key' } as User;

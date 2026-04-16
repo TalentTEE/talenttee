@@ -112,6 +112,10 @@ export class ResumeService {
       parts.push(`Tech Stack: ${resume.skills.join(', ')}`);
     }
 
+    if (resume.softSkills?.length) {
+      parts.push(`Soft Skills: ${resume.softSkills.join(', ')}`);
+    }
+
     if (resume.experience?.length) {
       const expLines = resume.experience.map(
         (e) =>
@@ -179,6 +183,7 @@ export class ResumeService {
 
       if (parsed) {
         updatePayload.skills = parsed.skills ?? [];
+        updatePayload.softSkills = parsed.softSkills ?? [];
         updatePayload.experience = parsed.experience ?? [];
         updatePayload.education = parsed.education ?? [];
         updatePayload.summary = parsed.summary ?? null;

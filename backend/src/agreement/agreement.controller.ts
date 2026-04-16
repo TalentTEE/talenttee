@@ -12,6 +12,11 @@ export class AgreementController {
     return this.agreementService.approve(id, req.user.id);
   }
 
+  @Post('negotiation/sessions/:id/reject')
+  async reject(@Param('id') id: string, @Req() req) {
+    return this.agreementService.reject(id, req.user.id);
+  }
+
   @Post('negotiation/sessions/:id/confirm-tx')
   async confirmTx(@Param('id') id: string, @Body() body: { txHash: string }) {
     await this.agreementService.confirmTx(id, body.txHash);

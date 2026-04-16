@@ -167,6 +167,7 @@ export class NegotiationService {
             marketValueMax: seekerProfile.marketValueMax,
             strengths: seekerProfile.strengths,
             weaknesses: seekerProfile.weaknesses,
+            softSkills: seekerProfile.softSkills,
             preferences: seekerProfile.preferences,
             negotiationHistory: historyStr,
             currentOffer: lastOffer,

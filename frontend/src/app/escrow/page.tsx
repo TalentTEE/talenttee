@@ -1,20 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getEscrowBalance, getEscrowPayments, depositToEscrow } from '@/lib/api';
-import { depositViaWallet, addAgentKey, getEscrowBalanceOnChain } from '@/lib/near';
+import { useWallet } from '@/lib/wallet-selector';
+import { getEscrowBalance, getEscrowPayments } from '@/lib/api';
+import { getEscrowBalanceOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
+import { utils } from 'near-api-js';
+import { actionCreators } from '@near-js/transactions';
+
+const ESCROW_CONTRACT_ID =
+  process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID || 'escrow.testnet';
 
 export default function EscrowPage() {
   const { user } = useAuth();
-  const router = useRouter();
+  const { selector } = useWallet();
 
-  useEffect(() => {
-    if (user && user.role !== 'EMPLOYER') router.replace('/dashboard/seeker');
-  }, [user, router]);
 
   const [escrow, setEscrow] = useState<EscrowAccount | null>(null);
   const [payments, setPayments] = useState<EscrowPayment[]>([]);
@@ -62,23 +64,33 @@ export default function EscrowPage() {
     try {
       if (USE_DUMMY) {
         setTxStatus(`Deposit of ${amount} NEAR initiated (mock).`);
+      } else if (!selector) {
+        setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
-        const nearKey = typeof window !== 'undefined' ? localStorage.getItem('nearPrivateKey') : null;
-        if (nearKey && user) {
-          await depositViaWallet(user.nearAccountId, nearKey, depositAmount);
-          setTxStatus(`Successfully deposited ${amount} NEAR.`);
-          await refreshBalance();
-        } else {
-          // Fallback: prepare transaction params via backend
-          const nearAmount = (amount * 1e24).toLocaleString('fullwide', { useGrouping: false });
-          const txParams = await depositToEscrow(nearAmount);
-          setTxStatus(
-            `Transaction prepared — Contract: ${txParams.contractId}, Method: ${txParams.methodName}, Deposit: ${amount} NEAR. Sign with your wallet to complete.`
-          );
-        }
+        const wallet = await selector.wallet();
+        const yoctoAmount = utils.format.parseNearAmount(depositAmount);
+        if (!yoctoAmount) throw new Error('Invalid amount');
+
+        await wallet.signAndSendTransaction({
+          receiverId: ESCROW_CONTRACT_ID,
+          actions: [
+            actionCreators.functionCall(
+              'deposit',
+              {},
+              BigInt('30000000000000'),
+              BigInt(yoctoAmount),
+            ),
+          ],
+        });
+
+        setTxStatus(`Successfully deposited ${amount} NEAR.`);
+        await refreshBalance();
       }
     } catch (e) {
-      setTxStatus(`Deposit failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      if (!msg.includes('User rejected') && !msg.includes('cancelled')) {
+        setTxStatus(`Deposit failed: ${msg}`);
+      }
     } finally {
       setIsDepositing(false);
       setDepositAmount('');
@@ -95,18 +107,34 @@ export default function EscrowPage() {
       if (USE_DUMMY) {
         setTxStatus('Agent key configured (mock).');
         setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
+      } else if (!selector) {
+        setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
-        const nearKey = typeof window !== 'undefined' ? localStorage.getItem('nearPrivateKey') : null;
-        if (nearKey) {
-          await addAgentKey(user.nearAccountId, nearKey, agentPubKey.trim());
-          setTxStatus('Agent key added successfully.');
-          setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
-        } else {
-          setTxStatus('No NEAR private key found in localStorage. Please set "nearPrivateKey" first.');
-        }
+        const wallet = await selector.wallet();
+        const allowance = utils.format.parseNearAmount('5') || '0';
+
+        await wallet.signAndSendTransaction({
+          receiverId: user.nearAccountId,
+          actions: [
+            actionCreators.addKey(
+              agentPubKey.trim() as unknown as Parameters<typeof actionCreators.addKey>[0],
+              actionCreators.functionCallAccessKey(
+                ESCROW_CONTRACT_ID,
+                ['pay_for_profile'],
+                BigInt(allowance),
+              ),
+            ),
+          ],
+        });
+
+        setTxStatus('Agent key added successfully.');
+        setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
       }
     } catch (e) {
-      setTxStatus(`Failed to add agent key: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      if (!msg.includes('User rejected') && !msg.includes('cancelled')) {
+        setTxStatus(`Failed to add agent key: ${msg}`);
+      }
     } finally {
       setIsSettingKey(false);
       setAgentPubKey('');

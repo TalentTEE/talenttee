@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, USE_DUMMY } from '@/lib/api';
+import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord, NegotiationRound, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 
@@ -107,15 +107,17 @@ export default function AgreementPage() {
     setApproving(true);
     try {
       await approveAgreement(sessionId);
-      if (USE_DUMMY) {
-        const mockTx = `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-        setTxHash(mockTx);
-      } else {
-        const updatedAgreement = await getAgreement(sessionId);
-        setTxHash(updatedAgreement.onChainTxHash);
-        setAgreement(updatedAgreement);
-      }
       setApproved(true);
+      // Try to fetch on-chain tx hash (best-effort — contract may not be deployed)
+      try {
+        const updatedAgreement = await getAgreement(sessionId);
+        if (updatedAgreement?.onChainTxHash) {
+          setTxHash(updatedAgreement.onChainTxHash);
+          setAgreement(updatedAgreement);
+        }
+      } catch {
+        // On-chain agreement not available yet — approval still succeeded
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to approve agreement');
     } finally {
@@ -123,8 +125,13 @@ export default function AgreementPage() {
     }
   };
 
-  const handleReject = () => {
-    setRejected(true);
+  const handleReject = async () => {
+    try {
+      await rejectAgreement(sessionId);
+      setRejected(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to reject agreement');
+    }
   };
 
   if (!agreement) {
