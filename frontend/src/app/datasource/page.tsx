@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { DataSourceConnection } from '@/lib/types';
 import { ResumeProfile } from '@/lib/types';
 import {
-  getDatasourceStatus, getDatasourceData, connectDatasourceMock,
+  getDatasourceStatus, getDatasourceData, connectDatasourceMock, disconnectDatasource,
   getResume, generateResume, getResumeStatus, USE_DUMMY,
 } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -122,6 +122,16 @@ export default function DatasourcePage() {
       setSyncingAll(false);
     }
   }, [connected, addToast]);
+
+  const handleDisconnect = useCallback(async (provider: string) => {
+    try {
+      await disconnectDatasource(provider);
+      await fetchConnections();
+      addToast(`${provider} disconnected.`, 'success');
+    } catch {
+      addToast(`Failed to disconnect ${provider}.`, 'error');
+    }
+  }, [fetchConnections, addToast]);
 
   function formatTime(dateStr?: string) {
     if (!dateStr) return null;
@@ -333,10 +343,17 @@ export default function DatasourcePage() {
                 </div>
 
                 {isConnected ? (
-                  <div>
+                  <div className="flex items-center justify-between">
                     {conn?.lastSyncedAt && (
                       <p className="text-xs text-muted-foreground">Last synced: {formatTime(conn.lastSyncedAt)}</p>
                     )}
+                    <button
+                      onClick={() => handleDisconnect(provider.id)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-sm">link_off</span>
+                      Disconnect
+                    </button>
                   </div>
                 ) : (
                   <button
