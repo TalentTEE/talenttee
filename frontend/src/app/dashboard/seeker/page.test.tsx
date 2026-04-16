@@ -30,9 +30,6 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // Mock child components to isolate the page
-vi.mock('@/components/dashboard/job-seeking-toggle', () => ({
-  JobSeekingToggle: () => <div data-testid="job-seeking-toggle">JobSeekingToggle</div>,
-}));
 vi.mock('@/components/dashboard/datasource-status', () => ({
   DatasourceStatus: () => <div data-testid="datasource-status">DatasourceStatus</div>,
 }));
@@ -84,7 +81,6 @@ describe('SeekerDashboard', () => {
       render(<SeekerDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('job-seeking-toggle')).toBeInTheDocument();
         expect(screen.getByTestId('datasource-status')).toBeInTheDocument();
         expect(screen.getByTestId('resume-summary')).toBeInTheDocument();
         expect(screen.getByTestId('market-value-card')).toBeInTheDocument();
@@ -111,7 +107,6 @@ describe('SeekerDashboard', () => {
       });
 
       // Common sections still present
-      expect(screen.getByTestId('job-seeking-toggle')).toBeInTheDocument();
       expect(screen.getByTestId('resume-summary')).toBeInTheDocument();
       expect(screen.getByTestId('market-value-card')).toBeInTheDocument();
       expect(screen.getByTestId('datasource-status')).toBeInTheDocument();
