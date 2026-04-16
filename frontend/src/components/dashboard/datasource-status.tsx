@@ -8,11 +8,13 @@ import { GitHubConnectDialog } from '@/components/datasource/github-connect-dial
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
 import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
 import { Gov24ConnectDialog } from '@/components/datasource/gov24-connect-dialog';
+import { GitHubIcon, SlackIcon, DiscordIcon } from '@/components/icons/provider-icons';
+import { ReactNode } from 'react';
 
-const ALL_PROVIDERS: { id: DataSourceConnection['provider']; label: string; icon: string }[] = [
-  { id: 'GITHUB', label: 'GitHub', icon: 'code' },
-  { id: 'SLACK', label: 'Slack', icon: 'chat' },
-  { id: 'DISCORD', label: 'Discord', icon: 'forum' },
+const ALL_PROVIDERS: { id: DataSourceConnection['provider']; label: string; icon: string; brandIcon?: (props: { className?: string }) => ReactNode }[] = [
+  { id: 'GITHUB', label: 'GitHub', icon: 'code', brandIcon: GitHubIcon },
+  { id: 'SLACK', label: 'Slack', icon: 'chat', brandIcon: SlackIcon },
+  { id: 'DISCORD', label: 'Discord', icon: 'forum', brandIcon: DiscordIcon },
   { id: 'GOV24', label: 'Gov24', icon: 'assured_workload' },
 ];
 
@@ -208,13 +210,13 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
               >
                 {/* Header row */}
                 <div className="flex items-center gap-2 mb-3">
-                  <span
-                    className={`material-symbols-outlined text-base ${
+                  {provider.brandIcon ? (
+                    <provider.brandIcon className={`w-4 h-4 ${connected ? 'text-[#00F0FF]' : 'text-muted-foreground'}`} />
+                  ) : (
+                    <span className={`material-symbols-outlined text-base ${
                       connected ? 'text-[#00F0FF]' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {provider.icon}
-                  </span>
+                    }`}>{provider.icon}</span>
+                  )}
                   <span
                     className={`text-sm font-semibold ${
                       connected ? 'text-foreground' : 'text-muted-foreground'

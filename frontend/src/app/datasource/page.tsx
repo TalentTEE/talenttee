@@ -16,11 +16,13 @@ import { DiscordConnectDialog } from '@/components/datasource/discord-connect-di
 import { Gov24ConnectDialog } from '@/components/datasource/gov24-connect-dialog';
 import { useToast } from '@/components/ui/toast-provider';
 import { AINudge } from '@/components/ui/AINudge';
+import { GitHubIcon, SlackIcon, DiscordIcon } from '@/components/icons/provider-icons';
+import { ReactNode } from 'react';
 
-const PROVIDERS: { id: DataSourceConnection['provider']; label: string; icon: string }[] = [
-  { id: 'GITHUB', label: 'GitHub', icon: 'code' },
-  { id: 'SLACK', label: 'Slack', icon: 'chat' },
-  { id: 'DISCORD', label: 'Discord', icon: 'forum' },
+const PROVIDERS: { id: DataSourceConnection['provider']; label: string; icon: string; brandIcon?: (props: { className?: string }) => ReactNode }[] = [
+  { id: 'GITHUB', label: 'GitHub', icon: 'code', brandIcon: GitHubIcon },
+  { id: 'SLACK', label: 'Slack', icon: 'chat', brandIcon: SlackIcon },
+  { id: 'DISCORD', label: 'Discord', icon: 'forum', brandIcon: DiscordIcon },
   { id: 'GOV24', label: 'Gov24', icon: 'assured_workload' },
 ];
 
@@ -337,9 +339,13 @@ export default function DatasourcePage() {
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                     isConnected ? 'bg-[#00F0FF]/10' : 'bg-muted/50'
                   }`}>
-                    <span className={`material-symbols-outlined text-lg ${
-                      isConnected ? 'text-[#00F0FF]' : 'text-muted-foreground'
-                    }`}>{provider.icon}</span>
+                    {provider.brandIcon ? (
+                      <provider.brandIcon className={isConnected ? 'text-[#00F0FF]' : 'text-muted-foreground'} />
+                    ) : (
+                      <span className={`material-symbols-outlined text-lg ${
+                        isConnected ? 'text-[#00F0FF]' : 'text-muted-foreground'
+                      }`}>{provider.icon}</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold text-foreground">{provider.label}</span>
