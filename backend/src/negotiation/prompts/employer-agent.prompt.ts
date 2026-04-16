@@ -53,7 +53,14 @@ ${params.currentCounter}
     "startDate": "YYYY-MM-DD",
     "probationMonths": 숫자
   },
-  "reasoning": "근거 설명",
+  "reasoning": {
+    "summary": "결정을 요약하는 한 문장",
+    "factors": ["근거 1", "근거 2", "근거 3"]
+  },
   "decision": "COUNTER 또는 ACCEPT 또는 REJECT"
-}`;
+}
+
+reasoning 규칙:
+- "summary": 전체 결정을 설명하는 정확히 1문장
+- "factors": 2-4개의 구체적 근거 배열, 각각 한 문장`;
 }

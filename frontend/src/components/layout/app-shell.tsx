@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Header } from './header';
-import { Sidebar } from './sidebar';
-import { AgentStatusProvider } from '@/hooks/AgentStatusProvider';
+import { useState } from "react";
+import { Header } from "./header";
+import { Sidebar } from "./sidebar";
+import { AgentStatusProvider } from "@/hooks/AgentStatusProvider";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <AgentStatusProvider>
-      <div className="h-screen flex flex-col bg-background">
-        <Header onMenuToggle={() => setSidebarOpen((o) => !o)} />
-        <div className="flex flex-1 min-h-0">
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 p-6 lg:p-8 overflow-auto">{children}</main>
-        </div>
-      </div>
-    </AgentStatusProvider>
-  );
+    return (
+        <AgentStatusProvider>
+            <div className="min-h-screen flex bg-background">
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+                <div className="flex-1 flex flex-col min-w-0">
+                    <Header onMenuToggle={() => setSidebarOpen((o) => !o)} />
+                    <main className="flex-1 p-6 lg:p-8">{children}</main>
+                </div>
+            </div>
+        </AgentStatusProvider>
+    );
 }

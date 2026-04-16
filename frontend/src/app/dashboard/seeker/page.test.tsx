@@ -25,6 +25,7 @@ vi.mock('@/lib/api', () => ({
   getSeekerMatches: (...args: unknown[]) => mockGetSeekerMatches(...args),
   getNegotiationSessions: (...args: unknown[]) => mockGetNegotiationSessions(...args),
   updateJobSeekingStatus: vi.fn(),
+  getJobSeekingStatus: vi.fn().mockResolvedValue({ jobSeeking: false }),
   USE_DUMMY: true,
 }));
 
@@ -56,6 +57,7 @@ describe('SeekerDashboard', () => {
   });
 
   it('calls 4 API functions on mount', async () => {
+    mockGetResume.mockResolvedValue({ status: 'COMPLETE' });
     render(<SeekerDashboard />);
 
     await waitFor(() => {

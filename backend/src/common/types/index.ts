@@ -19,11 +19,16 @@ export interface NegotiationBoundary {
   negotiationStyle: 'conservative' | 'moderate' | 'aggressive';
 }
 
+export interface NegotiationReasoning {
+  summary: string;
+  factors: string[];
+}
+
 export interface AgentResponse {
   round: number;
   actor: 'SEEKER_AGENT' | 'EMPLOYER_AGENT';
   proposal: NegotiationProposal;
-  reasoning: string;
+  reasoning: string | NegotiationReasoning;
   decision: 'COUNTER' | 'ACCEPT' | 'REJECT';
 }
 

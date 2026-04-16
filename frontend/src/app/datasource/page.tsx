@@ -752,7 +752,7 @@ export default function DatasourcePage() {
         <AINudge id="ds-three" message="One more source to go. Gov24 verifies your credentials on-chain." />
       )}
       {connectedCount >= 4 && (
-        <AINudge id="ds-all" message="All sources connected. Your AI resume is being generated automatically — check it on the Resume page." ctaLabel="View Resume" ctaHref="/resume" />
+        <AINudge id="ds-all" message="All sources connected. Your AI analysis is being generated automatically — check it on the Analysis page." ctaLabel="View Analysis" ctaHref="/analysis" />
       )}
 
       {/* Auto-sync banner */}
