@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { getGithubOAuthUrl, getDatasourceData } from '@/lib/api';
-import type { GitHubData } from '@/lib/types';
 
 interface GitHubConnectDialogProps {
   open: boolean;
@@ -44,81 +42,15 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
   const [step, setStep] = useState<Step>('login');
   const [selected, setSelected] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
-  const [repos, setRepos] = useState<RepoItem[]>([]);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
-
   function reset() {
     setStep('login');
-    setSelected([]);
-    setPending(false);
-    setRepos([]);
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-  }
-
-  // After OAuth popup completes — fetch real repos from backend
-  async function onOAuthDone() {
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-    try {
-      const data = (await getDatasourceData('GITHUB')) as GitHubData;
-      const fetched: RepoItem[] = data.repositories.map((r) => ({
-        id: r.name, name: r.name, lang: r.language, stars: r.stars, desc: r.description,
-      }));
-      setRepos(fetched);
-      setSelected(fetched.slice(0, 3).map((r) => r.id));
-      setStep('select');
-    } catch {
-      // Backend not ready or OAuth failed — fall back to dummy repos
-      fallbackToDummy();
-    }
-  }
-
-  function fallbackToDummy() {
-    setRepos(DUMMY_REPOS);
     setSelected(['defi-swap', 'ai-resume', 'react-dash']);
-    setStep('select');
+    setPending(false);
   }
-
-  // Listen for postMessage from the OAuth popup callback page
-  useEffect(() => {
-    if (step !== 'loading' || useDummy) return;
-    function handleMsg(e: MessageEvent) {
-      if (e.origin !== window.location.origin) return;
-      if (e.data?.type === 'github-oauth-connected') onOAuthDone();
-    }
-    window.addEventListener('message', handleMsg);
-    return () => window.removeEventListener('message', handleMsg);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, useDummy]);
 
   function handleLogin() {
-    if (!useDummy) {
-      const url = getGithubOAuthUrl();
-      const popup = window.open(url, 'github-oauth', 'width=600,height=700,left=200,top=100');
-
-      if (!popup) {
-        // Popup blocked — fall back to dummy repos immediately
-        setStep('loading');
-        setTimeout(fallbackToDummy, 1500);
-        return;
-      }
-
-      setStep('loading');
-      pollRef.current = setInterval(() => {
-        if (popup.closed) onOAuthDone();
-      }, 500);
-      return;
-    }
-    // Dummy mode: simulated loading → dummy repos
     setStep('loading');
-    setTimeout(() => {
-      setRepos(DUMMY_REPOS);
-      setSelected(['defi-swap', 'ai-resume', 'react-dash']);
-      setStep('select');
-    }, 1500);
+    setTimeout(() => setStep('select'), 1500);
   }
 
   function toggleRepo(id: string) {
@@ -130,7 +62,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
   async function handleConnect() {
     setPending(true);
     setStep('connecting');
-    const repoNames = repos.filter((r) => selected.includes(r.id)).map((r) => r.name);
+    const repoNames = DUMMY_REPOS.filter((r) => selected.includes(r.id)).map((r) => r.name);
     await onConnect(repoNames);
     setStep('done');
     setTimeout(() => {
