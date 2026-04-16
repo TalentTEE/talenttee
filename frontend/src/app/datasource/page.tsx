@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { DataSourceConnection } from '@/lib/types';
 import { ResumeProfile } from '@/lib/types';
 import {
-  getDatasourceStatus, getDatasourceData, connectDatasourceMock, connectGithubOAuth, disconnectDatasource,
+  getDatasourceStatus, getDatasourceData, connectDatasourceMock,
   getResume, generateResume, getResumeStatus, USE_DUMMY,
 } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
@@ -44,7 +44,6 @@ export default function DatasourcePage() {
   // ── Datasource state ──
   const [connections, setConnections] = useState<DataSourceConnection[]>([]);
   const [loadingDs, setLoadingDs] = useState(true);
-  const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [syncingAll, setSyncingAll] = useState(false);
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
 
@@ -103,10 +102,6 @@ export default function DatasourcePage() {
   const connectedCount = connected.length;
 
   const openConnectDialog = (provider: string) => {
-    if (!USE_DUMMY && provider === 'GITHUB') {
-      connectGithubOAuth();
-      return;
-    }
     setDialogOpen(provider);
   };
 
@@ -114,18 +109,6 @@ export default function DatasourcePage() {
     await connectDatasourceMock(provider);
     await fetchConnections();
   }, [fetchConnections]);
-
-  const handleResync = useCallback(async (provider: string) => {
-    setSyncing((prev) => ({ ...prev, [provider]: true }));
-    try {
-      await getDatasourceData(provider);
-      addToast(`${provider} data refreshed.`, 'success');
-    } catch {
-      addToast(`Failed to refresh ${provider}.`, 'error');
-    } finally {
-      setSyncing((prev) => ({ ...prev, [provider]: false }));
-    }
-  }, [addToast]);
 
   const handleResyncAll = useCallback(async () => {
     if (connected.length === 0) return;
@@ -139,16 +122,6 @@ export default function DatasourcePage() {
       setSyncingAll(false);
     }
   }, [connected, addToast]);
-
-  const handleDisconnect = useCallback(async (provider: string) => {
-    try {
-      await disconnectDatasource(provider);
-      await fetchConnections();
-      addToast(`${provider} disconnected.`, 'success');
-    } catch {
-      addToast(`Failed to disconnect ${provider}.`, 'error');
-    }
-  }, [fetchConnections, addToast]);
 
   function formatTime(dateStr?: string) {
     if (!dateStr) return null;
@@ -326,7 +299,6 @@ export default function DatasourcePage() {
           {PROVIDERS.map((provider) => {
             const conn = connectionMap.get(provider.id);
             const isConnected = conn && conn.status !== 'DISCONNECTED';
-            const isSyncing = syncing[provider.id];
 
             return (
               <div
@@ -361,27 +333,10 @@ export default function DatasourcePage() {
                 </div>
 
                 {isConnected ? (
-                  <div className="space-y-3">
+                  <div>
                     {conn?.lastSyncedAt && (
                       <p className="text-xs text-muted-foreground">Last synced: {formatTime(conn.lastSyncedAt)}</p>
                     )}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleResync(provider.id)}
-                        disabled={isSyncing}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#00F0FF]/10 text-[#00F0FF] hover:bg-[#00F0FF]/20 transition-colors disabled:opacity-50 cursor-pointer"
-                      >
-                        <span className={`material-symbols-outlined text-sm ${isSyncing ? 'animate-spin' : ''}`}>sync</span>
-                        {isSyncing ? 'Syncing...' : 'Resync'}
-                      </button>
-                      <button
-                        onClick={() => handleDisconnect(provider.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-sm">link_off</span>
-                        Disconnect
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <button

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { DataSourceConnection, DatasourceDetail, GitHubData, SlackData, DiscordData, Gov24Data } from '@/lib/types';
-import { getDatasourceData, connectDatasourceMock, connectGithubOAuth, USE_DUMMY } from '@/lib/api';
+import { getDatasourceData, connectDatasourceMock, USE_DUMMY } from '@/lib/api';
 import { GitHubConnectDialog } from '@/components/datasource/github-connect-dialog';
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
 import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
@@ -171,17 +171,13 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
   }, [onConnect]);
 
   const openConnectDialog = (provider: string) => {
-    if (!USE_DUMMY && provider === 'GITHUB') {
-      connectGithubOAuth();
-      return;
-    }
     setDialogOpen(provider);
   };
 
   const connectionMap = new Map(connections.map((c) => [c.provider, c]));
 
   return (
-    <div className="bg-card rounded-2xl border border-border/10 p-6">
+    <div className="bg-card rounded-2xl border border-[#00F0FF]/20 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Value</h3>
         <Link href="/datasource" className="text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 font-medium transition-colors">
