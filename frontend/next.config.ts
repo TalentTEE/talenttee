@@ -36,6 +36,9 @@ for (const [k, v] of Object.entries(rootEnv)) {
 
 const nextConfig: NextConfig = {
   env: publicEnv,
+  // Allow LAN/mobile devices on 172.30.x.x subnet to hit the dev server
+  // (HMR, /_next/* assets). Add more origins here if testing from other networks.
+  allowedDevOrigins: ['172.30.72.55', '172.30.*.*'],
 };
 
 export default nextConfig;
