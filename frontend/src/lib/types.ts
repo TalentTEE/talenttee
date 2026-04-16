@@ -189,6 +189,7 @@ export interface AgreementRecord {
   seekerApproved: boolean;
   employerApproved: boolean;
   onChainTxHash: string | null;
+  rejected?: boolean;
 }
 
 export interface EscrowAccount {

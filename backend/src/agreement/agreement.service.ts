@@ -150,29 +150,65 @@ export class AgreementService {
   }
 
   async getAgreement(sessionId: string): Promise<any> {
-    const response = await fetch(this.nearNodeUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'dontcare',
-        method: 'query',
-        params: {
-          request_type: 'call_function',
-          finality: 'final',
-          account_id: this.agreementContractId,
-          method_name: 'get_agreement',
-          args_base64: Buffer.from(JSON.stringify({ session_id: sessionId })).toString('base64'),
-        },
-      }),
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId },
+      relations: ['job'],
     });
-    const data = await response.json();
-    if (data.error || !data.result?.result) return null;
-    try {
-      return JSON.parse(Buffer.from(data.result.result).toString('utf-8'));
-    } catch {
-      return null;
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.state !== NegotiationState.AGREED && session.state !== NegotiationState.FAILED) {
+      throw new NotFoundException('No agreement for this session');
     }
+
+    // Get the last accepted round for agreement summary
+    const lastRound = await this.roundRepo.findOne({
+      where: { sessionId, decision: NegotiationDecision.ACCEPT },
+      order: { round: 'DESC' },
+    });
+
+    let agreedSalary = 0;
+    let remotePolicy = 'N/A';
+    let startDate = 'TBD';
+    let probationMonths = 0;
+    let positionTitle = session.job?.title || 'N/A';
+    try {
+      if (lastRound?.encryptedData && session.sessionKeyNonce) {
+        // Load seeker to get public key
+        const fullSession = await this.sessionRepo.findOne({
+          where: { id: sessionId },
+          relations: ['seeker'],
+        });
+        if (fullSession?.seeker?.publicKey) {
+          const seekerPubKey = this.parsePublicKey(fullSession.seeker.publicKey);
+          const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, fullSession.sessionKeyNonce);
+          const decrypted = this.cryptoService.decrypt(sessionKey, lastRound.encryptedData);
+          const parsed = JSON.parse(decrypted);
+          agreedSalary = parsed?.proposal?.salary ?? parsed?.proposal?.baseSalary ?? 0;
+          remotePolicy = parsed?.proposal?.remotePolicy ?? 'N/A';
+          startDate = parsed?.proposal?.startDate ?? 'TBD';
+          probationMonths = parsed?.proposal?.probationMonths ?? 0;
+          positionTitle = parsed?.proposal?.title ?? positionTitle;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to decrypt for getAgreement ${sessionId}: ${err.message}`);
+    }
+
+    return {
+      sessionId: session.id,
+      agreementHash: session.agreementHash || `pending-${session.id.slice(0, 8)}`,
+      summary: {
+        positionTitle,
+        agreedSalary,
+        startDate,
+        negotiationRounds: session.currentRound || 0,
+        remotePolicy,
+        probationMonths,
+      },
+      seekerApproved: session.seekerApproved,
+      employerApproved: session.employerApproved,
+      onChainTxHash: session.onChainTxHash || null,
+      rejected: session.state === NegotiationState.FAILED,
+    };
   }
 
   async verifyAgreement(sessionId: string): Promise<boolean> {
