@@ -21,8 +21,8 @@ export function MarketValueCard({ resume }: { resume: ResumeProfile | null }) {
           <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">Strengths</p>
           <div className="flex gap-2 flex-wrap">
             {resume.negotiationPoints.strengths.map((s, i) => (
-              <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#39FF14]/5 border border-[#39FF14]/10 text-sm text-[#39FF14] font-medium">
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
+              <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#39FF14]/5 border border-transparent text-sm text-muted-foreground">
+                <span className="material-symbols-outlined text-sm text-[#39FF14]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
                 {s}
               </span>
             ))}

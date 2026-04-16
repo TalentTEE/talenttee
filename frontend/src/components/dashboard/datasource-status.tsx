@@ -179,7 +179,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
   return (
     <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Value</h3>
+        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Connected Data</h3>
         <Link href="/datasource" className="text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 font-medium transition-colors">
           Manage
         </Link>
@@ -200,7 +200,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
                 key={provider.id}
                 className={`rounded-xl border p-4 transition-all ${
                   connected
-                    ? 'bg-[#00F0FF]/[0.03] border-[#00F0FF]/15'
+                    ? 'bg-[#00F0FF]/[0.03] border-border/10'
                     : 'bg-muted/30 border-border/10'
                 }`}
               >
