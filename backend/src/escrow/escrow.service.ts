@@ -39,8 +39,8 @@ export class EscrowService {
     if (data.error || !data.result?.result) return '0';
 
     try {
-      const result = JSON.parse(Buffer.from(data.result.result).toString('utf-8'));
-      return String(result);
+      const raw = Buffer.from(data.result.result).toString('utf-8').trim().replace(/^"|"$/g, '');
+      return raw;
     } catch {
       return '0';
     }

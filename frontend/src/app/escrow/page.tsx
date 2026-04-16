@@ -40,18 +40,33 @@ export default function EscrowPage() {
 
   const USE_DUMMY = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
 
-  const refreshBalance = async () => {
+  const refreshBalance = async (retries = 3, delayMs = 2000) => {
     if (!user) return;
+    const prevBalance = escrow?.balance ?? 0;
+    for (let i = 0; i < retries; i++) {
+      if (i > 0) await new Promise(r => setTimeout(r, delayMs));
+      try {
+        const balance = await getEscrowBalance(user.nearAccountId);
+        if (balance.balance !== prevBalance) {
+          setEscrow(balance);
+          return;
+        }
+      } catch {
+        try {
+          const rpcBalance = await getEscrowBalanceOnChain(user.nearAccountId);
+          const newBalance = Number(BigInt(rpcBalance)) / 1e24;
+          if (newBalance !== prevBalance) {
+            setEscrow(prev => prev ? { ...prev, balance: newBalance } : prev);
+            return;
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    // After retries, set whatever we got last
     try {
       const balance = await getEscrowBalance(user.nearAccountId);
       setEscrow(balance);
-    } catch {
-      // Fallback to on-chain RPC query
-      try {
-        const rpcBalance = await getEscrowBalanceOnChain(user.nearAccountId);
-        setEscrow(prev => prev ? { ...prev, balance: Number(BigInt(rpcBalance)) / 1e24 } : prev);
-      } catch { /* ignore */ }
-    }
+    } catch { /* ignore */ }
   };
 
   const handleDeposit = async () => {
@@ -63,6 +78,7 @@ export default function EscrowPage() {
 
     try {
       if (USE_DUMMY) {
+        setEscrow(prev => prev ? { ...prev, balance: prev.balance + amount } : prev);
         setTxStatus(`Deposit of ${amount} NEAR initiated (mock).`);
       } else if (!selector) {
         setTxStatus('Wallet not connected. Please connect your wallet first.');
@@ -84,7 +100,8 @@ export default function EscrowPage() {
         });
 
         setTxStatus(`Successfully deposited ${amount} NEAR.`);
-        await refreshBalance();
+        setEscrow(prev => prev ? { ...prev, balance: prev.balance + amount } : prev);
+        refreshBalance();
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
