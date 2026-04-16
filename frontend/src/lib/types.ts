@@ -136,6 +136,8 @@ export interface NegotiationSession {
   currentRound: number;
   maxRounds: number;
   onChainTxHash: string | null;
+  seekerApproved?: boolean;
+  employerApproved?: boolean;
 }
 
 export interface NegotiationProposal {

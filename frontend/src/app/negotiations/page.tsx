@@ -103,11 +103,17 @@ export default function NegotiationsPage() {
 
 function AgreedRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
   const score = match ? Math.round(match.rerankScore * 100) : null;
+  const bothApproved = s.seekerApproved && s.employerApproved;
+  const oneApproved = !bothApproved && (s.seekerApproved || s.employerApproved);
 
   return (
     <div className="flex items-center justify-between p-4 rounded-xl bg-accent/50 border border-border/5">
       <div className="flex items-center gap-3">
-        {score !== null ? (
+        {bothApproved ? (
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+            <span className="material-symbols-outlined text-lg text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+          </div>
+        ) : score !== null ? (
           <div className="relative w-10 h-10 shrink-0">
             <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
               <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted" />
@@ -129,20 +135,34 @@ function AgreedRow({ session: s, match }: { session: NegotiationSession; match?:
           <p className="text-base font-semibold text-foreground">
             {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${s.id}`}
           </p>
-          <p className="text-sm" style={{ color: NEON_PINK }}>
-            Agreement reached — review the terms
+          <p className={`text-sm ${bothApproved ? 'text-emerald-400' : oneApproved ? 'text-amber-400' : ''}`} style={!bothApproved && !oneApproved ? { color: NEON_PINK } : undefined}>
+            {bothApproved
+              ? 'Finalized — both parties approved'
+              : oneApproved
+                ? 'Waiting for the other party to approve'
+                : 'Agreement reached — review the terms'}
           </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Link
-          href={`/negotiation/${s.id}/agree`}
-          className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-90"
-          style={{ backgroundColor: NEON_PINK, color: '#0a0a0a' }}
-        >
-          <span className="material-symbols-outlined text-base">visibility</span>
-          Review & Decide
-        </Link>
+        {bothApproved ? (
+          <Link
+            href={`/negotiation/${s.id}/agree`}
+            className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+          >
+            <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            View Agreement
+          </Link>
+        ) : (
+          <Link
+            href={`/negotiation/${s.id}/agree`}
+            className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:brightness-90"
+            style={{ backgroundColor: NEON_PINK, color: '#0a0a0a' }}
+          >
+            <span className="material-symbols-outlined text-base">visibility</span>
+            {oneApproved ? 'View Status' : 'Review & Decide'}
+          </Link>
+        )}
       </div>
     </div>
   );
