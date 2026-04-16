@@ -5,7 +5,7 @@ import {
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
 } from './types';
 import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
-import { getDummyDatasources, addDummyDatasource } from './dummy/datasources';
+import { getDummyDatasources, addDummyDatasource, removeDummyDatasource } from './dummy/datasources';
 import { DUMMY_RESUME } from './dummy/resume';
 import { DUMMY_JOBS } from './dummy/jobs';
 import { DUMMY_SEEKER_MATCHES, DUMMY_EMPLOYER_MATCHES, DUMMY_MATCH_CONTEXT } from './dummy/matches';
@@ -116,6 +116,14 @@ export async function connectDatasourceMock(provider: string): Promise<DataSourc
     return conn;
   }
   return apiFetch('/datasource/connect/mock', { method: 'POST', body: JSON.stringify({ provider }) });
+}
+
+export async function disconnectDatasource(provider: string): Promise<void> {
+  if (USE_DUMMY) {
+    removeDummyDatasource(provider);
+    return;
+  }
+  await apiFetch(`/datasource/${provider.toLowerCase()}`, { method: 'DELETE' });
 }
 
 export async function getDatasourceData(provider: string): Promise<DatasourceDetail> {

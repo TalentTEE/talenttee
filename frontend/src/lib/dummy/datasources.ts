@@ -27,3 +27,9 @@ export function addDummyDatasource(conn: DataSourceConnection): void {
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
 }
+
+/** Remove a connection from localStorage (for dummy mode) */
+export function removeDummyDatasource(provider: string): void {
+  const current = getDummyDatasources().filter((c) => c.provider !== provider);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+}

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
@@ -56,6 +56,15 @@ export class DatasourceController {
   async getStatus(@Req() req) {
     const userId = req.user.id;
     return this.datasourceService.getStatus(userId);
+  }
+
+  @Delete(':provider')
+  @UseGuards(JwtGuard)
+  async disconnect(@Req() req, @Param('provider') provider: string) {
+    const userId = req.user.id;
+    const normalizedProvider = provider.toUpperCase() as DataSourceProvider;
+    await this.datasourceService.disconnect(userId, normalizedProvider);
+    return { message: `${normalizedProvider} disconnected` };
   }
 
   @Post('sync')
