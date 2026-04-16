@@ -1,6 +1,8 @@
 import { Injectable, Inject, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
+import { OnEvent } from '@nestjs/event-emitter';
+import { Cron } from '@nestjs/schedule';
 import { MatchResult } from '../entities/match-result.entity.js';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
 import { JobPosting } from '../entities/job-posting.entity.js';
@@ -9,6 +11,8 @@ import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { NEGOTIATION_HANDOFF } from '../common/interfaces/negotiation-handoff.interface.js';
 import type { NegotiationHandoff } from '../common/interfaces/negotiation-handoff.interface.js';
+import { MATCH_EVENTS } from '../common/events/match.events.js';
+import type { ResumeCompletedEvent, JobCreatedEvent, JobSeekingOnEvent } from '../common/events/match.events.js';
 import { ResumeService } from '../resume/resume.service.js';
 
 @Injectable()
@@ -31,6 +35,60 @@ export class MatchService {
     private readonly resumeService: ResumeService,
     private readonly dataSource: DataSource,
   ) {}
+
+  /* ---------------------------------------------------------- *
+   * Event listeners — fire-and-forget auto-matching
+   * ---------------------------------------------------------- */
+
+  @OnEvent(MATCH_EVENTS.RESUME_COMPLETED)
+  async onResumeCompleted(event: ResumeCompletedEvent): Promise<void> {
+    try {
+      this.logger.log(`[Event] Resume completed for seeker ${event.seekerId}, triggering match...`);
+      await this.matchForSeeker(event.seekerId);
+    } catch (err) {
+      this.logger.error(`[Event] matchForSeeker failed for ${event.seekerId}: ${err}`);
+    }
+  }
+
+  @OnEvent(MATCH_EVENTS.JOB_CREATED)
+  async onJobCreated(event: JobCreatedEvent): Promise<void> {
+    try {
+      this.logger.log(`[Event] Job created ${event.jobId}, triggering match...`);
+      await this.matchForJob(event.jobId);
+    } catch (err) {
+      this.logger.error(`[Event] matchForJob failed for ${event.jobId}: ${err}`);
+    }
+  }
+
+  @OnEvent(MATCH_EVENTS.JOB_SEEKING_ON)
+  async onJobSeekingOn(event: JobSeekingOnEvent): Promise<void> {
+    try {
+      this.logger.log(`[Event] Job seeking ON for seeker ${event.seekerId}, triggering match...`);
+      await this.matchForSeeker(event.seekerId);
+    } catch (err) {
+      this.logger.error(`[Event] matchForSeeker failed for ${event.seekerId}: ${err}`);
+    }
+  }
+
+  /* ---------------------------------------------------------- *
+   * Cron — periodic re-match every 6 hours
+   * ---------------------------------------------------------- */
+
+  @Cron('0 */6 * * *')
+  async cronMatchAll(): Promise<void> {
+    this.logger.log('[Cron] Starting periodic match for all active seekers...');
+    const activeSeekers = await this.userRepo.find({ where: { jobSeeking: true, role: 'SEEKER' as any } });
+    for (const seeker of activeSeekers) {
+      const resume = await this.resumeRepo.findOne({ where: { userId: seeker.id } });
+      if (!resume || resume.status !== 'COMPLETE' || !resume.embedding) continue;
+      try {
+        await this.matchForSeeker(seeker.id);
+      } catch (err) {
+        this.logger.error(`[Cron] matchForSeeker failed for ${seeker.id}: ${err}`);
+      }
+    }
+    this.logger.log('[Cron] Periodic match complete.');
+  }
 
   async matchForSeeker(seekerId: string, limit = 5) {
     const resume = await this.resumeRepo.findOne({ where: { userId: seekerId } });
@@ -85,6 +143,13 @@ export class MatchService {
         });
         matches.push(await this.matchRepo.save(match));
       }
+    }
+
+    // Step 4: Auto-negotiate for rank 1 match
+    const topMatch = matches.find((m) => m.finalRank === 1);
+    if (topMatch && !topMatch.negotiationSessionId) {
+      const job = annResults[rerankResults[0].index];
+      await this.autoNegotiate(topMatch, job.employer_id);
     }
 
     return this.getCachedSeekerMatches(seekerId);
@@ -168,6 +233,12 @@ export class MatchService {
       }
     }
 
+    // Step 4: Auto-negotiate for rank 1 match
+    const topMatch = matches.find((m) => m.finalRank === 1);
+    if (topMatch && !topMatch.negotiationSessionId) {
+      await this.autoNegotiate(topMatch, job.employerId);
+    }
+
     return this.getCachedJobMatches(jobId);
   }
 
@@ -205,6 +276,24 @@ export class MatchService {
           : '',
       };
     });
+  }
+
+  private async autoNegotiate(match: MatchResult, employerId: string): Promise<void> {
+    try {
+      match.seekerAgreed = true;
+      match.employerAgreed = true;
+      const result = await this.negotiationHandoff.createSession({
+        jobId: match.jobId,
+        seekerId: match.seekerId,
+        employerId,
+        matchId: match.id,
+      });
+      match.negotiationSessionId = result.sessionId;
+      await this.matchRepo.save(match);
+      this.logger.log(`Auto-negotiation started for match ${match.id} → session ${result.sessionId}`);
+    } catch (err) {
+      this.logger.error(`Auto-negotiation failed for match ${match.id}: ${err}`);
+    }
   }
 
   async agree(matchId: string, userId: string, role: string): Promise<MatchResult> {
