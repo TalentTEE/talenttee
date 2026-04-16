@@ -306,23 +306,47 @@ export default function MatchingPage() {
                     )}
                   </p>
 
-                  {/* Skill Tags */}
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {match.seekerSkills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="px-2 py-0.5 rounded-md text-sm bg-muted text-muted-foreground font-medium"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Skill Tags — highlight matched skills */}
+                  {(() => {
+                    const requiredSet = new Set((match.jobRequiredSkills ?? []).map(s => s.toLowerCase()));
+                    const allSkills = isEmployer ? match.seekerSkills : (match.jobRequiredSkills ?? []);
+                    const compareSkills = isEmployer ? (match.jobRequiredSkills ?? []) : match.seekerSkills;
+                    const compareSet = new Set(compareSkills.map(s => s.toLowerCase()));
+                    const matchedCount = allSkills.filter(s => compareSet.has(s.toLowerCase())).length;
 
-                  {/* Score Breakdown */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>ANN Score: <span className="font-semibold text-foreground">{(match.annScore * 100).toFixed(0)}%</span></span>
-                    <span>Rerank Score: <span className="font-semibold text-foreground">{(match.rerankScore * 100).toFixed(0)}%</span></span>
-                  </div>
+                    return (
+                      <>
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {allSkills.map((skill) => {
+                            const isMatched = isEmployer
+                              ? requiredSet.has(skill.toLowerCase())
+                              : new Set(match.seekerSkills.map(s => s.toLowerCase())).has(skill.toLowerCase());
+                            return (
+                              <span
+                                key={skill}
+                                className={`px-2 py-0.5 rounded-md text-sm font-medium ${
+                                  isMatched
+                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}
+                              >
+                                {skill}
+                              </span>
+                            );
+                          })}
+                        </div>
+
+                        {/* Skill Match Summary */}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm text-emerald-400">check_circle</span>
+                            <span className="font-semibold text-emerald-400">{matchedCount}/{allSkills.length}</span> skills matched
+                          </span>
+                          <span>Match Score: <span className="font-semibold text-foreground">{(match.rerankScore * 100).toFixed(0)}%</span></span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Actions */}
