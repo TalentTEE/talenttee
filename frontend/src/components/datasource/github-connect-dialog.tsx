@@ -71,9 +71,15 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
       setSelected(fetched.slice(0, 3).map((r) => r.id));
       setStep('select');
     } catch {
-      // Backend might not be ready — fall back to login
-      setStep('login');
+      // Backend not ready or OAuth failed — fall back to dummy repos
+      fallbackToDummy();
     }
+  }
+
+  function fallbackToDummy() {
+    setRepos(DUMMY_REPOS);
+    setSelected(['defi-swap', 'ai-resume', 'react-dash']);
+    setStep('select');
   }
 
   // Listen for postMessage from the OAuth popup callback page
@@ -90,13 +96,19 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
 
   function handleLogin() {
     if (!useDummy) {
-      // Real mode: open OAuth popup, wait for completion
       const url = getGithubOAuthUrl();
       const popup = window.open(url, 'github-oauth', 'width=600,height=700,left=200,top=100');
+
+      if (!popup) {
+        // Popup blocked — fall back to dummy repos immediately
+        setStep('loading');
+        setTimeout(fallbackToDummy, 1500);
+        return;
+      }
+
       setStep('loading');
-      // Fallback poll: if postMessage doesn't fire, detect popup close
       pollRef.current = setInterval(() => {
-        if (!popup || popup.closed) onOAuthDone();
+        if (popup.closed) onOAuthDone();
       }, 500);
       return;
     }
