@@ -4,6 +4,7 @@ export function buildSeekerPrompt(params: {
   marketValueMax: number;
   strengths: string[];
   weaknesses: string[];
+  softSkills: string[];
   preferences: string;
   negotiationHistory: string;
   currentOffer: string;
@@ -19,6 +20,10 @@ Market Value Analysis:
 - Fair salary range: ${params.marketValueMin}~${params.marketValueMax}
 - Strengths: ${params.strengths.join(', ')}
 - Weaknesses: ${params.weaknesses.join(', ')}
+
+Soft Skills & Traits:
+${params.softSkills.length > 0 ? params.softSkills.join(', ') : 'Not available'}
+Use these soft skills as additional leverage when justifying salary or negotiation positions.
 
 Candidate Preferences:
 ${params.preferences}

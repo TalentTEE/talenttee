@@ -110,19 +110,29 @@ export class MatchService {
 
     if (annResults.length === 0) return [];
 
+    // Step 1.5: Hard filters — salary overlap + skill coverage
+    const filtered = annResults.filter(
+      (j: any) =>
+        this.salaryOverlaps(resume.marketValueMin, resume.marketValueMax, j.salary_min, j.salary_max) &&
+        this.skillCoverageOk(resume.skills, j.required_skills),
+    );
+    if (filtered.length === 0) return [];
+
     // Step 2: Reranker
     const resumeText = this.resumeService.buildResumeText(resume);
-    const jobTexts = annResults.map(
+    const jobTexts = filtered.map(
       (j: any) => `${j.title} | ${j.description} | Skills: ${(j.required_skills ?? []).join(', ')}`,
     );
 
     const rerankResults = await this.aiClient.rerank(resumeText, jobTexts, limit);
 
-    // Step 3: Save MatchResults
+    // Step 3: Save MatchResults (skip rerank score < 0.5)
     const matches: MatchResult[] = [];
-    for (let rank = 0; rank < rerankResults.length; rank++) {
-      const rr = rerankResults[rank];
-      const job = annResults[rr.index];
+    let finalRank = 0;
+    for (const rr of rerankResults) {
+      if (rr.score < 0.5) continue;
+      finalRank++;
+      const job = filtered[rr.index];
 
       const existing = await this.matchRepo.findOne({
         where: { seekerId, jobId: job.id },
@@ -131,7 +141,7 @@ export class MatchService {
       if (existing) {
         existing.annScore = job.ann_score;
         existing.rerankScore = rr.score;
-        existing.finalRank = rank + 1;
+        existing.finalRank = finalRank;
         matches.push(await this.matchRepo.save(existing));
       } else {
         const match = this.matchRepo.create({
@@ -139,17 +149,18 @@ export class MatchService {
           jobId: job.id,
           annScore: job.ann_score,
           rerankScore: rr.score,
-          finalRank: rank + 1,
+          finalRank,
         });
         matches.push(await this.matchRepo.save(match));
       }
     }
 
-    // Step 4: Auto-negotiate for rank 1 match
-    const topMatch = matches.find((m) => m.finalRank === 1);
-    if (topMatch && !topMatch.negotiationSessionId) {
-      const job = annResults[rerankResults[0].index];
-      await this.autoNegotiate(topMatch, job.employer_id);
+    // Step 4: Auto-negotiate for all passing matches
+    for (const match of matches) {
+      if (!match.negotiationSessionId) {
+        const job = filtered.find((j: any) => j.id === match.jobId);
+        if (job) await this.autoNegotiate(match, job.employer_id);
+      }
     }
 
     return this.getCachedSeekerMatches(seekerId);
@@ -174,6 +185,8 @@ export class MatchService {
       negotiationSessionId: m.negotiationSessionId,
       jobTitle: m.job?.title ?? '',
       companyName: m.job?.employer?.nearAccountId?.split('.')[0] ?? '',
+      jobRequiredSkills: m.job?.requiredSkills ?? [],
+      jobPreferredSkills: m.job?.preferredSkills ?? [],
       seekerSkills: [] as string[],
       seekerExperienceYears: '',
     }));
@@ -188,6 +201,7 @@ export class MatchService {
     // Step 1: ANN
     const annResults = await this.dataSource.query(
       `SELECT rp.id, rp.user_id, rp.skills, rp.summary, rp.parsed_data,
+              rp.market_value_min, rp.market_value_max,
               1 - (rp.embedding::vector <=> $1::vector) as ann_score
        FROM resume_profile rp
        WHERE rp.embedding IS NOT NULL AND rp.status = 'COMPLETE'
@@ -198,19 +212,29 @@ export class MatchService {
 
     if (annResults.length === 0) return [];
 
+    // Step 1.5: Hard filters — salary overlap + skill coverage
+    const filtered = annResults.filter(
+      (r: any) =>
+        this.salaryOverlaps(job.salaryMin, job.salaryMax, r.market_value_min, r.market_value_max) &&
+        this.skillCoverageOk(r.skills, job.requiredSkills),
+    );
+    if (filtered.length === 0) return [];
+
     // Step 2: Reranker
     const jobText = `${job.title} | ${job.description} | Skills: ${(job.requiredSkills ?? []).join(', ')}`;
-    const resumeTexts = annResults.map(
+    const resumeTexts = filtered.map(
       (r: any) => `${r.summary ?? ''} | Skills: ${(r.skills ?? []).join(', ')}`,
     );
 
     const rerankResults = await this.aiClient.rerank(jobText, resumeTexts, limit);
 
-    // Step 3: Save MatchResults
+    // Step 3: Save MatchResults (skip rerank score < 0.5)
     const matches: MatchResult[] = [];
-    for (let rank = 0; rank < rerankResults.length; rank++) {
-      const rr = rerankResults[rank];
-      const resume = annResults[rr.index];
+    let finalRank = 0;
+    for (const rr of rerankResults) {
+      if (rr.score < 0.5) continue;
+      finalRank++;
+      const resume = filtered[rr.index];
 
       const existing = await this.matchRepo.findOne({
         where: { seekerId: resume.user_id, jobId },
@@ -219,7 +243,7 @@ export class MatchService {
       if (existing) {
         existing.annScore = resume.ann_score;
         existing.rerankScore = rr.score;
-        existing.finalRank = rank + 1;
+        existing.finalRank = finalRank;
         matches.push(await this.matchRepo.save(existing));
       } else {
         const match = this.matchRepo.create({
@@ -227,16 +251,17 @@ export class MatchService {
           jobId,
           annScore: resume.ann_score,
           rerankScore: rr.score,
-          finalRank: rank + 1,
+          finalRank,
         });
         matches.push(await this.matchRepo.save(match));
       }
     }
 
-    // Step 4: Auto-negotiate for rank 1 match
-    const topMatch = matches.find((m) => m.finalRank === 1);
-    if (topMatch && !topMatch.negotiationSessionId) {
-      await this.autoNegotiate(topMatch, job.employerId);
+    // Step 4: Auto-negotiate for all passing matches
+    for (const match of matches) {
+      if (!match.negotiationSessionId) {
+        await this.autoNegotiate(match, job.employerId);
+      }
     }
 
     return this.getCachedJobMatches(jobId);
@@ -270,12 +295,38 @@ export class MatchService {
         negotiationSessionId: m.negotiationSessionId,
         jobTitle: m.job?.title ?? '',
         companyName: m.job?.employer?.nearAccountId?.split('.')[0] ?? '',
+        jobRequiredSkills: m.job?.requiredSkills ?? [],
+        jobPreferredSkills: m.job?.preferredSkills ?? [],
         seekerSkills: resume?.skills ?? [],
         seekerExperienceYears: resume?.experience?.length
           ? `${resume.experience.length} roles`
           : '',
       };
     });
+  }
+
+  /** Salary range overlap check — if either side is null, pass through */
+  private salaryOverlaps(
+    min1: number | null | undefined,
+    max1: number | null | undefined,
+    min2: number | null | undefined,
+    max2: number | null | undefined,
+  ): boolean {
+    if (min1 == null || max1 == null || min2 == null || max2 == null) return true;
+    return min1 <= max2 && min2 <= max1;
+  }
+
+  /** Required skill coverage check — case-insensitive, threshold default 50% */
+  private skillCoverageOk(
+    seekerSkills: string[] | null | undefined,
+    requiredSkills: string[] | null | undefined,
+    threshold = 0.5,
+  ): boolean {
+    if (!requiredSkills || requiredSkills.length === 0) return true;
+    if (!seekerSkills || seekerSkills.length === 0) return false;
+    const lower = new Set(seekerSkills.map((s) => s.toLowerCase()));
+    const covered = requiredSkills.filter((s) => lower.has(s.toLowerCase())).length;
+    return covered / requiredSkills.length >= threshold;
   }
 
   private async autoNegotiate(match: MatchResult, employerId: string): Promise<void> {
