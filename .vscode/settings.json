@@ -30,5 +30,12 @@
     "watchDirectory": "useFsEvents",
     "fallbackPolling": "dynamicPriority"
   },
-  "typescript.disableAutomaticTypeAcquisition": true
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "git.autorefresh": false,
+  "git.autofetch": false,
+  "git.decorations.enabled": true,
+  "git.untrackedChanges": "separate",
+  "git.scanRepositories": [],
+  "git.repositoryScanMaxDepth": 1,
+  "scm.diffDecorations": "gutter"
 }
