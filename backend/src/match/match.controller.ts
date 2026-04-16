@@ -17,6 +17,11 @@ export class MatchController {
     return this.matchService.matchForSeeker(req.user.id);
   }
 
+  @Post('me/retry-negotiate')
+  async retryNegotiate(@Req() req) {
+    return this.matchService.retryNegotiateForSeeker(req.user.id);
+  }
+
   @Get('job/:jobId')
   async getJobMatches(@Param('jobId') jobId: string) {
     return this.matchService.getCachedJobMatches(jobId);

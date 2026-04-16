@@ -30,9 +30,6 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // Mock child components to isolate the page
-vi.mock('@/components/dashboard/job-seeking-toggle', () => ({
-  JobSeekingToggle: () => <div data-testid="job-seeking-toggle">JobSeekingToggle</div>,
-}));
 vi.mock('@/components/dashboard/datasource-status', () => ({
   DatasourceStatus: () => <div data-testid="datasource-status">DatasourceStatus</div>,
 }));
@@ -44,6 +41,9 @@ vi.mock('@/components/dashboard/market-value-card', () => ({
 }));
 vi.mock('@/components/dashboard/negotiation-list', () => ({
   NegotiationList: () => <div data-testid="negotiation-list">NegotiationList</div>,
+}));
+vi.mock('@/components/dashboard/negotiation-overview', () => ({
+  NegotiationOverview: () => <div data-testid="negotiation-overview">NegotiationOverview</div>,
 }));
 
 import SeekerDashboard from './page';
@@ -75,15 +75,41 @@ describe('SeekerDashboard', () => {
     });
   });
 
-  it('renders all dashboard sections', async () => {
-    render(<SeekerDashboard />);
+  describe('Phase A: Onboarding (no sessions)', () => {
+    it('renders AIActionCard and common sections, not NegotiationOverview', async () => {
+      mockGetNegotiationSessions.mockResolvedValue([]);
+      render(<SeekerDashboard />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('job-seeking-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('datasource-status')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('datasource-status')).toBeInTheDocument();
+        expect(screen.getByTestId('resume-summary')).toBeInTheDocument();
+        expect(screen.getByTestId('market-value-card')).toBeInTheDocument();
+      });
+
+      // Phase A: no NegotiationOverview or NegotiationList
+      expect(screen.queryByTestId('negotiation-overview')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('negotiation-list')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Phase B: Active (sessions exist)', () => {
+    const mockSessions = [
+      { id: 'session-1', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-1', state: 'EMPLOYER_COUNTER', currentRound: 3, maxRounds: 7, onChainTxHash: null },
+    ];
+
+    it('renders NegotiationOverview and NegotiationList, not AIActionCard', async () => {
+      mockGetNegotiationSessions.mockResolvedValue(mockSessions);
+      render(<SeekerDashboard />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('negotiation-overview')).toBeInTheDocument();
+        expect(screen.getByTestId('negotiation-list')).toBeInTheDocument();
+      });
+
+      // Common sections still present
       expect(screen.getByTestId('resume-summary')).toBeInTheDocument();
       expect(screen.getByTestId('market-value-card')).toBeInTheDocument();
-      expect(screen.getByTestId('negotiation-list')).toBeInTheDocument();
+      expect(screen.getByTestId('datasource-status')).toBeInTheDocument();
     });
   });
 });

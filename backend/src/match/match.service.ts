@@ -1,6 +1,6 @@
 import { Injectable, Inject, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, In } from 'typeorm';
+import { Repository, DataSource, In, IsNull } from 'typeorm';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Cron } from '@nestjs/schedule';
 import { MatchResult } from '../entities/match-result.entity.js';
@@ -345,6 +345,25 @@ export class MatchService {
     } catch (err) {
       this.logger.error(`Auto-negotiation failed for match ${match.id}: ${err}`);
     }
+  }
+
+  async retryNegotiateForSeeker(seekerId: string) {
+    const pending = await this.matchRepo.find({
+      where: { seekerId, negotiationSessionId: IsNull() },
+      relations: ['job'],
+    });
+
+    // TypeORM maps SQL NULL to undefined — but also filter explicitly
+    const needsRetry = pending.filter((m) => !m.negotiationSessionId);
+
+    for (const match of needsRetry) {
+      const employerId = match.job?.employerId;
+      if (employerId) {
+        await this.autoNegotiate(match, employerId);
+      }
+    }
+
+    return this.getCachedSeekerMatches(seekerId);
   }
 
   async agree(matchId: string, userId: string, role: string): Promise<MatchResult> {

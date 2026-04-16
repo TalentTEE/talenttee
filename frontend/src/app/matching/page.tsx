@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getSeekerMatches, getEmployerMatches, accessProfile, getJobs } from '@/lib/api';
+import { getSeekerMatches, getEmployerMatches, accessProfile, getJobs, retrySeekerNegotiate } from '@/lib/api';
 import { MatchResultDisplay, ProfileReport } from '@/lib/types';
 
 function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
@@ -226,7 +226,21 @@ export default function MatchingPage() {
       ? getJobs().then(jobs => jobs.length > 0 ? getEmployerMatches(jobs[0].id) : [])
       : getSeekerMatches().catch(() => []);
 
-    fetchMatches.then(setMatches).catch(() => setMatches([])).finally(() => setLoading(false));
+    fetchMatches
+      .then(async (results) => {
+        setMatches(results);
+        // Auto-retry negotiate for seeker matches stuck without a session
+        if (!isEmployer && results.some((m) => !m.negotiationSessionId)) {
+          try {
+            const updated = await retrySeekerNegotiate();
+            setMatches(updated);
+          } catch {
+            // retry is best-effort; keep original results
+          }
+        }
+      })
+      .catch(() => setMatches([]))
+      .finally(() => setLoading(false));
   }, [user, isEmployer]);
 
   const handleViewProfile = async (seekerId: string) => {

@@ -50,6 +50,11 @@ export class NegotiationController {
     return { message: 'Intervention registered', sessionId: id };
   }
 
+  @Get('sessions/:id/match-context')
+  async getMatchContext(@Param('id') id: string) {
+    return this.negotiationService.getMatchContext(id);
+  }
+
   @Post('sessions/:id/decrypt')
   async decryptRounds(@Param('id') id: string, @Body() body: { sessionKey: string }) {
     return this.negotiationService.decryptRounds(id, body.sessionKey);
