@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getNegotiationSession, getNegotiationRounds } from '@/lib/api';
-import { NegotiationSession, NegotiationRound, isStructuredReasoning } from '@/lib/types';
+import { getNegotiationSession, getNegotiationRounds, getMatchContext } from '@/lib/api';
+import { NegotiationSession, NegotiationRound, MatchContext, isStructuredReasoning } from '@/lib/types';
 import { ThinkingAnimation } from '@/components/negotiation/ThinkingAnimation';
 import { StrategyInsight } from '@/components/negotiation/StrategyInsight';
+import { MatchContextCard } from '@/components/negotiation/MatchContextCard';
 import { formatSalary } from '@/lib/format';
 
 function stateLabel(state: string): string {
@@ -46,8 +47,14 @@ export default function NegotiationMonitorPage() {
 
   const [session, setSession] = useState<NegotiationSession | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
+  const [matchContext, setMatchContext] = useState<MatchContext | null>(null);
 
   const isTerminal = session?.state === 'AGREED' || session?.state === 'FAILED' || session?.state === 'MAX_ROUNDS';
+
+  useEffect(() => {
+    if (!sessionId) return;
+    getMatchContext(sessionId).then(setMatchContext);
+  }, [sessionId]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -115,6 +122,9 @@ export default function NegotiationMonitorPage() {
           </div>
         </div>
       )}
+
+      {/* Match Context */}
+      {matchContext && <MatchContextCard context={matchContext} />}
 
       {/* Final Terms Summary */}
       {isTerminal && rounds.length > 0 && (() => {

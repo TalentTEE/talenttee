@@ -96,6 +96,18 @@ export interface MatchResultDisplay extends MatchResult {
   jobPreferredSkills: string[];
 }
 
+export interface MatchContext {
+  annScore: number;
+  rerankScore: number;
+  seekerSkills: string[];
+  seekerSummary: string;
+  jobRequiredSkills: string[];
+  jobPreferredSkills: string[];
+  matchedRequired: string[];
+  matchedPreferred: string[];
+  missingRequired: string[];
+}
+
 export interface ProfileReport {
   seekerId: string;
   technicalSkills: { skill: string; level: string; experience: string }[];
