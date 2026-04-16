@@ -10,7 +10,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-3">Analysis</h3>
         <p className="text-base text-muted-foreground mb-4">No analysis generated yet.</p>
         <Link
-          href="/analysis"
+          href="/datasource"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#BF5AF2] text-white text-base font-bold hover:bg-[#BF5AF2]/90 transition-all"
         >
           <span className="material-symbols-outlined text-base">auto_awesome</span>
@@ -50,7 +50,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
       </p>
       <div className="flex gap-2">
         <Link
-          href="/analysis"
+          href="/datasource"
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-foreground text-base font-medium hover:bg-accent transition-all border border-border/10"
         >
           <span className="material-symbols-outlined text-base">visibility</span>
