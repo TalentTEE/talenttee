@@ -617,14 +617,7 @@ export default function DatasourcePage() {
       <GitHubConnectDialog
         open={dialogOpen === 'GITHUB'}
         onOpenChange={(val) => !val && setDialogOpen(null)}
-        onConnect={async () => {
-          if (!USE_DUMMY) {
-            // Real mode: OAuth already connected on backend, just refresh
-            await fetchConnections();
-          } else {
-            await handleDialogConnect('GITHUB');
-          }
-        }}
+        onConnect={async () => { await handleDialogConnect('GITHUB'); }}
         useDummy={USE_DUMMY}
       />
       <SlackConnectDialog
