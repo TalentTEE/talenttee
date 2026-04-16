@@ -137,7 +137,7 @@ export function NegotiationList({
   const hasAnySessions = sessions.length > 0;
 
   return (
-    <div className="bg-card rounded-2xl border border-border/20 p-6">
+    <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
       <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-4">Negotiations</h3>
       {!hasAnySessions && (
         <p className="text-base text-muted-foreground">No active negotiations.</p>

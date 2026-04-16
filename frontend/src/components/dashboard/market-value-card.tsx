@@ -7,7 +7,7 @@ export function MarketValueCard({ resume }: { resume: ResumeProfile | null }) {
   if (!resume || !resume.marketValueMin) return null;
 
   return (
-    <div className="bg-card rounded-2xl border border-border/20 p-6">
+    <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
       <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-4">Market Value</h3>
       <div className="flex items-baseline gap-2 mb-2">
         <span className="text-3xl font-extrabold text-[#39FF14] font-[var(--font-manrope)]">
