@@ -116,6 +116,41 @@ export default function NegotiationMonitorPage() {
         </div>
       )}
 
+      {/* Final Terms Summary */}
+      {isTerminal && rounds.length > 0 && (() => {
+        const lastProposal = rounds[rounds.length - 1].proposal;
+        return (
+          <div className="bg-card rounded-2xl border border-border/10 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                summarize
+              </span>
+              <h2 className="text-base font-bold text-foreground">Final Terms</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Salary</p>
+                <p className="text-base font-bold text-foreground">{formatSalary(lastProposal.salary)}</p>
+              </div>
+              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Remote Policy</p>
+                <p className="text-base font-bold text-foreground">{lastProposal.remotePolicy}</p>
+              </div>
+              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Working Hours</p>
+                <p className="text-base font-bold text-foreground">{lastProposal.workingHours}</p>
+              </div>
+              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Signing Bonus</p>
+                <p className="text-base font-bold text-foreground">
+                  {lastProposal.signingBonus ? formatSalary(lastProposal.signingBonus) : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Agent Participants */}
       {rounds.length > 0 && (
         <div className="flex items-center justify-between px-2">

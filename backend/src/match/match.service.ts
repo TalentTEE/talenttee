@@ -174,6 +174,8 @@ export class MatchService {
       negotiationSessionId: m.negotiationSessionId,
       jobTitle: m.job?.title ?? '',
       companyName: m.job?.employer?.nearAccountId?.split('.')[0] ?? '',
+      jobRequiredSkills: m.job?.requiredSkills ?? [],
+      jobPreferredSkills: m.job?.preferredSkills ?? [],
       seekerSkills: [] as string[],
       seekerExperienceYears: '',
     }));
@@ -270,6 +272,8 @@ export class MatchService {
         negotiationSessionId: m.negotiationSessionId,
         jobTitle: m.job?.title ?? '',
         companyName: m.job?.employer?.nearAccountId?.split('.')[0] ?? '',
+        jobRequiredSkills: m.job?.requiredSkills ?? [],
+        jobPreferredSkills: m.job?.preferredSkills ?? [],
         seekerSkills: resume?.skills ?? [],
         seekerExperienceYears: resume?.experience?.length
           ? `${resume.experience.length} roles`
