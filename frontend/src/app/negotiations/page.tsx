@@ -64,7 +64,7 @@ export default function NegotiationsPage() {
           </div>
           <div className="space-y-3">
             {agreed.map((s) => (
-              <AgreedRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} />
+              <AgreedRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} userRole={user?.role} />
             ))}
           </div>
         </div>
@@ -101,46 +101,40 @@ export default function NegotiationsPage() {
 
 /* ── Agreed Row: accept or reject ── */
 
-function AgreedRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
-  const score = match ? Math.round(match.rerankScore * 100) : null;
+function AgreedRow({ session: s, match, userRole }: { session: NegotiationSession; match?: MatchResultDisplay; userRole?: string }) {
   const bothApproved = s.seekerApproved && s.employerApproved;
-  const oneApproved = !bothApproved && (s.seekerApproved || s.employerApproved);
+  // Did the OTHER party approve (but not me yet)?
+  const otherApproved = userRole === 'SEEKER'
+    ? (s.employerApproved && !s.seekerApproved)
+    : (s.seekerApproved && !s.employerApproved);
+  // Neither side has approved yet
+  const noneApproved = !s.seekerApproved && !s.employerApproved;
+
+  // Icon
+  const icon = bothApproved ? 'verified' : otherApproved ? 'notifications_active' : 'task_alt';
+  const iconColor = bothApproved ? 'text-emerald-400' : otherApproved ? 'text-amber-400' : '';
+  const iconBg = bothApproved ? 'bg-emerald-500/10' : otherApproved ? 'bg-amber-500/10' : '';
+
+  // Label
+  const label = bothApproved
+    ? 'Finalized — both parties approved'
+    : otherApproved
+      ? 'Other party approved — your decision needed'
+      : 'Agreement reached — review the terms';
+  const labelColor = bothApproved ? 'text-emerald-400' : otherApproved ? 'text-amber-400' : '';
 
   return (
     <div className="flex items-center justify-between p-4 rounded-xl bg-accent/50 border border-border/5">
       <div className="flex items-center gap-3">
-        {bothApproved ? (
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-lg text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-          </div>
-        ) : score !== null ? (
-          <div className="relative w-10 h-10 shrink-0">
-            <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
-              <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted" />
-              <circle
-                cx="20" cy="20" r="16" fill="none" strokeWidth="2.5"
-                style={{ stroke: NEON_PINK }}
-                strokeDasharray={`${score * 1.005} 999`}
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold" style={{ color: NEON_PINK }}>{score}%</span>
-          </div>
-        ) : (
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `color-mix(in srgb, ${NEON_PINK} 10%, transparent)` }}>
-            <span className="material-symbols-outlined text-lg" style={{ color: NEON_PINK, fontVariationSettings: "'FILL' 1" }}>task_alt</span>
-          </div>
-        )}
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconBg}`} style={noneApproved ? { backgroundColor: `color-mix(in srgb, ${NEON_PINK} 10%, transparent)` } : undefined}>
+          <span className={`material-symbols-outlined text-lg ${iconColor}`} style={{ fontVariationSettings: "'FILL' 1", ...(noneApproved ? { color: NEON_PINK } : {}) }}>{icon}</span>
+        </div>
         <div>
           <p className="text-base font-semibold text-foreground">
             {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${s.id}`}
           </p>
-          <p className={`text-sm ${bothApproved ? 'text-emerald-400' : oneApproved ? 'text-amber-400' : ''}`} style={!bothApproved && !oneApproved ? { color: NEON_PINK } : undefined}>
-            {bothApproved
-              ? 'Finalized — both parties approved'
-              : oneApproved
-                ? 'Waiting for the other party to approve'
-                : 'Agreement reached — review the terms'}
+          <p className={`text-sm ${labelColor}`} style={noneApproved ? { color: NEON_PINK } : undefined}>
+            {label}
           </p>
         </div>
       </div>
@@ -160,7 +154,7 @@ function AgreedRow({ session: s, match }: { session: NegotiationSession; match?:
             style={{ backgroundColor: NEON_PINK, color: '#0a0a0a' }}
           >
             <span className="material-symbols-outlined text-base">visibility</span>
-            {oneApproved ? 'View Status' : 'Review & Decide'}
+            {otherApproved ? 'Review & Decide' : 'Review & Decide'}
           </Link>
         )}
       </div>
@@ -172,12 +166,14 @@ function AgreedRow({ session: s, match }: { session: NegotiationSession; match?:
 
 function FailedRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
   const isMaxRounds = s.state === 'MAX_ROUNDS';
+  // If state is FAILED and at least one party had approved, it was rejected by the other
+  const wasRejected = s.state === 'FAILED' && !isMaxRounds;
 
   return (
     <div className="flex items-center justify-between p-4 rounded-xl bg-accent/50 border border-border/5">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-lg text-red-400">{isMaxRounds ? 'timer_off' : 'cancel'}</span>
+          <span className="material-symbols-outlined text-lg text-red-400">{isMaxRounds ? 'timer_off' : 'block'}</span>
         </div>
         <div>
           <p className="text-base font-semibold text-foreground">
@@ -186,7 +182,9 @@ function FailedRow({ session: s, match }: { session: NegotiationSession; match?:
           <p className="text-sm text-red-400">
             {isMaxRounds
               ? `No agreement after ${s.maxRounds} rounds`
-              : 'Negotiation failed — parties could not agree'}
+              : wasRejected
+                ? 'Agreement rejected by the other party'
+                : 'Negotiation failed — parties could not agree'}
           </p>
         </div>
       </div>
