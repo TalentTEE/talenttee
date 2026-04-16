@@ -1,10 +1,12 @@
 import { Injectable, Inject, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobPosting } from '../entities/job-posting.entity.js';
 import { JobPostingStatus } from '../common/enums/index.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/index.js';
 import type { NearAiClient } from '../common/interfaces/index.js';
+import { MATCH_EVENTS } from '../common/events/match.events.js';
 import { CreateJobDto } from './dto/create-job.dto.js';
 import { JOB_CREATION_SYSTEM_PROMPT } from './prompts/job-creation.en.prompt.js';
 import { BOUNDARY_SETTING_SYSTEM_PROMPT } from './prompts/boundary-setting.en.prompt.js';
@@ -23,6 +25,7 @@ export class JobService {
     private readonly jobRepo: Repository<JobPosting>,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     // Backfill embeddings for existing jobs on startup
     this.backfillEmbeddings().catch((err) =>
@@ -92,6 +95,7 @@ export class JobService {
       job.embedding = JSON.stringify(embeddings[0]);
       await this.jobRepo.save(job);
       this.logger.log(`Embedding generated for job ${job.id}`);
+      this.eventEmitter.emit(MATCH_EVENTS.JOB_CREATED, { jobId: job.id });
     }
   }
 
