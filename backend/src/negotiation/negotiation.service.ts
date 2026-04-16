@@ -7,6 +7,8 @@ import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { JobPosting } from '../entities/job-posting.entity.js';
 import { User } from '../entities/user.entity.js';
+import { MatchResult } from '../entities/match-result.entity.js';
+import { ResumeProfile } from '../entities/resume-profile.entity.js';
 import { NegotiationState, NegotiationActor, NegotiationDecision } from '../common/enums/index.js';
 import type { AgentResponse, NegotiationBoundary } from '../common/types/index.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
@@ -32,6 +34,10 @@ export class NegotiationService {
     private readonly jobRepo: Repository<JobPosting>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(MatchResult)
+    private readonly matchResultRepo: Repository<MatchResult>,
+    @InjectRepository(ResumeProfile)
+    private readonly resumeProfileRepo: Repository<ResumeProfile>,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
     @Inject(MATCH_RESULT_QUERY)
@@ -296,5 +302,44 @@ export class NegotiationService {
         };
       }
     });
+  }
+
+  async getMatchContext(sessionId: string) {
+    const match = await this.matchResultRepo.findOne({
+      where: { negotiationSessionId: sessionId },
+    });
+    if (!match) throw new NotFoundException('Match result not found for this session');
+
+    const session = await this.getSession(sessionId);
+    const job = session.job;
+    if (!job) throw new NotFoundException('Job not found for this session');
+
+    const resume = await this.resumeProfileRepo.findOne({
+      where: { userId: match.seekerId },
+    });
+
+    const seekerSkills = resume?.skills ?? [];
+    const seekerSummary = resume?.summary ?? '';
+    const jobRequiredSkills = job.requiredSkills ?? [];
+    const jobPreferredSkills = job.preferredSkills ?? [];
+
+    const lower = (s: string) => s.toLowerCase();
+    const seekerLower = seekerSkills.map(lower);
+
+    const matchedRequired = jobRequiredSkills.filter(s => seekerLower.includes(lower(s)));
+    const missingRequired = jobRequiredSkills.filter(s => !seekerLower.includes(lower(s)));
+    const matchedPreferred = jobPreferredSkills.filter(s => seekerLower.includes(lower(s)));
+
+    return {
+      annScore: match.annScore,
+      rerankScore: match.rerankScore,
+      seekerSkills,
+      seekerSummary,
+      jobRequiredSkills,
+      jobPreferredSkills,
+      matchedRequired,
+      matchedPreferred,
+      missingRequired,
+    };
   }
 }

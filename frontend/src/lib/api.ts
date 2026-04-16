@@ -1,6 +1,6 @@
 import {
   User, DataSourceConnection, DatasourceDetail, ResumeProfile, JobPosting,
-  MatchResult, MatchResultDisplay, ProfileReport, NegotiationSession, NegotiationRound,
+  MatchResult, MatchResultDisplay, MatchContext, ProfileReport, NegotiationSession, NegotiationRound,
   EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
 } from './types';
@@ -8,7 +8,7 @@ import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
 import { getDummyDatasources, addDummyDatasource } from './dummy/datasources';
 import { DUMMY_RESUME } from './dummy/resume';
 import { DUMMY_JOBS } from './dummy/jobs';
-import { DUMMY_SEEKER_MATCHES, DUMMY_EMPLOYER_MATCHES } from './dummy/matches';
+import { DUMMY_SEEKER_MATCHES, DUMMY_EMPLOYER_MATCHES, DUMMY_MATCH_CONTEXT } from './dummy/matches';
 import { DUMMY_PROFILE_REPORT } from './dummy/profile-report';
 import { DUMMY_SESSIONS, DUMMY_ROUNDS } from './dummy/negotiation';
 import { DUMMY_AGREEMENT } from './dummy/agreement';
@@ -350,6 +350,15 @@ export async function getNegotiationSession(sessionId: string): Promise<Negotiat
 export async function getNegotiationRounds(sessionId: string): Promise<NegotiationRound[]> {
   if (USE_DUMMY) return DUMMY_ROUNDS.filter(r => r.sessionId === sessionId);
   return apiFetch(`/negotiation/sessions/${sessionId}/rounds/decrypted`);
+}
+
+export async function getMatchContext(sessionId: string): Promise<MatchContext | null> {
+  if (USE_DUMMY) return DUMMY_MATCH_CONTEXT[sessionId] ?? null;
+  try {
+    return await apiFetch<MatchContext>(`/negotiation/sessions/${sessionId}/match-context`);
+  } catch {
+    return null;
+  }
 }
 
 export async function sendIntervention(sessionId: string, direction: string): Promise<void> {
