@@ -130,7 +130,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/signup"
+                href={user ? dashboardPath : '/signup'}
                 className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo neon-glow-cyan hover:shadow-[0_0_30px_rgba(0,240,255,0.5),0_0_80px_rgba(0,240,255,0.2)] flex items-center gap-2"
               >
                 Get Started
@@ -227,7 +227,7 @@ export default function LandingPage() {
               Join Talent-Tee and let your AI agent find the best career opportunities.
             </p>
             <Link
-              href="/signup"
+              href={user ? dashboardPath : '/signup'}
               className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base tracking-wide hover:bg-primary/90 transition-all duration-300 ease-out-expo neon-glow-cyan"
             >
               Get Started Now
