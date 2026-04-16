@@ -53,7 +53,7 @@ function getSeekerAction(
         message: 'Your data is ready',
         detail: 'Let AI generate your professional analysis.',
         ctaLabel: 'Generate Analysis',
-        ctaHref: '/analysis',
+        ctaHref: '/datasource',
         stage: 'analyze',
         animating: false,
       };
@@ -63,7 +63,7 @@ function getSeekerAction(
       message: 'AI is analyzing your profile',
       detail: `Processing data from ${connected.length} source${connected.length > 1 ? 's' : ''}...`,
       ctaLabel: 'View Progress',
-      ctaHref: '/analysis',
+      ctaHref: '/datasource',
       stage: 'analyze',
       animating: true,
     };
@@ -75,7 +75,7 @@ function getSeekerAction(
       message: 'Your AI analysis is live',
       detail: 'Waiting for employer matches...',
       ctaLabel: 'View Analysis',
-      ctaHref: '/analysis',
+      ctaHref: '/datasource',
       stage: 'match',
       animating: true,
     };
