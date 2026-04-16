@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 const mockGetNegotiationSession = vi.fn();
 const mockGetNegotiationRounds = vi.fn();
+const mockGetMatchContext = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   getNegotiationSession: (...args: unknown[]) => mockGetNegotiationSession(...args),
   getNegotiationRounds: (...args: unknown[]) => mockGetNegotiationRounds(...args),
+  getMatchContext: (...args: unknown[]) => mockGetMatchContext(...args),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -46,9 +48,23 @@ const MOCK_ROUNDS = [
 ];
 
 describe('NegotiationMonitorPage', () => {
+  const MOCK_MATCH_CONTEXT = {
+    annScore: 0.92,
+    rerankScore: 0.87,
+    seekerSkills: ['TypeScript', 'NestJS', 'PostgreSQL'],
+    seekerSummary: 'Experienced backend developer with TypeScript expertise.',
+    jobRequiredSkills: ['TypeScript', 'NestJS', 'PostgreSQL', 'Docker'],
+    jobPreferredSkills: ['GraphQL', 'Redis'],
+    matchedRequired: ['TypeScript', 'NestJS', 'PostgreSQL'],
+    matchedPreferred: [],
+    missingRequired: ['Docker'],
+  };
+
   beforeEach(() => {
     mockGetNegotiationSession.mockReset();
     mockGetNegotiationRounds.mockReset();
+    mockGetMatchContext.mockReset();
+    mockGetMatchContext.mockResolvedValue(MOCK_MATCH_CONTEXT);
   });
 
   it('reads sessionId from useParams and displays it', async () => {
@@ -134,6 +150,29 @@ describe('NegotiationMonitorPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Waiting for agents to begin negotiation...')).toBeInTheDocument();
     });
+  });
+
+  it('renders Why You Matched card with scores and skills', async () => {
+    mockGetNegotiationSession.mockResolvedValue(MOCK_SESSION_ACTIVE);
+    mockGetNegotiationRounds.mockResolvedValue(MOCK_ROUNDS);
+    render(<NegotiationMonitorPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Why You Matched')).toBeInTheDocument();
+      expect(screen.getByText('92% Similarity')).toBeInTheDocument();
+      expect(screen.getByText('87% Fit')).toBeInTheDocument();
+      expect(screen.getByText('Docker')).toBeInTheDocument();
+    });
+  });
+
+  it('does not render match card when context is null', async () => {
+    mockGetMatchContext.mockResolvedValue(null);
+    mockGetNegotiationSession.mockResolvedValue(MOCK_SESSION_ACTIVE);
+    mockGetNegotiationRounds.mockResolvedValue(MOCK_ROUNDS);
+    render(<NegotiationMonitorPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Session #session-1')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Why You Matched')).not.toBeInTheDocument();
   });
 
   it('polls every 5s when not in terminal state', async () => {

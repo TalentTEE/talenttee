@@ -3,6 +3,7 @@ import { NegotiationSession, NegotiationRound } from '../types';
 export const DUMMY_SESSIONS: NegotiationSession[] = [
   { id: 'session-1', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-1', state: 'EMPLOYER_COUNTER', currentRound: 3, maxRounds: 7, onChainTxHash: null },
   { id: 'session-2', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-2', state: 'AGREED', currentRound: 5, maxRounds: 7, onChainTxHash: '0xabc123def456' },
+  { id: 'session-3', seekerId: 'user-1', employerId: 'user-3', jobId: 'job-3', state: 'FAILED', currentRound: 7, maxRounds: 7, onChainTxHash: null },
 ];
 
 export const DUMMY_ROUNDS: NegotiationRound[] = [

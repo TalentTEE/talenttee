@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { networkInterfaces } from "os";
 
 // Load env from project root (one level up) so backend/frontend share a single .env
 function parseRootEnv(): Record<string, string> {
@@ -35,6 +36,10 @@ for (const [k, v] of Object.entries(rootEnv)) {
 }
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: Object.values(networkInterfaces())
+    .flat()
+    .filter((i) => i && !i.internal && i.family === "IPv4")
+    .map((i) => i!.address),
   env: publicEnv,
   // Allow LAN/mobile devices on 172.30.x.x subnet to hit the dev server
   // (HMR, /_next/* assets). Add more origins here if testing from other networks.

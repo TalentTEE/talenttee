@@ -1,6 +1,6 @@
 import {
   User, DataSourceConnection, DatasourceDetail, ResumeProfile, JobPosting,
-  MatchResult, MatchResultDisplay, ProfileReport, NegotiationSession, NegotiationRound,
+  MatchResult, MatchResultDisplay, MatchContext, ProfileReport, NegotiationSession, NegotiationRound,
   EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
 } from './types';
@@ -8,7 +8,7 @@ import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
 import { getDummyDatasources, addDummyDatasource } from './dummy/datasources';
 import { DUMMY_RESUME } from './dummy/resume';
 import { DUMMY_JOBS } from './dummy/jobs';
-import { DUMMY_SEEKER_MATCHES, DUMMY_EMPLOYER_MATCHES } from './dummy/matches';
+import { DUMMY_SEEKER_MATCHES, DUMMY_EMPLOYER_MATCHES, DUMMY_MATCH_CONTEXT } from './dummy/matches';
 import { DUMMY_PROFILE_REPORT } from './dummy/profile-report';
 import { DUMMY_SESSIONS, DUMMY_ROUNDS } from './dummy/negotiation';
 import { DUMMY_AGREEMENT } from './dummy/agreement';
@@ -323,6 +323,11 @@ export async function agreeMatch(matchId: string): Promise<void> {
   await apiFetch(`/match/${matchId}/agree`, { method: 'POST' });
 }
 
+export async function retrySeekerNegotiate(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me/retry-negotiate', { method: 'POST' });
+}
+
 // === Profile ===
 export async function accessProfile(seekerId: string): Promise<ProfileReport> {
   if (USE_DUMMY) return DUMMY_PROFILE_REPORT;
@@ -347,6 +352,15 @@ export async function getNegotiationRounds(sessionId: string): Promise<Negotiati
   return apiFetch(`/negotiation/sessions/${sessionId}/rounds/decrypted`);
 }
 
+export async function getMatchContext(sessionId: string): Promise<MatchContext | null> {
+  if (USE_DUMMY) return DUMMY_MATCH_CONTEXT[sessionId] ?? null;
+  try {
+    return await apiFetch<MatchContext>(`/negotiation/sessions/${sessionId}/match-context`);
+  } catch {
+    return null;
+  }
+}
+
 export async function sendIntervention(sessionId: string, direction: string): Promise<void> {
   if (USE_DUMMY) return;
   await apiFetch(`/negotiation/sessions/${sessionId}/intervene`, {
@@ -358,6 +372,11 @@ export async function sendIntervention(sessionId: string, direction: string): Pr
 export async function approveAgreement(sessionId: string): Promise<void> {
   if (USE_DUMMY) return;
   await apiFetch(`/negotiation/sessions/${sessionId}/approve`, { method: 'POST' });
+}
+
+export async function rejectAgreement(sessionId: string): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch(`/negotiation/sessions/${sessionId}/reject`, { method: 'POST' });
 }
 
 // === Agreement ===
