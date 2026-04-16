@@ -27,17 +27,17 @@ export function Header({ onMenuToggle }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border/10">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-6 py-4 min-h-[57px]">
+        <div className="flex items-center gap-4 min-w-0">
           {onMenuToggle && (
             <button
               onClick={onMenuToggle}
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+              className="lg:hidden flex items-center justify-center w-9 h-9 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
             >
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
           )}
-          <Link href="/" className="text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)] hover:opacity-80 transition-opacity">
+          <Link href="/" className="text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)] hover:opacity-80 transition-opacity whitespace-nowrap">
             Talent-Tee
           </Link>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
@@ -49,14 +49,14 @@ export function Header({ onMenuToggle }: HeaderProps) {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 shrink-0">
           <AgentStatusIndicator
             state={agentStatus.state}
             message={agentStatus.message}
           />
-          <div className="hidden sm:flex items-center gap-2 text-muted-foreground text-base">
-            <span className="material-symbols-outlined text-base">account_balance_wallet</span>
-            <span>{user.nearAccountId}</span>
+          <div className="hidden sm:flex items-center gap-2 text-muted-foreground text-base min-w-0">
+            <span className="material-symbols-outlined text-base shrink-0">account_balance_wallet</span>
+            <span className="truncate max-w-[160px]">{user.nearAccountId}</span>
           </div>
           <button
             onClick={handleLogout}
