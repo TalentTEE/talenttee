@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { connectGithubOAuth } from '@/lib/api';
 
 interface GitHubConnectDialogProps {
   open: boolean;
@@ -13,7 +12,15 @@ interface GitHubConnectDialogProps {
   useDummy: boolean;
 }
 
-const AVAILABLE_REPOS = [
+interface RepoItem {
+  id: string;
+  name: string;
+  lang: string;
+  stars: number;
+  desc: string;
+}
+
+const AVAILABLE_REPOS: RepoItem[] = [
   { id: 'defi-swap', name: 'defi-swap-protocol', lang: 'Rust', stars: 34, desc: 'Decentralized token swap on NEAR Protocol' },
   { id: 'ai-resume', name: 'ai-resume-builder', lang: 'TypeScript', stars: 89, desc: 'AI-powered resume generation tool' },
   { id: 'react-dash', name: 'react-dashboard-kit', lang: 'TypeScript', stars: 156, desc: 'Enterprise dashboard component library' },
@@ -43,17 +50,14 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
   }
 
   function handleLogin() {
-    if (!useDummy) {
-      connectGithubOAuth();
-      return;
-    }
+    // Always show loading → repo selection (same UX as Slack/Discord dialogs)
     setStep('loading');
     setTimeout(() => setStep('select'), 1500);
   }
 
   function toggleRepo(id: string) {
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
     );
   }
 

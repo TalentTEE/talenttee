@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { DataSourceConnection } from '@/lib/types';
+import { DataSourceConnection, DatasourceDetail } from '@/lib/types';
 import { ResumeProfile } from '@/lib/types';
 import {
   getDatasourceStatus, getDatasourceData, connectDatasourceMock, disconnectDatasource,
@@ -14,6 +14,7 @@ import { GitHubConnectDialog } from '@/components/datasource/github-connect-dial
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
 import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
 import { Gov24ConnectDialog } from '@/components/datasource/gov24-connect-dialog';
+import { DatasourceDetailView } from '@/components/datasource/datasource-detail-view';
 import { useToast } from '@/components/ui/toast-provider';
 import { AINudge } from '@/components/ui/AINudge';
 import { GitHubIcon, SlackIcon, DiscordIcon } from '@/components/icons/provider-icons';
@@ -47,12 +48,36 @@ export default function DatasourcePage() {
   const [syncingAll, setSyncingAll] = useState(false);
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
 
+  // ── Expand/collapse state ──
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [dsData, setDsData] = useState<Record<string, DatasourceDetail>>({});
+  const [loadingDetail, setLoadingDetail] = useState<Record<string, boolean>>({});
+
   // ── Analysis state ──
   const [resume, setResume] = useState<ResumeProfile | null>(null);
   const [loadingResume, setLoadingResume] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [simulatedStatus, setSimulatedStatus] = useState<ResumeProfile['status'] | null>(null);
   const autoGenTriggered = useRef(false);
+
+  // ── Handle OAuth popup callback ──
+  const [isOAuthPopup, setIsOAuthPopup] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('github') === 'connected') {
+      if (window.opener) {
+        // We're inside a popup — notify parent and close
+        setIsOAuthPopup(true);
+        window.opener.postMessage({ type: 'github-oauth-connected' }, window.location.origin);
+        window.close();
+        return;
+      }
+      // Direct navigation fallback — clean up URL and refresh
+      window.history.replaceState({}, '', '/datasource');
+      fetchConnections();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (user && user.role !== 'SEEKER') router.replace('/dashboard/employer');
@@ -133,6 +158,26 @@ export default function DatasourcePage() {
     }
   }, [fetchConnections, addToast]);
 
+  const toggleExpand = useCallback(async (providerId: string) => {
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(providerId)) {
+        next.delete(providerId);
+      } else {
+        next.add(providerId);
+        // Fetch data if not cached
+        if (!dsData[providerId]) {
+          setLoadingDetail((ld) => ({ ...ld, [providerId]: true }));
+          getDatasourceData(providerId)
+            .then((data) => setDsData((d) => ({ ...d, [providerId]: data })))
+            .catch(() => {})
+            .finally(() => setLoadingDetail((ld) => ({ ...ld, [providerId]: false })));
+        }
+      }
+      return next;
+    });
+  }, [dsData]);
+
   function formatTime(dateStr?: string) {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -187,6 +232,14 @@ export default function DatasourcePage() {
   const loading = loadingDs || loadingResume;
 
   // ── Render ──
+  if (isOAuthPopup) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="material-symbols-outlined text-2xl animate-spin text-muted-foreground">progress_activity</span>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="space-y-8 max-w-5xl mx-auto py-10 px-4">
@@ -343,18 +396,43 @@ export default function DatasourcePage() {
                 </div>
 
                 {isConnected ? (
-                  <div className="flex items-center justify-between">
-                    {conn?.lastSyncedAt && (
-                      <p className="text-xs text-muted-foreground">Last synced: {formatTime(conn.lastSyncedAt)}</p>
-                    )}
+                  <>
+                    <div className="flex items-center justify-between">
+                      {conn?.lastSyncedAt && (
+                        <p className="text-xs text-muted-foreground">Last synced: {formatTime(conn.lastSyncedAt)}</p>
+                      )}
+                      <button
+                        onClick={() => handleDisconnect(provider.id)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">link_off</span>
+                        Disconnect
+                      </button>
+                    </div>
+
+                    {/* Expand/collapse toggle */}
                     <button
-                      onClick={() => handleDisconnect(provider.id)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                      onClick={() => toggleExpand(provider.id)}
+                      className="w-full flex items-center justify-center gap-1 mt-3 pt-3 border-t border-border/10 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-sm">link_off</span>
-                      Disconnect
+                      {expandedCards.has(provider.id) ? 'Hide details' : 'View details'}
+                      <span className={`material-symbols-outlined text-sm transition-transform duration-200 ${expandedCards.has(provider.id) ? 'rotate-180' : ''}`}>
+                        expand_more
+                      </span>
                     </button>
-                  </div>
+
+                    {/* Expanded detail */}
+                    {expandedCards.has(provider.id) && (
+                      loadingDetail[provider.id] ? (
+                        <div className="flex items-center justify-center gap-2 py-6">
+                          <span className="material-symbols-outlined text-base animate-spin text-muted-foreground">progress_activity</span>
+                          <span className="text-xs text-muted-foreground">Loading data...</span>
+                        </div>
+                      ) : dsData[provider.id] ? (
+                        <DatasourceDetailView provider={provider.id} data={dsData[provider.id]} />
+                      ) : null
+                    )}
+                  </>
                 ) : (
                   <button
                     onClick={() => openConnectDialog(provider.id)}
@@ -539,7 +617,14 @@ export default function DatasourcePage() {
       <GitHubConnectDialog
         open={dialogOpen === 'GITHUB'}
         onOpenChange={(val) => !val && setDialogOpen(null)}
-        onConnect={async () => { await handleDialogConnect('GITHUB'); }}
+        onConnect={async () => {
+          if (!USE_DUMMY) {
+            // Real mode: OAuth already connected on backend, just refresh
+            await fetchConnections();
+          } else {
+            await handleDialogConnect('GITHUB');
+          }
+        }}
         useDummy={USE_DUMMY}
       />
       <SlackConnectDialog

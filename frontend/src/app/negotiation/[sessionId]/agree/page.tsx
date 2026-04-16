@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord, NegotiationRound, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
+
+type FlowState = 'idle' | 'approving' | 'waiting' | 'completed' | 'rejected';
 
 function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('@/lib/types').NegotiationReasoning; isSeeker: boolean }) {
   const [expanded, setExpanded] = useState(false);
@@ -48,37 +50,42 @@ function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('
 
 export default function AgreementPage() {
   const params = useParams();
+  const router = useRouter();
   const sessionId = params.sessionId as string;
 
   const [agreement, setAgreement] = useState<AgreementRecord | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
-  const [approving, setApproving] = useState(false);
-  const [approved, setApproved] = useState(false);
-  const [rejected, setRejected] = useState(false);
+  const [flowState, setFlowState] = useState<FlowState>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup poll on unmount
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, []);
 
   useEffect(() => {
     if (!sessionId) return;
 
-    // Always fetch rounds for the conversation timeline
     getNegotiationRounds(sessionId).then(setRounds).catch(() => {});
 
     getAgreement(sessionId)
       .then((data) => {
         setAgreement(data);
-        if (data.onChainTxHash) {
-          setTxHash(data.onChainTxHash);
-          setApproved(true);
+        // Restore state from existing agreement
+        if (data.seekerApproved && data.employerApproved) {
+          setFlowState('completed');
+          if (data.onChainTxHash) setTxHash(data.onChainTxHash);
         }
       })
       .catch(async () => {
         // No agreement record yet — build from negotiation rounds
         try {
-          const [session, rounds] = await Promise.all([
+          const [session, roundData] = await Promise.all([
             getNegotiationSession(sessionId),
             getNegotiationRounds(sessionId),
           ]);
-          const lastRound = rounds[rounds.length - 1];
+          const lastRound = roundData[roundData.length - 1];
           if (lastRound?.proposal) {
             setAgreement({
               sessionId,
@@ -87,7 +94,7 @@ export default function AgreementPage() {
                 positionTitle: lastRound.proposal.title || 'N/A',
                 agreedSalary: lastRound.proposal.salary || 0,
                 startDate: lastRound.proposal.startDate || 'TBD',
-                negotiationRounds: session.currentRound || rounds.length,
+                negotiationRounds: session.currentRound || roundData.length,
                 remotePolicy: lastRound.proposal.remotePolicy || 'N/A',
                 probationMonths: lastRound.proposal.probationMonths || 0,
               },
@@ -97,38 +104,72 @@ export default function AgreementPage() {
             });
           }
         } catch {
-          // Both paths failed — stay in loading (shouldn't normally happen)
+          // Both paths failed
         }
       });
   }, [sessionId]);
 
-  const handleApprove = async () => {
-    if (approving) return;
-    setApproving(true);
-    try {
-      await approveAgreement(sessionId);
-      setApproved(true);
-      // Try to fetch on-chain tx hash (best-effort — contract may not be deployed)
+  // Poll for other party's approval (real mode)
+  const startPolling = useCallback(() => {
+    if (pollRef.current) return;
+    pollRef.current = setInterval(async () => {
       try {
-        const updatedAgreement = await getAgreement(sessionId);
-        if (updatedAgreement?.onChainTxHash) {
-          setTxHash(updatedAgreement.onChainTxHash);
-          setAgreement(updatedAgreement);
+        const updated = await getAgreement(sessionId);
+        if (updated.seekerApproved && updated.employerApproved) {
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          setAgreement(updated);
+          setTxHash(updated.onChainTxHash ?? null);
+          setFlowState('completed');
         }
       } catch {
-        // On-chain agreement not available yet — approval still succeeded
+        // Keep polling
+      }
+    }, 3000);
+  }, [sessionId]);
+
+  const handleApprove = async () => {
+    if (flowState === 'approving') return;
+    setFlowState('approving');
+    try {
+      await approveAgreement(sessionId);
+
+      // Move to waiting state
+      setFlowState('waiting');
+
+      if (USE_DUMMY) {
+        // Simulate other party approving after 3 seconds
+        setTimeout(() => {
+          setTxHash('0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''));
+          if (agreement) {
+            setAgreement({ ...agreement, seekerApproved: true, employerApproved: true });
+          }
+          setFlowState('completed');
+        }, 3000);
+      } else {
+        // Try to fetch updated agreement — might already be completed
+        try {
+          const updated = await getAgreement(sessionId);
+          if (updated.seekerApproved && updated.employerApproved) {
+            setAgreement(updated);
+            setTxHash(updated.onChainTxHash ?? null);
+            setFlowState('completed');
+            return;
+          }
+        } catch {
+          // Not yet — start polling
+        }
+        startPolling();
       }
     } catch (err) {
+      setFlowState('idle');
       alert(err instanceof Error ? err.message : 'Failed to approve agreement');
-    } finally {
-      setApproving(false);
     }
   };
 
   const handleReject = async () => {
     try {
       await rejectAgreement(sessionId);
-      setRejected(true);
+      setFlowState('rejected');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to reject agreement');
     }
@@ -188,7 +229,6 @@ export default function AgreementPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Position */}
               <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">badge</span>
@@ -197,7 +237,6 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.positionTitle}</p>
               </div>
 
-              {/* Salary */}
               <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">payments</span>
@@ -206,7 +245,6 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-primary">{formatSalary(agreement.summary.agreedSalary)}</p>
               </div>
 
-              {/* Work Type */}
               <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">home_work</span>
@@ -215,7 +253,6 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.remotePolicy}</p>
               </div>
 
-              {/* Start Date */}
               <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">calendar_month</span>
@@ -224,7 +261,6 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.startDate}</p>
               </div>
 
-              {/* Probation */}
               <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">schedule</span>
@@ -233,7 +269,6 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.probationMonths} months</p>
               </div>
 
-              {/* Total Rounds */}
               <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">repeat</span>
@@ -243,43 +278,43 @@ export default function AgreementPage() {
               </div>
             </div>
 
-            {/* Agreement Hash */}
             <div className="mt-4 rounded-xl bg-muted/50 border border-border/5 p-3">
               <p className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Agreement Hash</p>
               <p className="text-sm font-mono text-foreground/70 break-all">{agreement.agreementHash}</p>
             </div>
           </div>
 
-          {/* On-Chain Warning */}
-          <div className="bg-card rounded-2xl border border-amber-500/10 p-5">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <span className="material-symbols-outlined text-base text-amber-400">warning</span>
-              </div>
-              <div>
-                <p className="text-base font-bold text-foreground mb-1">On-Chain Recording</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  By approving this agreement, the final terms will be permanently recorded on the NEAR blockchain.
-                  This action is irreversible. Both parties must approve for the transaction to be finalized.
-                </p>
+          {/* On-Chain Warning — only when still deciding */}
+          {flowState === 'idle' && (
+            <div className="bg-card rounded-2xl border border-amber-500/10 p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="material-symbols-outlined text-base text-amber-400">warning</span>
+                </div>
+                <div>
+                  <p className="text-base font-bold text-foreground mb-1">On-Chain Recording</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    By approving this agreement, the final terms will be permanently recorded on the NEAR blockchain.
+                    This action is irreversible. Both parties must approve for the transaction to be finalized.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Action Buttons / TX Result */}
-          {!approved && !rejected && (
+          {/* ── Action Buttons (idle) ── */}
+          {flowState === 'idle' && (
             <div className="flex items-center gap-3">
               <button
                 onClick={handleApprove}
-                disabled={approving}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all duration-300 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">check_circle</span>
-                {approving ? 'Approving...' : 'Approve & Record On-Chain'}
+                Approve & Record On-Chain
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300"
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">cancel</span>
                 Reject
@@ -287,30 +322,142 @@ export default function AgreementPage() {
             </div>
           )}
 
-          {/* TX Hash Display */}
-          {approved && txHash && (
-            <div className="bg-primary/5 rounded-2xl border border-primary/20 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  verified
-                </span>
-                <p className="text-base font-bold text-primary">On-Chain Transaction Confirmed</p>
+          {/* ── Approving spinner ── */}
+          {flowState === 'approving' && (
+            <div className="bg-primary/5 rounded-2xl border border-primary/20 p-6 text-center">
+              <span className="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
+              <p className="text-base font-semibold text-foreground mt-3">Recording on-chain...</p>
+              <p className="text-sm text-muted-foreground mt-1">Please wait while your approval is being processed.</p>
+            </div>
+          )}
+
+          {/* ── Waiting for other party ── */}
+          {flowState === 'waiting' && (
+            <div className="bg-amber-500/5 rounded-2xl border border-amber-500/15 p-6 text-center">
+              <div className="w-14 h-14 rounded-full bg-amber-500/10 mx-auto mb-3 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-amber-400 animate-pulse">hourglass_top</span>
               </div>
-              <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
-                <p className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Transaction Hash</p>
-                <p className="text-sm font-mono text-foreground break-all">{txHash}</p>
+              <p className="text-base font-bold text-foreground">Your Approval Recorded</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Waiting for the other party to review and approve the agreement.
+                The transaction will be finalized once both parties have approved.
+              </p>
+              <div className="flex items-center justify-center gap-6 mt-4">
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  <p className="text-xs text-muted-foreground mt-1">Your approval</p>
+                </div>
+                <div className="w-12 h-px bg-border/20" />
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-xl text-muted-foreground/30 animate-pulse">pending</span>
+                  <p className="text-xs text-muted-foreground mt-1">Other party</p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Rejected State */}
-          {rejected && (
-            <div className="bg-red-500/5 rounded-2xl border border-red-500/10 p-5 text-center">
-              <span className="material-symbols-outlined text-3xl text-red-400 mb-2">cancel</span>
-              <p className="text-base font-semibold text-red-400">Agreement Rejected</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                The negotiation will continue or be terminated based on remaining rounds.
-              </p>
+          {/* ── Completed — both approved ── */}
+          {flowState === 'completed' && (
+            <>
+              <div className="bg-emerald-500/5 rounded-2xl border border-emerald-500/15 p-6 text-center">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/10 mx-auto mb-3 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-3xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                </div>
+                <p className="text-lg font-extrabold text-emerald-400">Agreement Finalized</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Both parties have approved. The agreement has been recorded on-chain.
+                </p>
+                {/* Approval status */}
+                <div className="flex items-center justify-center gap-6 mt-4">
+                  <div className="text-center">
+                    <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <p className="text-xs text-emerald-400/80 mt-1">Seeker</p>
+                  </div>
+                  <span className="material-symbols-outlined text-2xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+                  <div className="text-center">
+                    <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <p className="text-xs text-emerald-400/80 mt-1">Employer</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* TX Hash */}
+              {txHash && (
+                <div className="bg-card rounded-2xl border border-border/10 p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      verified
+                    </span>
+                    <p className="text-base font-bold text-primary">On-Chain Transaction</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
+                    <p className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Transaction Hash</p>
+                    <p className="text-sm font-mono text-foreground break-all">{txHash}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Next Steps */}
+              <div className="bg-card rounded-2xl border border-border/10 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-base text-[#00F0FF]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    rocket_launch
+                  </span>
+                  <h3 className="text-base font-bold text-foreground">Next Steps</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/50">
+                    <span className="material-symbols-outlined text-base text-emerald-400 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Agreement finalized</p>
+                      <p className="text-xs text-muted-foreground">Terms recorded on NEAR blockchain</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/50">
+                    <span className="material-symbols-outlined text-base text-[#00F0FF] mt-0.5">calendar_month</span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Schedule interview</p>
+                      <p className="text-xs text-muted-foreground">Both parties can now coordinate an interview time</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/50">
+                    <span className="material-symbols-outlined text-base text-muted-foreground/40 mt-0.5">description</span>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground/60">Onboarding</p>
+                      <p className="text-xs text-muted-foreground">Complete documentation and start onboarding process</p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => router.push('/negotiations')}
+                  className="w-full flex items-center justify-center gap-2 mt-4 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">arrow_back</span>
+                  Back to Negotiations
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ── Rejected ── */}
+          {flowState === 'rejected' && (
+            <div className="space-y-4">
+              <div className="bg-red-500/5 rounded-2xl border border-red-500/10 p-6 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-500/10 mx-auto mb-3 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-3xl text-red-400" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
+                </div>
+                <p className="text-lg font-bold text-red-400">Agreement Rejected</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You have rejected the proposed terms. The negotiation has been terminated.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/negotiations')}
+                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-muted/80 transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Back to Negotiations
+              </button>
             </div>
           )}
         </div>
@@ -371,7 +518,6 @@ export default function AgreementPage() {
                   {/* Chat Bubble */}
                   <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[90%] space-y-1.5 flex flex-col ${isSeeker ? 'items-end' : 'items-start'}`}>
-                      {/* Reasoning */}
                       <ReasoningBubble reasoning={round.reasoning} isSeeker={isSeeker} />
 
                       {/* Compact Proposal */}
@@ -418,7 +564,7 @@ export default function AgreementPage() {
               );
             })}
 
-            {/* Final handshake at the bottom */}
+            {/* Final handshake */}
             {rounds.length > 0 && (
               <div className="flex items-center justify-center gap-2 py-3">
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
