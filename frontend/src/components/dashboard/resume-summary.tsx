@@ -6,7 +6,7 @@ import Link from 'next/link';
 export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
   if (!resume) {
     return (
-      <div className="bg-card rounded-2xl border border-border/10 p-6">
+      <div className="bg-card rounded-2xl border border-[#BF5AF2]/20 p-6">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-3">Analysis</h3>
         <p className="text-base text-muted-foreground mb-4">No analysis generated yet.</p>
         <Link
@@ -21,7 +21,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
   }
 
   return (
-    <div className="bg-card rounded-2xl border border-border/10 p-6">
+    <div className="bg-card rounded-2xl border border-[#BF5AF2]/20 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Analysis</h3>
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium ${
