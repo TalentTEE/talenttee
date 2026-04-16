@@ -29,13 +29,14 @@ const mockVerifyNearAuth = vi.mocked(verifyNearAuth);
 
 // Helper component that exposes auth context
 function AuthConsumer() {
-  const { user, login, loginWithNear, logout, isLoading } = useAuth();
+  const { user, login, loginWithNear, loginByAccount, logout, isLoading } = useAuth();
   return (
     <div>
       <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="user">{user ? JSON.stringify(user) : 'null'}</span>
       <button data-testid="login-seeker" onClick={() => login('SEEKER')}>Login Seeker</button>
       <button data-testid="login-near" onClick={() => loginWithNear('test.testnet', 'SEEKER')}>Login NEAR</button>
+      <button data-testid="login-by-account" onClick={() => loginByAccount('alice.testnet')}>Login By Account</button>
       <button data-testid="logout" onClick={logout}>Logout</button>
     </div>
   );
@@ -153,5 +154,115 @@ describe('AuthProvider', () => {
     expect(screen.getByTestId('user').textContent).toBe('null');
     expect(localStorage.getItem('user')).toBeNull();
     expect(localStorage.getItem('jwt')).toBeNull();
+  });
+
+  // ── new tests for loginByAccount fix ──
+
+  it('loginByAccount() succeeds for a registered user and uses role from backend response', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
+    mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce-lb', expiresAt: '2026-12-31' });
+    mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
+    const apiUser = { id: 'u-emp', nearAccountId: 'alice.testnet', role: 'EMPLOYER' as const, publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
+    mockVerifyNearAuth.mockResolvedValue({ jwt: 'employer-jwt', user: apiUser });
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await act(async () => {
+      screen.getByTestId('login-by-account').click();
+    });
+
+    await waitFor(() => {
+      const userText = screen.getByTestId('user').textContent!;
+      const userData = JSON.parse(userText);
+      expect(userData.role).toBe('EMPLOYER');
+      expect(localStorage.getItem('jwt')).toBe('employer-jwt');
+    });
+
+    // Assert verifyNearAuth was called with intent='login' and NO role field
+    expect(mockVerifyNearAuth).toHaveBeenCalledWith(expect.objectContaining({
+      intent: 'login',
+    }));
+    const callArgs = mockVerifyNearAuth.mock.calls[0][0] as Record<string, unknown>;
+    expect(callArgs.role).toBeUndefined();
+  });
+
+  it('loginByAccount() throws "not registered" error when backend returns 404', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
+    mockRequestChallenge.mockResolvedValue({ nonce: 'test-nonce-404', expiresAt: '2026-12-31' });
+    mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
+    mockVerifyNearAuth.mockRejectedValue(new Error('Account not registered. Please sign up first.'));
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    let caughtError: Error | null = null;
+    await act(async () => {
+      try {
+        // We trigger the button which calls loginByAccount internally
+        screen.getByTestId('login-by-account').click();
+      } catch (e) {
+        caughtError = e as Error;
+      }
+    });
+
+    // localStorage 'user' must NOT be set for unregistered account
+    await waitFor(() => {
+      expect(localStorage.getItem('user')).toBeNull();
+    });
+  });
+
+  it('signup() still sends role explicitly with intent signup', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
+    mockRequestChallenge.mockResolvedValue({ nonce: 'signup-nonce', expiresAt: '2026-12-31' });
+    mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
+    const apiUser = { id: 'u-new', nearAccountId: 'newuser.testnet', role: 'EMPLOYER' as const, publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
+    mockVerifyNearAuth.mockResolvedValue({ jwt: 'signup-jwt', user: apiUser });
+
+    // Expose signup via a custom consumer
+    function SignupConsumer() {
+      const { signup } = useAuth();
+      return (
+        <button data-testid="signup-btn" onClick={() => signup('newuser.testnet', 'EMPLOYER')}>
+          Signup
+        </button>
+      );
+    }
+
+    render(<AuthProvider><SignupConsumer /></AuthProvider>);
+
+    await act(async () => {
+      screen.getByTestId('signup-btn').click();
+    });
+
+    await waitFor(() => {
+      expect(mockVerifyNearAuth).toHaveBeenCalled();
+    });
+
+    expect(mockVerifyNearAuth).toHaveBeenCalledWith(expect.objectContaining({
+      role: 'EMPLOYER',
+      intent: 'signup',
+    }));
+  });
+
+  it('loginByAccount() never sends role in verify payload (regression lock for the bug)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'false');
+    mockRequestChallenge.mockResolvedValue({ nonce: 'reg-nonce', expiresAt: '2026-12-31' });
+    mockSignMessage.mockResolvedValue({ signature: 'c2lnbmVk', publicKey: 'ed25519:pk' });
+    const apiUser = { id: 'u-seeker', nearAccountId: 'alice.testnet', role: 'SEEKER' as const, publicKey: 'ed25519:pk', createdAt: '2026-01-01' };
+    mockVerifyNearAuth.mockResolvedValue({ jwt: 'seeker-jwt', user: apiUser });
+
+    render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+    await act(async () => {
+      screen.getByTestId('login-by-account').click();
+    });
+
+    await waitFor(() => {
+      expect(mockVerifyNearAuth).toHaveBeenCalled();
+    });
+
+    // The call MUST NOT include a role field
+    const callArgs = mockVerifyNearAuth.mock.calls[0][0] as Record<string, unknown>;
+    expect(callArgs.role).toBeUndefined();
+    expect(callArgs.intent).toBe('login');
   });
 });

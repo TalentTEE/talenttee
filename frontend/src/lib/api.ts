@@ -66,7 +66,8 @@ export async function verifyNearAuth(params: {
   publicKey: string;
   signature: string;
   nonce: string;
-  role: string;
+  role?: string;
+  intent?: 'login' | 'signup';
 }): Promise<{ jwt: string; user: User }> {
   return apiFetch('/auth/near/verify', {
     method: 'POST',
