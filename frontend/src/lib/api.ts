@@ -323,6 +323,11 @@ export async function agreeMatch(matchId: string): Promise<void> {
   await apiFetch(`/match/${matchId}/agree`, { method: 'POST' });
 }
 
+export async function retrySeekerNegotiate(): Promise<MatchResultDisplay[]> {
+  if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
+  return apiFetch('/match/me/retry-negotiate', { method: 'POST' });
+}
+
 // === Profile ===
 export async function accessProfile(seekerId: string): Promise<ProfileReport> {
   if (USE_DUMMY) return DUMMY_PROFILE_REPORT;
