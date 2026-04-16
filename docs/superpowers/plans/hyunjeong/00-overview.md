@@ -49,7 +49,10 @@ Phase 10 ── (4/18~) ─── 인터페이스 정렬 (백엔드 ↔ 프론�
 Phase 11 ── (4/18~) ─── AI Agentic UX — "AI Command Center" 전면 개선
   │         ↓ AI 에이전트 존재감 + Smart Dashboard + Negotiation Theater
   │
-Phase 12 ── (추가구현) ── NEAR 핵심 기술 5대 적용
+Phase 12 ── (추가구현) ── 협상 후 마무리 플로우 (수락/거절 → 완료 화면)
+  │         ↓ Reject API + 양측 승인 대기 + 완료 페이지 + 대시보드 반영
+  │
+Phase 13 ── (추가구현) ── NEAR 핵심 기술 5대 적용
             ↓ 보안 에이전트 강화 → TEE → Intents → 체인 추상화 → 확장성
 ```
 
@@ -91,7 +94,8 @@ Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5 
 | 9 | [phase-9-landing-wallet-selector.md](./phase-9-landing-wallet-selector.md) | 진행 중 | ~4h |
 | 10 | [phase-10-interface-alignment.md](./phase-10-interface-alignment.md) | 미시작 | ~2h |
 | 11 | [phase-11-onboarding-ux.md](./phase-11-onboarding-ux.md) | 진행 중 | ~6h |
-| 12 | [phase-12-near-core-tech.md](./phase-12-near-core-tech.md) | 미시작 | ~10-15일 |
+| 12 | [phase-12-post-negotiation-flow.md](./phase-12-post-negotiation-flow.md) | 미시작 | ~1일 |
+| 13 | [phase-13-near-core-tech.md](./phase-13-near-core-tech.md) | 미시작 | ~10-15일 |
 
 ## 전체 수락 기준
 
