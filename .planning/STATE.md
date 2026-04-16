@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-04-16T03:19:23.059Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-04-16T03:22:40.387Z"
 last_activity: 2026-03-31 — Roadmap created, all 32 v1 requirements mapped to 4 phases
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 33
 ---
 
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 05-integration-investigation-and-tests P01 | 35 | 2 tasks | 5 files |
 | Phase 06-fix-smart-contract-security-vulnerabilities-from-audit P01 | 75 | 1 tasks | 1 files |
 | Phase 06-fix-smart-contract-security-vulnerabilities-from-audit P02 | 3 | 1 tasks | 3 files |
+| Phase 06-fix-smart-contract-security-vulnerabilities-from-audit P03 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 06-fix-smart-contract-security-vulnerabilities-from-audit]: ed25519-dalek v2 with default-features=false for WASM compatibility
 - [Phase 06-fix-smart-contract-security-vulnerabilities-from-audit]: Canonical serialization: colon-delimited position_title:agreed_salary:start_date:negotiation_rounds for deterministic hashing and signing
 - [Phase 06-fix-smart-contract-security-vulnerabilities-from-audit]: system_agent is owner-configurable to allow trusted backend to record agreements on behalf of parties
+- [Phase 06-fix-smart-contract-security-vulnerabilities-from-audit]: MAX_RECORDS_PER_EMPLOYER = 1000 chosen as upper bound preventing storage DoS while retaining meaningful access history
+- [Phase 06-fix-smart-contract-security-vulnerabilities-from-audit]: set_profile_view_cost accepts U128 (NEAR JSON type) consistent with withdraw(amount: U128) convention from Plan 01
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-16T03:19:23.057Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-04-16T03:22:40.385Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
