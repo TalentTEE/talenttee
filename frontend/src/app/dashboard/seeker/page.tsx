@@ -10,6 +10,7 @@ import { AIActionCard } from '@/components/dashboard/AIActionCard';
 import { ResumeSummary } from '@/components/dashboard/resume-summary';
 import { MarketValueCard } from '@/components/dashboard/market-value-card';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
+import { NegotiationOverview } from '@/components/dashboard/negotiation-overview';
 import { SkeletonGrid } from '@/components/ui/skeleton-card';
 
 export default function SeekerDashboard() {
@@ -46,6 +47,8 @@ export default function SeekerDashboard() {
     );
   }
 
+  const isOnboarding = sessions.length === 0;
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div>
@@ -54,24 +57,49 @@ export default function SeekerDashboard() {
         </h1>
         <p className="text-base text-muted-foreground mt-1">Your career overview at a glance</p>
       </div>
-      <div className="animate-[fadeSlideUp_300ms_ease-out_both]">
-        <AIActionCard datasources={datasources} resume={resume} matches={matches} sessions={sessions} role="SEEKER" />
-      </div>
-      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
-        <JobSeekingToggle initialActive={jobSeeking} onToggle={async (active) => {
-          await updateJobSeekingStatus(active);
-        }} />
-      </div>
-      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
-        <DatasourceStatus connections={datasources} />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
-        <ResumeSummary resume={resume} />
-        <MarketValueCard resume={resume} />
-      </div>
-      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '320ms' }}>
-        <NegotiationList sessions={sessions} matches={matches} />
-      </div>
+
+      {isOnboarding ? (
+        <>
+          {/* Phase A: Onboarding — AIActionCard guides the user */}
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]">
+            <AIActionCard datasources={datasources} resume={resume} matches={matches} sessions={sessions} role="SEEKER" />
+          </div>
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
+            <JobSeekingToggle initialActive={jobSeeking} onToggle={async (active) => {
+              await updateJobSeekingStatus(active);
+            }} />
+          </div>
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
+            <DatasourceStatus connections={datasources} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
+            <ResumeSummary resume={resume} />
+            <MarketValueCard resume={resume} />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Phase B: Active — NegotiationOverview + grouped list */}
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]">
+            <NegotiationOverview sessions={sessions} />
+          </div>
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
+            <NegotiationList sessions={sessions} matches={matches} />
+          </div>
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
+            <JobSeekingToggle initialActive={jobSeeking} onToggle={async (active) => {
+              await updateJobSeekingStatus(active);
+            }} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
+            <ResumeSummary resume={resume} />
+            <MarketValueCard resume={resume} />
+          </div>
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '320ms' }}>
+            <DatasourceStatus connections={datasources} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
