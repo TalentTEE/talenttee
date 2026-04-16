@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 Phase: 1 of 4 (Foundation)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-03-31 — Roadmap created, all 32 v1 requirements mapped to 4 phases
+Last activity: 2026-04-16 — Completed quick task 260416-qyq: VSCode 메모리 폭주 해결 - watcher/검색/TS 인덱싱 exclude 설정
 
 Progress: [███░░░░░░░] 33%
 
@@ -94,6 +94,12 @@ None yet.
 - [Phase 1 risk]: Agent API contracts.ts must be published before Phase 2 begins — parallel team members depend on it
 - [Phase 4 risk]: MAX_ROUNDS value is not yet decided — product decision needed before Phase 4 planning
 - [Research gap]: Qwen3-Reranker model slug must be verified against NEAR AI Cloud dashboard before Phase 3 reranker integration
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260416-qyq | VSCode 메모리 폭주 해결 - watcher/검색/TS 인덱싱 exclude 설정 | 2026-04-16 | 0317f9e | [260416-qyq-vscode-watcher-ts-exclude](./quick/260416-qyq-vscode-watcher-ts-exclude/) |
 
 ## Session Continuity
 
