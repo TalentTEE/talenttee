@@ -73,9 +73,13 @@ export default function AgreementPage() {
       .then((data) => {
         setAgreement(data);
         // Restore state from existing agreement
-        if (data.seekerApproved && data.employerApproved) {
+        if (data.rejected) {
+          setFlowState('rejected');
+        } else if (data.seekerApproved && data.employerApproved) {
           setFlowState('completed');
           if (data.onChainTxHash) setTxHash(data.onChainTxHash);
+        } else if (data.seekerApproved || data.employerApproved) {
+          setFlowState('waiting');
         }
       })
       .catch(async () => {
