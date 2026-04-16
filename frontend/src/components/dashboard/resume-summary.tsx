@@ -26,7 +26,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Analysis</h3>
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium ${
           resume.status === 'COMPLETE'
-            ? 'bg-[#BF5AF2]/10 text-[#BF5AF2]'
+            ? 'bg-[#39FF14]/10 text-[#39FF14]'
             : 'bg-muted text-muted-foreground'
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -36,7 +36,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
       {resume.skills?.length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-3">
           {resume.skills.slice(0, 6).map((s) => (
-            <span key={s} className="px-2 py-1 rounded-md bg-muted text-muted-foreground text-sm font-medium border border-border/10">
+            <span key={s} className="px-2 py-1 rounded-md bg-[#BF5AF2]/10 text-[#BF5AF2] text-sm font-medium border border-[#BF5AF2]/20">
               {s}
             </span>
           ))}
