@@ -40,7 +40,7 @@ export function NegotiationOverview({ sessions }: NegotiationOverviewProps) {
   ];
 
   return (
-    <div className="bg-card rounded-2xl border border-border/20 p-5" data-testid="negotiation-overview">
+    <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-5" data-testid="negotiation-overview">
       <div className="flex items-start gap-4">
         {/* AI Icon */}
         <div

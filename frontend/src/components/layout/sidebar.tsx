@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
-import { useAgentStatusContext } from '@/hooks/AgentStatusProvider';
-import { AgentActivityStream } from './AgentActivityStream';
 import { SidebarJobSeekToggle } from './sidebar-job-seek-toggle';
 
 const seekerLinks = [
@@ -29,7 +27,6 @@ interface SidebarProps {
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const agentStatus = useAgentStatusContext();
   const links = user?.role === 'SEEKER' ? seekerLinks : employerLinks;
 
   return (
@@ -49,6 +46,12 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
+        <Link href="/" className="flex items-center gap-2 px-3 pt-4 pb-6 hover:opacity-80 transition-opacity">
+          <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+          <span className="text-lg font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
+            Talent-Tee
+          </span>
+        </Link>
         <nav className="flex flex-col gap-1 flex-1">
           {links.map((link) => {
             const isActive = pathname === link.href;
@@ -77,7 +80,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           })}
         </nav>
         {user?.role === 'SEEKER' && <SidebarJobSeekToggle />}
-        <AgentActivityStream activities={agentStatus.activities} />
       </aside>
     </>
   );

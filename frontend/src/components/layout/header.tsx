@@ -28,7 +28,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border/10">
       <div className="flex items-center justify-between px-6 py-4 min-h-[57px]">
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           {onMenuToggle && (
             <button
               onClick={onMenuToggle}
@@ -37,19 +37,11 @@ export function Header({ onMenuToggle }: HeaderProps) {
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
           )}
-          <Link href="/" className="text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)] hover:opacity-80 transition-opacity whitespace-nowrap">
+          <span className="lg:hidden text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
             Talent-Tee
-          </Link>
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-            <span className="material-symbols-outlined text-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
-              {user.role === 'SEEKER' ? 'person' : 'corporate_fare'}
-            </span>
-            <span className="text-primary text-base font-semibold">
-              {user.role === 'SEEKER' ? 'Seeker' : 'Employer'}
-            </span>
-          </div>
+          </span>
         </div>
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <AgentStatusIndicator
             state={agentStatus.state}
             message={agentStatus.message}
@@ -57,6 +49,14 @@ export function Header({ onMenuToggle }: HeaderProps) {
           <div className="hidden sm:flex items-center gap-2 text-muted-foreground text-base min-w-0">
             <span className="material-symbols-outlined text-base shrink-0">account_balance_wallet</span>
             <span className="truncate max-w-[160px]">{user.nearAccountId}</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+            <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+              {user.role === 'SEEKER' ? 'person' : 'corporate_fare'}
+            </span>
+            <span className="text-primary text-sm font-semibold">
+              {user.role === 'SEEKER' ? 'Seeker' : 'Employer'}
+            </span>
           </div>
           <button
             onClick={handleLogout}
