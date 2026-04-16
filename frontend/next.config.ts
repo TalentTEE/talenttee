@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
     .filter((i) => i && !i.internal && i.family === "IPv4")
     .map((i) => i!.address),
   env: publicEnv,
+  // Allow LAN/mobile devices on 172.30.x.x subnet to hit the dev server
+  // (HMR, /_next/* assets). Add more origins here if testing from other networks.
+  allowedDevOrigins: ['172.30.72.55', '172.30.*.*'],
 };
 
 export default nextConfig;
