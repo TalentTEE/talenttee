@@ -183,12 +183,9 @@ describe('API — Real mode', () => {
       expect(JSON.parse(opts.body)).toEqual({ message: 'Hello' });
     });
 
-    it('connectGithubOAuth → redirects to backend GitHub OAuth endpoint', () => {
-      // connectGithubOAuth now sets window.location.href directly (GET redirect)
-      const mockLocation = { href: '' };
-      Object.defineProperty(window, 'location', { value: mockLocation, writable: true });
-      api.connectGithubOAuth();
-      expect(mockLocation.href).toContain('/datasource/connect/github');
+    it('getGithubOAuthUrl → returns backend GitHub OAuth URL', () => {
+      const url = api.getGithubOAuthUrl();
+      expect(url).toContain('/datasource/connect/github');
     });
 
     it('createJob → POST /jobs with jobData body', async () => {

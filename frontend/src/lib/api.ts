@@ -95,10 +95,9 @@ export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
   return apiFetch('/datasource/status');
 }
 
-export function connectGithubOAuth(): void {
+export function getGithubOAuthUrl(): string {
   const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
-  // GET endpoint — browser redirect with JWT as query param for state passing
-  window.location.href = `${API_URL}/datasource/connect/github${token ? `?token=${token}` : ''}`;
+  return `${API_URL}/datasource/connect/github${token ? `?token=${token}` : ''}`;
 }
 
 export async function connectDatasourceMock(provider: string): Promise<DataSourceConnection> {
