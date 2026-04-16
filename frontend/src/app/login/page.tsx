@@ -107,7 +107,14 @@ export default function LoginPage() {
 
         {error && (
           <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-base text-center">
-            {error}
+            <p>{error}</p>
+            {error.toLowerCase().includes('not registered') && (
+              <p className="mt-2">
+                <Link href="/signup" className="underline font-semibold text-red-300 hover:text-red-200">
+                  Sign up
+                </Link>
+              </p>
+            )}
           </div>
         )}
 
