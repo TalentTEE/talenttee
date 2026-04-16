@@ -1,13 +1,11 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
 import { DatasourceService } from '../datasource/datasource.service.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ResumeStatus } from '../common/enums/index.js';
-import { MATCH_EVENTS } from '../common/events/match.events.js';
 import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.en.prompt.js';
 import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.en.prompt.js';
 import { MARKET_VALUE_PROMPT } from './prompts/market-value.en.prompt.js';
@@ -20,7 +18,6 @@ export class ResumeService {
     private readonly datasourceService: DatasourceService,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /* ---------------------------------------------------------- *
@@ -228,9 +225,6 @@ export class ResumeService {
       await this.resumeRepo.update(resumeId, {
         status: ResumeStatus.COMPLETE,
       });
-
-      // 9. Emit event for auto-matching
-      this.eventEmitter.emit(MATCH_EVENTS.RESUME_COMPLETED, { seekerId: userId });
     } catch (err) {
       await this.resumeRepo.update(resumeId, {
         status: ResumeStatus.ERROR,
