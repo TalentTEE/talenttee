@@ -51,11 +51,16 @@ export default function SeekerDashboard() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div>
-        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
-          Welcome back, {user?.nearAccountId?.split('.')[0] || 'Seeker'}
-        </h1>
-        <p className="text-base text-muted-foreground mt-1">Your career overview at a glance</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+            Welcome back, {user?.nearAccountId?.split('.')[0] || 'Seeker'}
+          </h1>
+          <p className="text-base text-muted-foreground mt-1">Your career overview at a glance</p>
+        </div>
+        <JobSeekingToggle compact initialActive={jobSeeking} onToggle={async (active) => {
+          await updateJobSeekingStatus(active);
+        }} />
       </div>
 
       {isOnboarding ? (
@@ -65,14 +70,9 @@ export default function SeekerDashboard() {
             <AIActionCard datasources={datasources} resume={resume} matches={matches} sessions={sessions} role="SEEKER" />
           </div>
           <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
-            <JobSeekingToggle initialActive={jobSeeking} onToggle={async (active) => {
-              await updateJobSeekingStatus(active);
-            }} />
-          </div>
-          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
             <DatasourceStatus connections={datasources} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
             <ResumeSummary resume={resume} />
             <MarketValueCard resume={resume} />
           </div>
@@ -86,16 +86,11 @@ export default function SeekerDashboard() {
           <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
             <NegotiationList sessions={sessions} matches={matches} />
           </div>
-          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
-            <JobSeekingToggle initialActive={jobSeeking} onToggle={async (active) => {
-              await updateJobSeekingStatus(active);
-            }} />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
             <ResumeSummary resume={resume} />
             <MarketValueCard resume={resume} />
           </div>
-          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '320ms' }}>
+          <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
             <DatasourceStatus connections={datasources} />
           </div>
         </>
