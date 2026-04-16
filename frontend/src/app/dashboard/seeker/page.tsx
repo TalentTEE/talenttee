@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions, updateJobSeekingStatus, getJobSeekingStatus } from '@/lib/api';
+import { getDatasourceStatus, getResume, getSeekerMatches, getNegotiationSessions } from '@/lib/api';
 import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession } from '@/lib/types';
-import { JobSeekingToggle } from '@/components/dashboard/job-seeking-toggle';
 import { DatasourceStatus } from '@/components/dashboard/datasource-status';
 import { AIActionCard } from '@/components/dashboard/AIActionCard';
 import { ResumeSummary } from '@/components/dashboard/resume-summary';
@@ -19,7 +18,6 @@ export default function SeekerDashboard() {
   const [resume, setResume] = useState<ResumeProfile | null>(null);
   const [matches, setMatches] = useState<MatchResultDisplay[]>([]);
   const [sessions, setSessions] = useState<NegotiationSession[]>([]);
-  const [jobSeeking, setJobSeeking] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,7 +27,6 @@ export default function SeekerDashboard() {
       getResume().then(setResume).catch(() => setResume(null)),
       getSeekerMatches().then(setMatches).catch(() => setMatches([])),
       getNegotiationSessions().then(setSessions).catch(() => setSessions([])),
-      getJobSeekingStatus().then((s) => setJobSeeking(s.jobSeeking)).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [user]);
 
@@ -51,16 +48,11 @@ export default function SeekerDashboard() {
 
   return (
     <div className="space-y-6 max-w-6xl">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
-            Welcome back, {user?.nearAccountId?.split('.')[0] || 'Seeker'}
-          </h1>
-          <p className="text-base text-muted-foreground mt-1">Your career overview at a glance</p>
-        </div>
-        <JobSeekingToggle compact initialActive={jobSeeking} onToggle={async (active) => {
-          await updateJobSeekingStatus(active);
-        }} />
+      <div>
+        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+          Welcome back, {user?.nearAccountId?.split('.')[0] || 'Seeker'}
+        </h1>
+        <p className="text-base text-muted-foreground mt-1">Your career overview at a glance</p>
       </div>
 
       {isOnboarding ? (
