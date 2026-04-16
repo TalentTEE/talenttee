@@ -130,7 +130,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2 max-h-[320px] overflow-y-auto">
-              {repos.map((repo) => (
+              {DUMMY_REPOS.map((repo) => (
                 <label
                   key={repo.id}
                   className="flex items-start gap-3 rounded-xl border border-border/10 bg-[#060610] px-4 py-3 cursor-pointer hover:border-border/20 transition-colors"
