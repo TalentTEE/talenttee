@@ -459,6 +459,8 @@ export function NegotiationList({
   matches?: MatchResultDisplay[];
   jobs?: JobPosting[];
 }) {
+  if (sessions.length === 0) return null;
+
   const { user } = useAuth();
   const { on } = useSse();
   const [viewMode, setViewMode] = useState<'job' | 'status'>('job');
@@ -524,7 +526,6 @@ export function NegotiationList({
     ended: sessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS'),
   };
 
-  const hasAnySessions = sessions.length > 0;
   const totalActivities = activities.size;
 
   // Employer mode: toggle between job-grouped and status-grouped
@@ -557,9 +558,7 @@ export function NegotiationList({
             </button>
           </div>
         </div>
-        {!hasAnySessions ? (
-          <p className="text-base text-muted-foreground">No active negotiations.</p>
-        ) : viewMode === 'job' ? (
+        {viewMode === 'job' ? (
           <JobGroupedList
             sessions={sessions}
             matchByJobId={matchByJobId}
@@ -590,16 +589,12 @@ export function NegotiationList({
           </span>
         )}
       </div>
-      {!hasAnySessions ? (
-        <p className="text-base text-muted-foreground">No active negotiations.</p>
-      ) : (
-        <StatusTabList
-          grouped={grouped}
-          matchByJobId={matchByJobId}
-          activities={activities}
-          currentUserRole={user?.role}
-        />
-      )}
+      <StatusTabList
+        grouped={grouped}
+        matchByJobId={matchByJobId}
+        activities={activities}
+        currentUserRole={user?.role}
+      />
     </div>
   );
 }
