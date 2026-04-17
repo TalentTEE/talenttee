@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EscrowController } from '../escrow.controller.js';
 import { EscrowService } from '../escrow.service.js';
+import { RealEscrowPayment } from '../real-escrow-payment.js';
 
 describe('EscrowController', () => {
   let controller: EscrowController;
@@ -13,12 +14,22 @@ describe('EscrowController', () => {
       args: {},
       deposit: '1000000000000000000000000',
     }),
+    getPaymentHistory: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockRealEscrow = {
+    getAgentPublicKey: jest.fn().mockReturnValue('ed25519:agentkey'),
+    payForProfile: jest.fn(),
+    checkBalance: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EscrowController],
-      providers: [{ provide: EscrowService, useValue: mockEscrowService }],
+      providers: [
+        { provide: EscrowService, useValue: mockEscrowService },
+        { provide: RealEscrowPayment, useValue: mockRealEscrow },
+      ],
     }).compile();
     controller = module.get<EscrowController>(EscrowController);
   });
