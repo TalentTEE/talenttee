@@ -36,14 +36,15 @@ for (const [k, v] of Object.entries(rootEnv)) {
 }
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: Object.values(networkInterfaces())
-    .flat()
-    .filter((i) => i && !i.internal && i.family === "IPv4")
-    .map((i) => i!.address),
+  allowedDevOrigins: [
+    ...Object.values(networkInterfaces())
+      .flat()
+      .filter((i) => i && !i.internal && i.family === "IPv4")
+      .map((i) => i!.address),
+    '172.30.72.55',
+    '172.30.*.*',
+  ],
   env: publicEnv,
-  // Allow LAN/mobile devices on 172.30.x.x subnet to hit the dev server
-  // (HMR, /_next/* assets). Add more origins here if testing from other networks.
-  allowedDevOrigins: ['172.30.72.55', '172.30.*.*'],
 };
 
 export default nextConfig;
