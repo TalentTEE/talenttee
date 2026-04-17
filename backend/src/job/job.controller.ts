@@ -52,6 +52,12 @@ export class JobController {
     return this.jobService.getBoundary(id);
   }
 
+  @Post('jobs/salary-recommend')
+  async recommendSalary(@Req() req, @Body() dto: { title: string; description: string; skills: string[] }) {
+    this.ensureEmployer(req);
+    return this.jobService.recommendSalary(dto);
+  }
+
   private ensureEmployer(req: any) {
     if (req.user.role !== 'EMPLOYER') {
       throw new ForbiddenException('Employer only');
