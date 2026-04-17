@@ -251,7 +251,7 @@ function JobGroupedList({
           <div key={job.id} className="rounded-xl border border-border/10 overflow-hidden">
             <button
               type="button"
-              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-all"
+              className="w-full flex items-center justify-between p-4 bg-accent/30 hover:bg-accent/50 transition-all border-b border-border/10"
               onClick={() => setCollapsedJobs((prev) => {
                 const next = new Set(prev);
                 next.has(job.id) ? next.delete(job.id) : next.add(job.id);
@@ -290,7 +290,7 @@ function JobGroupedList({
             </button>
 
             {!isCollapsed && (
-              <div className="px-4 pb-4 space-y-3">
+              <div className="px-4 pl-6 pb-4 pt-3 space-y-3">
                 {SECTIONS.map((section) => {
                   const items = section.key === 'active' ? active
                     : section.key === 'agreed' ? agreed
