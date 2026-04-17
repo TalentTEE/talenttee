@@ -3,13 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProfileAccessGrant } from '../entities/profile-access-grant.entity.js';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
+import { User } from '../entities/user.entity.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ESCROW_PAYMENT } from '../common/interfaces/escrow-payment.interface.js';
 import type { EscrowPayment } from '../common/interfaces/escrow-payment.interface.js';
 import { DETAIL_REPORT_PROMPT } from './prompts/detail-report.en.prompt.js';
-
-const PROFILE_ACCESS_COST = '1000000000000000000000000'; // 1 NEAR
 
 @Injectable()
 export class ProfileService {
@@ -18,6 +17,8 @@ export class ProfileService {
     private readonly grantRepo: Repository<ProfileAccessGrant>,
     @InjectRepository(ResumeProfile)
     private readonly resumeRepo: Repository<ResumeProfile>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
     @Inject(ESCROW_PAYMENT)
@@ -29,16 +30,19 @@ export class ProfileService {
     if (existing) return existing;
 
     const balance = await this.escrowPayment.checkBalance(employerAccountId);
-    if (BigInt(balance) < BigInt(PROFILE_ACCESS_COST)) {
+    if (BigInt(balance) < BigInt('0')) {
       throw new ForbiddenException('Insufficient escrow balance. Please deposit first.');
     }
 
-    const { txHash } = await this.escrowPayment.payForProfile(employerAccountId, PROFILE_ACCESS_COST);
+    const seeker = await this.userRepo.findOne({ where: { id: seekerId } });
+    if (!seeker) throw new NotFoundException('Seeker not found.');
+
+    const { txHash } = await this.escrowPayment.payForProfile(employerAccountId, seeker.nearAccountId);
 
     const grant = this.grantRepo.create({
       employerId,
       seekerId,
-      amount: Number(PROFILE_ACCESS_COST),
+      amount: 0,
       nearTxHash: txHash,
     });
 

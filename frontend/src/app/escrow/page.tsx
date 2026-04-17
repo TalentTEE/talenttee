@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
-import { getEscrowBalance, getEscrowPayments } from '@/lib/api';
+import { getEscrowBalance, getEscrowPayments, getAgentPublicKey } from '@/lib/api';
 import { getEscrowBalanceOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
@@ -36,10 +36,15 @@ export default function EscrowPage() {
   useEffect(() => {
     if (!user) return;
 
-    Promise.all([getEscrowBalance(user.nearAccountId), getEscrowPayments()])
-      .then(([balance, history]) => {
+    Promise.all([
+      getEscrowBalance(user.nearAccountId),
+      getEscrowPayments(),
+      getAgentPublicKey(),
+    ])
+      .then(([balance, history, agentKey]) => {
         setEscrow(balance);
         setPayments(history);
+        setAgentPubKey(agentKey);
       })
       .finally(() => setIsLoading(false));
   }, [user]);
@@ -317,19 +322,18 @@ export default function EscrowPage() {
           <span className="text-base font-medium">Agent Key Setup</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Add your AI agent&apos;s public key to authorize automated escrow operations.
+          Register the AI agent&apos;s key to authorize automated profile payments from your escrow.
         </p>
         <div className="space-y-3">
           <input
             type="text"
             value={agentPubKey}
-            onChange={(e) => setAgentPubKey(e.target.value)}
-            placeholder="ed25519:..."
-            className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#39FF14]/30 transition-all font-mono"
+            readOnly
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground/70 outline-none font-mono truncate"
           />
           <button
             onClick={handleAddAgentKey}
-            disabled={!agentPubKey.trim() || isSettingKey}
+            disabled={!agentPubKey.trim() || isSettingKey || (escrow?.agentKeySet ?? false)}
             className="w-full py-3 rounded-xl bg-[#39FF14] text-[#0a0a0a] text-base font-semibold hover:bg-[#39FF14]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSettingKey ? (

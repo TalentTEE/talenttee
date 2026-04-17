@@ -492,6 +492,12 @@ export async function depositToEscrow(amount: string): Promise<{
   });
 }
 
+export async function getAgentPublicKey(): Promise<string> {
+  if (USE_DUMMY) return 'ed25519:DummyAgentKey1234567890abcdef';
+  const data = await apiFetch<{ publicKey: string }>('/escrow/agent-key');
+  return data.publicKey;
+}
+
 // === Encrypted Negotiation History ===
 export async function getEncryptedHistory(sessionId: string): Promise<EncryptedNegotiationRound[]> {
   return apiFetch(`/negotiation/sessions/${sessionId}/rounds`);
