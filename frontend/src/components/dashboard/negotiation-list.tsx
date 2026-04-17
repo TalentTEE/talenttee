@@ -98,7 +98,7 @@ function SessionRow({
   return (
     <Link
       href={ctaHref}
-      className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
         activity
           ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10'
           : 'bg-accent/50 border-border/5 hover:bg-accent'
@@ -308,7 +308,7 @@ function JobGroupedList({
                           {items.length}
                         </span>
                       </div>
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {items.map((s) => (
                           <SessionRow
                             key={s.id}
@@ -432,7 +432,7 @@ export function NegotiationList({
                 {isCollapsible && <span className={`material-symbols-outlined text-sm text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>}
               </button>
               {isOpen && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {items.map((s) => (
                     <SessionRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} ctaHref={section.ctaHref(s)} activity={activities.get(s.id)} currentUserRole={user?.role} />
                   ))}
@@ -534,7 +534,7 @@ export function NegotiationList({
                 )}
               </button>
               {isOpen && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {items.map((s) => (
                     <SessionRow
                       key={s.id}
