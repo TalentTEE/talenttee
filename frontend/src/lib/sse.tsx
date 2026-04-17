@@ -2,9 +2,8 @@
 
 import { createContext, useContext, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { useAuth } from './auth';
-import { useToast } from '@/components/ui/toast-provider';
 
-type SseEventType = 'message' | 'match_found' | 'negotiation_complete' | 'agreement_update' | 'resume_complete';
+type SseEventType = 'message' | 'negotiation_complete' | 'agreement_update' | 'resume_complete';
 type SseListener = (data: any) => void;
 
 interface SseContextType {
@@ -18,22 +17,8 @@ const SseContext = createContext<SseContextType>({
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const RECONNECT_DELAY = 5000;
 
-const TOAST_MESSAGES: Partial<Record<SseEventType, (data: any) => { message: string; type: 'info' | 'success' }>> = {
-  message: (d) => ({ message: `New message: "${d.preview?.slice(0, 50) || '...'}"`, type: 'info' }),
-  match_found: (d) => ({ message: `New match found: ${d.jobTitle || 'New position'}`, type: 'success' }),
-  negotiation_complete: () => ({ message: 'Negotiation completed!', type: 'success' }),
-  agreement_update: (d) => ({
-    message: d.action === 'approved'
-      ? `The ${d.byRole} has approved the agreement`
-      : `The ${d.byRole} has rejected the agreement`,
-    type: d.action === 'approved' ? 'info' : 'warning' as any,
-  }),
-  resume_complete: () => ({ message: 'Your resume has been generated!', type: 'success' }),
-};
-
 export function SseProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { addToast } = useToast();
   const listenersRef = useRef<Map<SseEventType, Set<SseListener>>>(new Map());
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,7 +36,6 @@ export function SseProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
     if (!user || !token) {
-      // Close any existing connection when logged out
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
@@ -67,7 +51,7 @@ export function SseProvider({ children }: { children: ReactNode }) {
       const es = new EventSource(`${API_URL}/events/stream?token=${encodeURIComponent(token!)}`);
       eventSourceRef.current = es;
 
-      const EVENT_TYPES: SseEventType[] = ['message', 'match_found', 'negotiation_complete', 'agreement_update', 'resume_complete'];
+      const EVENT_TYPES: SseEventType[] = ['message', 'negotiation_complete', 'agreement_update', 'resume_complete'];
 
       for (const type of EVENT_TYPES) {
         es.addEventListener(type, (event: MessageEvent) => {
@@ -78,14 +62,6 @@ export function SseProvider({ children }: { children: ReactNode }) {
             data = event.data;
           }
 
-          // Show toast
-          const toastFn = TOAST_MESSAGES[type];
-          if (toastFn) {
-            const { message, type: toastType } = toastFn(data);
-            addToast(message, toastType);
-          }
-
-          // Dispatch to registered listeners
           const listeners = listenersRef.current.get(type);
           if (listeners) {
             for (const listener of listeners) {
@@ -98,7 +74,6 @@ export function SseProvider({ children }: { children: ReactNode }) {
       es.onerror = () => {
         es.close();
         eventSourceRef.current = null;
-        // Reconnect after delay
         reconnectTimerRef.current = setTimeout(connect, RECONNECT_DELAY);
       };
     }
@@ -115,7 +90,7 @@ export function SseProvider({ children }: { children: ReactNode }) {
         eventSourceRef.current = null;
       }
     };
-  }, [user, addToast]);
+  }, [user]);
 
   return (
     <SseContext.Provider value={{ on }}>

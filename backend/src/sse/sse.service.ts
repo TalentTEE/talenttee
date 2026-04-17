@@ -4,7 +4,6 @@ import { Subject } from 'rxjs';
 import { SSE_EVENTS } from '../common/events/sse.events.js';
 import type {
   SseNewMessageEvent,
-  SseMatchFoundEvent,
   SseNegotiationCompleteEvent,
   SseAgreementUpdateEvent,
   SseResumeCompleteEvent,
@@ -57,14 +56,6 @@ export class SseService {
         senderId: event.senderId,
         preview: event.preview,
       }),
-    });
-  }
-
-  @OnEvent(SSE_EVENTS.MATCH_FOUND)
-  onMatchFound(event: SseMatchFoundEvent): void {
-    this.pushToUser(event.recipientUserId, {
-      type: 'match_found',
-      data: JSON.stringify({ jobTitle: event.jobTitle }),
     });
   }
 

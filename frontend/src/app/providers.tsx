@@ -12,7 +12,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <WalletSelectorProvider>
       <AuthProvider>
         <SmoothScroll />
-        <ToastProvider><SseProvider>{children}</SseProvider></ToastProvider>
+        <ToastProvider>
+          <SseProvider>{children}</SseProvider>
+        </ToastProvider>
       </AuthProvider>
     </WalletSelectorProvider>
   );

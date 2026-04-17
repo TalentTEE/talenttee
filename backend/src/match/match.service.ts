@@ -13,8 +13,6 @@ import { NEGOTIATION_HANDOFF } from '../common/interfaces/negotiation-handoff.in
 import type { NegotiationHandoff } from '../common/interfaces/negotiation-handoff.interface.js';
 import { MATCH_EVENTS } from '../common/events/match.events.js';
 import type { ResumeCompletedEvent, JobCreatedEvent, JobSeekingOnEvent } from '../common/events/match.events.js';
-import { SSE_EVENTS } from '../common/events/sse.events.js';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResumeService } from '../resume/resume.service.js';
 
 @Injectable()
@@ -36,7 +34,6 @@ export class MatchService {
     private readonly negotiationHandoff: NegotiationHandoff,
     private readonly resumeService: ResumeService,
     private readonly dataSource: DataSource,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /* ---------------------------------------------------------- *
@@ -156,15 +153,6 @@ export class MatchService {
         });
         matches.push(await this.matchRepo.save(match));
       }
-    }
-
-    // Notify seeker about new matches
-    for (const match of matches) {
-      const job = filtered.find((j: any) => j.id === match.jobId);
-      this.eventEmitter.emit(SSE_EVENTS.MATCH_FOUND, {
-        recipientUserId: seekerId,
-        jobTitle: job?.title ?? 'New position',
-      });
     }
 
     // Step 4: Auto-negotiate for all passing matches
