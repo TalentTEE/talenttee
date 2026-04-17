@@ -33,7 +33,7 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs.map((j) => (
+          {[...jobs].sort((a, b) => (a.status === 'CLOSED' ? 1 : 0) - (b.status === 'CLOSED' ? 1 : 0)).map((j) => (
             <div key={j.id} className="flex items-center justify-between p-3 rounded-xl bg-accent/50 border border-border/5 hover:bg-accent transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#FFE600]/10 flex items-center justify-center">

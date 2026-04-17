@@ -69,7 +69,7 @@ export default function JobPostingsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs.map((j) => (
+          {[...jobs].sort((a, b) => (a.status === 'CLOSED' ? 1 : 0) - (b.status === 'CLOSED' ? 1 : 0)).map((j) => (
             <div
               key={j.id}
               className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/10 hover:border-[#FFE600]/20 transition-all"
