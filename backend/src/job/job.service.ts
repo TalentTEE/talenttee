@@ -134,7 +134,7 @@ export class JobService {
     if (parsed.complete && parsed.jobPosting) {
       const job = await this.createJob(employerId, parsed.jobPosting);
       this.chatSessions.delete(sid);
-      return { sessionId: sid, response: { complete: true, jobPosting: job } };
+      return { sessionId: sid, response: { complete: true, jobPosting: job, salaryRecommendation: parsed.salaryRecommendation } };
     }
 
     return { sessionId: sid, response: parsed };

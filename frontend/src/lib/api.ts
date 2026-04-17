@@ -277,24 +277,45 @@ export async function chatCreateJob(
   backendSessionId?: string,
 ): Promise<ChatCreateJobResult> {
   if (USE_DUMMY) {
-    if (messages.length >= 6) {
+    const sid = backendSessionId ?? 'dummy-session';
+    const userMsgCount = messages.filter((m) => m.role === 'user').length;
+
+    // Phase 3: After salary ceiling answer → complete
+    if (userMsgCount >= 5) {
       return {
-        sessionId: backendSessionId ?? 'dummy-session',
-        response: { complete: true, jobPosting: DUMMY_JOBS[0] },
+        sessionId: sid,
+        response: {
+          complete: true,
+          jobPosting: { ...DUMMY_JOBS[0], salaryMax: 90000 },
+          salaryRecommendation: { min: 70000, max: 95000, reasoning: 'Based on market data for Senior Backend Developers with TypeScript/React skills in the current market.' },
+        },
       };
     }
+
+    // Phase 2: After remote policy answer → salary recommendation
+    if (userMsgCount >= 4) {
+      return {
+        sessionId: sid,
+        response: {
+          complete: false,
+          salaryRecommendation: { min: 70000, max: 95000, reasoning: 'Based on market data for Senior Backend Developers with TypeScript/React skills in the current market.' },
+          question: 'Based on my market analysis, the typical salary range for this role is $70,000–$95,000/year. What would you like to set as your maximum negotiation ceiling? (Candidates won\'t see this number — the AI negotiator will use it as the upper limit.)',
+        },
+      };
+    }
+
+    // Phase 1: Collect info
     const questions = [
       'What position are you hiring for? (e.g. Senior Backend Developer)',
       'Can you describe the role and responsibilities?',
       'What are the required tech skills? (e.g. TypeScript, React, Node.js)',
-      "What's your maximum salary budget? This will be your negotiation ceiling — candidates won't see this number.",
       'What is the remote work policy? (Full Office / Hybrid / Full Remote)',
     ];
     return {
-      sessionId: backendSessionId ?? 'dummy-session',
+      sessionId: sid,
       response: {
         complete: false,
-        question: questions[Math.min(messages.length, questions.length - 1)],
+        question: questions[Math.min(userMsgCount, questions.length - 1)],
       },
     };
   }
