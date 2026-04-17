@@ -98,7 +98,7 @@ function SessionRow({
   return (
     <Link
       href={ctaHref}
-      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+      className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
         activity
           ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10'
           : 'bg-accent/50 border-border/5 hover:bg-accent'
@@ -344,6 +344,7 @@ export function NegotiationList({
   const { user } = useAuth();
   const { on } = useSse();
   const [endedOpen, setEndedOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'job' | 'status'>('job');
   // sessionId → latest activity badge
   const [activities, setActivities] = useState<Map<string, Activity>>(new Map());
   const matchByJobId = new Map(matches.map((m) => [m.jobId, m]));
@@ -409,21 +410,71 @@ export function NegotiationList({
   const hasAnySessions = sessions.length > 0;
   const totalActivities = activities.size;
 
-  // Employer mode: group by job
+  // Employer mode: toggle between job-grouped and status-grouped
   if (jobs && jobs.length > 0) {
+    const statusContent = (
+      <div className="space-y-5">
+        {SECTIONS.map((section) => {
+          const items = grouped[section.key];
+          if (!items || items.length === 0) return null;
+          const isCollapsible = section.key === 'ended';
+          const isOpen = isCollapsible ? endedOpen : section.defaultOpen;
+          return (
+            <div key={section.key}>
+              <button
+                type="button"
+                className={`flex items-center gap-2 mb-2 ${isCollapsible ? 'cursor-pointer' : 'cursor-default'}`}
+                onClick={() => isCollapsible && setEndedOpen((o) => !o)}
+                disabled={!isCollapsible}
+              >
+                <span className="text-sm font-semibold text-muted-foreground">{section.title}</span>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold" style={{ backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`, color: section.badgeColor }}>{items.length}</span>
+                {isCollapsible && <span className={`material-symbols-outlined text-sm text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>}
+              </button>
+              {isOpen && (
+                <div className="space-y-3">
+                  {items.map((s) => (
+                    <SessionRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} ctaHref={section.ctaHref(s)} activity={activities.get(s.id)} currentUserRole={user?.role} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+
     return (
       <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Negotiations</h3>
-          {totalActivities > 0 && (
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-              {totalActivities}
-            </span>
-          )}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Negotiations</h3>
+            {totalActivities > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                {totalActivities}
+              </span>
+            )}
+          </div>
+          <div className="flex rounded-lg border border-border/20 overflow-hidden">
+            <button
+              type="button"
+              className={`px-3 py-1 text-xs font-semibold transition-all ${viewMode === 'job' ? 'bg-[#BF5AF2]/20 text-[#BF5AF2]' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setViewMode('job')}
+            >
+              By Job
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1 text-xs font-semibold transition-all ${viewMode === 'status' ? 'bg-[#BF5AF2]/20 text-[#BF5AF2]' : 'text-muted-foreground hover:text-foreground'}`}
+              onClick={() => setViewMode('status')}
+            >
+              By Status
+            </button>
+          </div>
         </div>
         {!hasAnySessions ? (
           <p className="text-base text-muted-foreground">No active negotiations.</p>
-        ) : (
+        ) : viewMode === 'job' ? (
           <JobGroupedList
             sessions={sessions}
             matchByJobId={matchByJobId}
@@ -431,7 +482,7 @@ export function NegotiationList({
             activities={activities}
             currentUserRole={user?.role}
           />
-        )}
+        ) : statusContent}
       </div>
     );
   }
