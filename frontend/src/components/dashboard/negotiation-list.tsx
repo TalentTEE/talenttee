@@ -311,7 +311,7 @@ function JobGroupedList({
                           {items.length}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="space-y-2">
                         {items.map((s) => {
                           const candidate = currentUserRole === 'EMPLOYER'
                             ? s.seeker?.nearAccountId?.split('.')[0]
