@@ -14,7 +14,7 @@ const seekerLinks = [
 
 const employerLinks = [
   { href: '/dashboard/employer', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
-  { href: '/jobs/create', label: 'Create Job', icon: 'edit_note', neonColor: '#FFE600' },
+  { href: '/jobs', label: 'Job Postings', icon: 'work', neonColor: '#FFE600' },
   { href: '/escrow', label: 'Escrow', icon: 'account_balance', neonColor: '#39FF14' },
   { href: '/negotiations', label: 'Negotiations', icon: 'handshake', neonColor: '#FF2DF1' },
 ];
