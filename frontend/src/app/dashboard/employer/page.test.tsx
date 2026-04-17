@@ -37,18 +37,27 @@ vi.mock('@/components/dashboard/job-list', () => ({
 vi.mock('@/components/dashboard/negotiation-list', () => ({
   NegotiationList: () => <div data-testid="negotiation-list">NegotiationList</div>,
 }));
+vi.mock('@/components/dashboard/negotiation-overview', () => ({
+  NegotiationOverview: () => <div data-testid="negotiation-overview">NegotiationOverview</div>,
+}));
+vi.mock('@/components/dashboard/AIActionCard', () => ({
+  AIActionCard: () => <div data-testid="ai-action-card">AIActionCard</div>,
+}));
+vi.mock('@/components/ui/skeleton-card', () => ({
+  SkeletonGrid: () => <div data-testid="skeleton-grid">Loading...</div>,
+}));
 
 import EmployerDashboard from './page';
 
 describe('EmployerDashboard', () => {
   beforeEach(() => {
     mockGetEscrowBalance.mockResolvedValue({ employerId: 'user-2', balance: 5.0, agentKeySet: true });
-    mockGetJobs.mockResolvedValue([]);
+    mockGetJobs.mockResolvedValue([{ id: 'job-1', title: 'Frontend Engineer', status: 'ACTIVE' }]);
     mockGetEmployerMatches.mockResolvedValue([]);
     mockGetNegotiationSessions.mockResolvedValue([]);
   });
 
-  it('calls 4 API functions on mount', async () => {
+  it('calls API functions on mount and fetches matches for all jobs', async () => {
     render(<EmployerDashboard />);
 
     await waitFor(() => {
@@ -66,13 +75,30 @@ describe('EmployerDashboard', () => {
     });
   });
 
-  it('renders all dashboard sections', async () => {
+  it('renders onboarding layout when no sessions', async () => {
+    mockGetNegotiationSessions.mockResolvedValue([]);
     render(<EmployerDashboard />);
 
     await waitFor(() => {
+      expect(screen.getByTestId('ai-action-card')).toBeInTheDocument();
       expect(screen.getByTestId('escrow-balance')).toBeInTheDocument();
       expect(screen.getByTestId('job-list')).toBeInTheDocument();
+      expect(screen.queryByTestId('negotiation-overview')).not.toBeInTheDocument();
+    });
+  });
+
+  it('renders active layout when sessions exist', async () => {
+    mockGetNegotiationSessions.mockResolvedValue([
+      { id: 's1', jobId: 'job-1', state: 'EMPLOYER_OFFER', currentRound: 1, maxRounds: 5 },
+    ]);
+    render(<EmployerDashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('negotiation-overview')).toBeInTheDocument();
       expect(screen.getByTestId('negotiation-list')).toBeInTheDocument();
+      expect(screen.getByTestId('escrow-balance')).toBeInTheDocument();
+      expect(screen.getByTestId('job-list')).toBeInTheDocument();
+      expect(screen.queryByTestId('ai-action-card')).not.toBeInTheDocument();
     });
   });
 });
