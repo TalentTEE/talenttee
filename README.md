@@ -2,6 +2,8 @@
 
 **AI-powered recruitment negotiation platform built on NEAR Protocol.**
 
+**Live Demo**: https://talenttee-sepia.vercel.app
+
 TalentTee connects job seekers and employers through intelligent AI matching, then deploys autonomous AI agents to negotiate salary, benefits, and contract terms on behalf of both parties. All negotiations are end-to-end encrypted and payments are handled transparently through blockchain escrow.
 
 ## Key Features
