@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
+import { NegotiationSession, MatchResultDisplay, JobPosting } from '@/lib/types';
 import { useAuth } from '@/lib/auth';
 import { useSse } from '@/lib/sse';
 import Link from 'next/link';
@@ -205,12 +205,141 @@ function SessionRow({
   );
 }
 
+function JobGroupedList({
+  sessions,
+  matchByJobId,
+  jobs,
+  activities,
+  currentUserRole,
+}: {
+  sessions: NegotiationSession[];
+  matchByJobId: Map<string, MatchResultDisplay>;
+  jobs: JobPosting[];
+  activities: Map<string, Activity>;
+  currentUserRole?: 'SEEKER' | 'EMPLOYER';
+}) {
+  const [collapsedJobs, setCollapsedJobs] = useState<Set<string>>(new Set());
+
+  const sessionsByJob = new Map<string, NegotiationSession[]>();
+  for (const s of sessions) {
+    const arr = sessionsByJob.get(s.jobId) || [];
+    arr.push(s);
+    sessionsByJob.set(s.jobId, arr);
+  }
+
+  const sortedJobs = [...jobs].sort((a, b) => {
+    const aHas = sessionsByJob.has(a.id) ? 0 : 1;
+    const bHas = sessionsByJob.has(b.id) ? 0 : 1;
+    return aHas - bHas || a.title.localeCompare(b.title);
+  });
+
+  return (
+    <div className="space-y-4">
+      {sortedJobs.map((job) => {
+        const jobSessions = sessionsByJob.get(job.id) || [];
+        if (jobSessions.length === 0) return null;
+
+        const isCollapsed = collapsedJobs.has(job.id);
+        const active = jobSessions.filter((s) => ACTIVE_STATES.has(s.state));
+        const agreed = jobSessions.filter((s) => s.state === 'AGREED');
+        const ended = jobSessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS');
+
+        return (
+          <div key={job.id} className="rounded-xl border border-border/10 overflow-hidden">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-all"
+              onClick={() => setCollapsedJobs((prev) => {
+                const next = new Set(prev);
+                next.has(job.id) ? next.delete(job.id) : next.add(job.id);
+                return next;
+              })}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#FFE600]/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#FFE600] text-lg">work</span>
+                </div>
+                <div className="text-left">
+                  <p className="text-base font-semibold text-foreground">{job.title}</p>
+                  <span className="text-sm text-muted-foreground">{jobSessions.length} candidate{jobSessions.length > 1 ? 's' : ''}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {active.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'color-mix(in srgb, #FF2DF1 15%, transparent)', color: '#FF2DF1' }}>
+                    {active.length} Active
+                  </span>
+                )}
+                {agreed.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'color-mix(in srgb, #39FF14 15%, transparent)', color: '#39FF14' }}>
+                    {agreed.length} Agreed
+                  </span>
+                )}
+                {ended.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'color-mix(in srgb, #f87171 15%, transparent)', color: '#f87171' }}>
+                    {ended.length} Ended
+                  </span>
+                )}
+                <span className={`material-symbols-outlined text-sm text-muted-foreground transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+                  expand_more
+                </span>
+              </div>
+            </button>
+
+            {!isCollapsed && (
+              <div className="px-4 pb-4 space-y-3">
+                {SECTIONS.map((section) => {
+                  const items = section.key === 'active' ? active
+                    : section.key === 'agreed' ? agreed
+                    : ended;
+                  if (items.length === 0) return null;
+
+                  return (
+                    <div key={section.key}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-semibold text-muted-foreground">{section.title}</span>
+                        <span
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
+                          style={{
+                            backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`,
+                            color: section.badgeColor,
+                          }}
+                        >
+                          {items.length}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {items.map((s) => (
+                          <SessionRow
+                            key={s.id}
+                            session={s}
+                            match={matchByJobId.get(s.jobId)}
+                            ctaHref={section.ctaHref(s)}
+                            activity={activities.get(s.id)}
+                            currentUserRole={currentUserRole}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function NegotiationList({
   sessions,
   matches = [],
+  jobs,
 }: {
   sessions: NegotiationSession[];
   matches?: MatchResultDisplay[];
+  jobs?: JobPosting[];
 }) {
   const { user } = useAuth();
   const { on } = useSse();
@@ -280,6 +409,34 @@ export function NegotiationList({
   const hasAnySessions = sessions.length > 0;
   const totalActivities = activities.size;
 
+  // Employer mode: group by job
+  if (jobs && jobs.length > 0) {
+    return (
+      <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Negotiations</h3>
+          {totalActivities > 0 && (
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+              {totalActivities}
+            </span>
+          )}
+        </div>
+        {!hasAnySessions ? (
+          <p className="text-base text-muted-foreground">No active negotiations.</p>
+        ) : (
+          <JobGroupedList
+            sessions={sessions}
+            matchByJobId={matchByJobId}
+            jobs={jobs}
+            activities={activities}
+            currentUserRole={user?.role}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Seeker mode: group by status
   return (
     <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -303,7 +460,6 @@ export function NegotiationList({
 
           return (
             <div key={section.key}>
-              {/* Section Header */}
               <button
                 type="button"
                 className={`flex items-center gap-2 mb-2 ${isCollapsible ? 'cursor-pointer' : 'cursor-default'}`}
@@ -326,8 +482,6 @@ export function NegotiationList({
                   </span>
                 )}
               </button>
-
-              {/* Section Content */}
               {isOpen && (
                 <div className="space-y-3">
                   {items.map((s) => (
