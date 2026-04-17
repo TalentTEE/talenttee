@@ -221,8 +221,6 @@ function JobGroupedList({
   activities: Map<string, Activity>;
   currentUserRole?: 'SEEKER' | 'EMPLOYER';
 }) {
-  const [collapsedJobs, setCollapsedJobs] = useState<Set<string>>(new Set());
-
   const sessionsByJob = new Map<string, NegotiationSession[]>();
   for (const s of sessions) {
     const arr = sessionsByJob.get(s.jobId) || [];
@@ -230,113 +228,95 @@ function JobGroupedList({
     sessionsByJob.set(s.jobId, arr);
   }
 
-  const sortedJobs = [...jobs].sort((a, b) => {
-    const aHas = sessionsByJob.has(a.id) ? 0 : 1;
-    const bHas = sessionsByJob.has(b.id) ? 0 : 1;
-    return aHas - bHas || a.title.localeCompare(b.title);
-  });
+  // Only show jobs that have sessions
+  const jobsWithSessions = [...jobs]
+    .filter((j) => sessionsByJob.has(j.id))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  const [activeJobId, setActiveJobId] = useState<string>(jobsWithSessions[0]?.id ?? '');
+
+  const selectedJob = jobsWithSessions.find((j) => j.id === activeJobId);
+  const jobSessions = selectedJob ? (sessionsByJob.get(selectedJob.id) || []) : [];
+  const active = jobSessions.filter((s) => ACTIVE_STATES.has(s.state));
+  const agreed = jobSessions.filter((s) => s.state === 'AGREED');
+  const ended = jobSessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS');
 
   return (
-    <div className="space-y-4">
-      {sortedJobs.map((job) => {
-        const jobSessions = sessionsByJob.get(job.id) || [];
-        if (jobSessions.length === 0) return null;
-
-        const isCollapsed = collapsedJobs.has(job.id);
-        const active = jobSessions.filter((s) => ACTIVE_STATES.has(s.state));
-        const agreed = jobSessions.filter((s) => s.state === 'AGREED');
-        const ended = jobSessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS');
-
-        return (
-          <div key={job.id} className="rounded-xl border border-border/10 overflow-hidden">
+    <div>
+      {/* Job tabs */}
+      <div className="flex gap-1 mb-4 overflow-x-auto scrollbar-none">
+        {jobsWithSessions.map((job) => {
+          const count = sessionsByJob.get(job.id)?.length ?? 0;
+          const isActive = job.id === activeJobId;
+          return (
             <button
+              key={job.id}
               type="button"
-              className="w-full flex items-center justify-between p-4 bg-accent/30 hover:bg-accent/50 transition-all border-b border-border/10"
-              onClick={() => setCollapsedJobs((prev) => {
-                const next = new Set(prev);
-                next.has(job.id) ? next.delete(job.id) : next.add(job.id);
-                return next;
-              })}
+              className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                isActive
+                  ? 'bg-[#FFE600]/15 text-[#FFE600] border border-[#FFE600]/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/30 border border-transparent'
+              }`}
+              onClick={() => setActiveJobId(job.id)}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#FFE600]/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#FFE600] text-lg">work</span>
-                </div>
-                <div className="text-left">
-                  <p className="text-base font-semibold text-foreground">{job.title}</p>
-                  <span className="text-sm text-muted-foreground">{jobSessions.length} candidate{jobSessions.length > 1 ? 's' : ''}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {active.length > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'color-mix(in srgb, #FF2DF1 15%, transparent)', color: '#FF2DF1' }}>
-                    {active.length} Active
-                  </span>
-                )}
-                {agreed.length > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'color-mix(in srgb, #39FF14 15%, transparent)', color: '#39FF14' }}>
-                    {agreed.length} Agreed
-                  </span>
-                )}
-                {ended.length > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'color-mix(in srgb, #f87171 15%, transparent)', color: '#f87171' }}>
-                    {ended.length} Ended
-                  </span>
-                )}
-                <span className={`material-symbols-outlined text-sm text-muted-foreground transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
-                  expand_more
-                </span>
-              </div>
+              <span className="material-symbols-outlined text-base">work</span>
+              <span className="truncate max-w-[180px]">{job.title}</span>
+              <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-xs font-bold ${
+                isActive ? 'bg-[#FFE600]/20 text-[#FFE600]' : 'bg-muted text-muted-foreground'
+              }`}>
+                {count}
+              </span>
             </button>
+          );
+        })}
+      </div>
 
-            {!isCollapsed && (
-              <div className="px-4 pl-6 pb-4 pt-3 space-y-3">
-                {SECTIONS.map((section) => {
-                  const items = section.key === 'active' ? active
-                    : section.key === 'agreed' ? agreed
-                    : ended;
-                  if (items.length === 0) return null;
+      {/* Selected job's sessions */}
+      {selectedJob && (
+        <div className="space-y-3">
+          {SECTIONS.map((section) => {
+            const items = section.key === 'active' ? active
+              : section.key === 'agreed' ? agreed
+              : ended;
+            if (items.length === 0) return null;
 
-                  return (
-                    <div key={section.key}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-muted-foreground">{section.title}</span>
-                        <span
-                          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
-                          style={{
-                            backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`,
-                            color: section.badgeColor,
-                          }}
-                        >
-                          {items.length}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {items.map((s) => {
-                          const candidate = currentUserRole === 'EMPLOYER'
-                            ? s.seeker?.nearAccountId?.split('.')[0]
-                            : s.employer?.nearAccountId?.split('.')[0];
-                          return (
-                            <SessionRow
-                              key={s.id}
-                              session={s}
-                              match={matchByJobId.get(s.jobId)}
-                              ctaHref={section.ctaHref(s)}
-                              activity={activities.get(s.id)}
-                              currentUserRole={currentUserRole}
-                              candidateLabel={candidate}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+            return (
+              <div key={section.key}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-muted-foreground">{section.title}</span>
+                  <span
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`,
+                      color: section.badgeColor,
+                    }}
+                  >
+                    {items.length}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {items.map((s) => {
+                    const candidate = currentUserRole === 'EMPLOYER'
+                      ? s.seeker?.nearAccountId?.split('.')[0]
+                      : s.employer?.nearAccountId?.split('.')[0];
+                    return (
+                      <SessionRow
+                        key={s.id}
+                        session={s}
+                        match={matchByJobId.get(s.jobId)}
+                        ctaHref={section.ctaHref(s)}
+                        activity={activities.get(s.id)}
+                        currentUserRole={currentUserRole}
+                        candidateLabel={candidate}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
