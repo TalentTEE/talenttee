@@ -10,6 +10,7 @@ import { MATCH_EVENTS } from '../common/events/match.events.js';
 import { CreateJobDto } from './dto/create-job.dto.js';
 import { JOB_CREATION_SYSTEM_PROMPT } from './prompts/job-creation.en.prompt.js';
 import { BOUNDARY_SETTING_SYSTEM_PROMPT } from './prompts/boundary-setting.en.prompt.js';
+import { SALARY_RECOMMEND_PROMPT } from './prompts/salary-recommend.en.prompt.js';
 
 interface ChatState {
   history: { role: string; content: string }[];
@@ -99,6 +100,18 @@ export class JobService {
     }
   }
 
+  async closeJob(jobId: string, employerId: string): Promise<JobPosting> {
+    const job = await this.getJob(jobId);
+    if (job.employerId !== employerId) {
+      throw new ForbiddenException('Not the job owner');
+    }
+    if (job.status === JobPostingStatus.CLOSED) {
+      return job; // idempotent
+    }
+    job.status = JobPostingStatus.CLOSED;
+    return this.jobRepo.save(job);
+  }
+
   async getJob(id: string): Promise<JobPosting> {
     const job = await this.jobRepo.findOne({ where: { id } });
     if (!job) throw new NotFoundException('Job posting not found');
@@ -133,7 +146,7 @@ export class JobService {
     if (parsed.complete && parsed.jobPosting) {
       const job = await this.createJob(employerId, parsed.jobPosting);
       this.chatSessions.delete(sid);
-      return { sessionId: sid, response: { complete: true, jobPosting: job } };
+      return { sessionId: sid, response: { complete: true, jobPosting: job, salaryRecommendation: parsed.salaryRecommendation } };
     }
 
     return { sessionId: sid, response: parsed };
@@ -185,5 +198,27 @@ export class JobService {
   async getBoundary(jobId: string): Promise<Record<string, any> | null> {
     const job = await this.getJob(jobId);
     return job.negotiationBoundary;
+  }
+
+  async recommendSalary(dto: { title: string; description: string; skills: string[] }): Promise<{ salaryMin: number; salaryMax: number; reasoning: string }> {
+    const userMessage = `Job Title: ${dto.title}\nDescription: ${dto.description}\nRequired Skills: ${dto.skills.join(', ')}`;
+
+    const result = await this.aiClient.chat({
+      agentId: 'salary-recommend',
+      systemPrompt: SALARY_RECOMMEND_PROMPT,
+      userMessage,
+    });
+
+    try {
+      const parsed = JSON.parse(result.content);
+      return {
+        salaryMin: parsed.salaryMin ?? 0,
+        salaryMax: parsed.salaryMax ?? 0,
+        reasoning: parsed.reasoning ?? '',
+      };
+    } catch {
+      this.logger.warn(`Failed to parse salary recommendation: ${result.content}`);
+      return { salaryMin: 0, salaryMax: 0, reasoning: 'Unable to estimate salary for this role.' };
+    }
   }
 }

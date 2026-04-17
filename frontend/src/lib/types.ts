@@ -136,6 +136,20 @@ export interface NegotiationSession {
   currentRound: number;
   maxRounds: number;
   onChainTxHash: string | null;
+  seekerApproved?: boolean;
+  employerApproved?: boolean;
+  job?: {
+    id: string;
+    title: string;
+    salaryMin: number | null;
+    salaryMax: number | null;
+    remotePolicy: string | null;
+  };
+  seeker?: { id: string; nearAccountId: string };
+  employer?: { id: string; nearAccountId: string };
+  updatedAt?: string;
+  messageCount?: number;
+  unreadCount?: number;
 }
 
 export interface NegotiationProposal {
@@ -189,6 +203,7 @@ export interface AgreementRecord {
   seekerApproved: boolean;
   employerApproved: boolean;
   onChainTxHash: string | null;
+  rejected?: boolean;
 }
 
 export interface EscrowAccount {
@@ -203,6 +218,15 @@ export interface EscrowPayment {
   amount: number;
   timestamp: string;
   txHash: string;
+}
+
+export interface InterviewMessage {
+  id: string;
+  sessionId: string;
+  senderId: string;
+  sender: { id: string; nearAccountId: string; role: UserRole };
+  content: string;
+  createdAt: string;
 }
 
 export interface EncryptedNegotiationRound {
@@ -268,4 +292,5 @@ export interface JobChatResponse {
   complete: boolean;
   question?: string;
   jobPosting?: JobPosting;
+  salaryRecommendation?: { min: number; max: number; reasoning: string };
 }

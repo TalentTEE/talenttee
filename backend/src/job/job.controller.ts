@@ -35,6 +35,12 @@ export class JobController {
     return this.jobService.publishJob(id, req.user.id);
   }
 
+  @Post('jobs/:id/close')
+  async closeJob(@Req() req, @Param('id') id: string) {
+    this.ensureEmployer(req);
+    return this.jobService.closeJob(id, req.user.id);
+  }
+
   @Post('jobs/chat')
   async chatCreateJob(@Req() req, @Body() dto: ChatMessageDto) {
     this.ensureEmployer(req);
@@ -50,6 +56,12 @@ export class JobController {
   @Get('jobs/:id/boundary')
   async getBoundary(@Param('id') id: string) {
     return this.jobService.getBoundary(id);
+  }
+
+  @Post('jobs/salary-recommend')
+  async recommendSalary(@Req() req, @Body() dto: { title: string; description: string; skills: string[] }) {
+    this.ensureEmployer(req);
+    return this.jobService.recommendSalary(dto);
   }
 
   private ensureEmployer(req: any) {

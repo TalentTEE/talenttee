@@ -2,9 +2,18 @@
 
 import { cn } from '@/lib/utils';
 
-export type PipelineStage = 'connect' | 'analyze' | 'match' | 'negotiate' | 'agree';
+export type SeekerStage = 'connect' | 'analyze' | 'match' | 'negotiate' | 'agree';
+export type EmployerStage = 'post' | 'fund' | 'match' | 'negotiate' | 'hire';
+export type PipelineStage = SeekerStage | EmployerStage;
 
-const stages: { key: PipelineStage; label: string; icon: string; color: string }[] = [
+interface StageConfig {
+  key: string;
+  label: string;
+  icon: string;
+  color: string;
+}
+
+const seekerStages: StageConfig[] = [
   { key: 'connect', label: 'Connect', icon: 'link', color: '#00F0FF' },
   { key: 'analyze', label: 'Analyze', icon: 'analytics', color: '#BF5AF2' },
   { key: 'match', label: 'Match', icon: 'groups', color: '#39FF14' },
@@ -12,11 +21,21 @@ const stages: { key: PipelineStage; label: string; icon: string; color: string }
   { key: 'agree', label: 'Agree', icon: 'task_alt', color: '#FFE600' },
 ];
 
+const employerStages: StageConfig[] = [
+  { key: 'post', label: 'Post', icon: 'edit_note', color: '#FFE600' },
+  { key: 'fund', label: 'Fund', icon: 'account_balance', color: '#39FF14' },
+  { key: 'match', label: 'Match', icon: 'groups', color: '#FF2DF1' },
+  { key: 'negotiate', label: 'Negotiate', icon: 'handshake', color: '#BF5AF2' },
+  { key: 'hire', label: 'Hire', icon: 'celebration', color: '#00F0FF' },
+];
+
 interface PipelineProgressProps {
   currentStage: PipelineStage;
+  role?: 'SEEKER' | 'EMPLOYER';
 }
 
-export function PipelineProgress({ currentStage }: PipelineProgressProps) {
+export function PipelineProgress({ currentStage, role = 'SEEKER' }: PipelineProgressProps) {
+  const stages = role === 'EMPLOYER' ? employerStages : seekerStages;
   const currentIndex = stages.findIndex((s) => s.key === currentStage);
 
   return (

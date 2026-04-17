@@ -33,4 +33,18 @@ export class AgreementController {
     const verified = await this.agreementService.verifyAgreement(sessionId);
     return { sessionId, verified };
   }
+
+  @Get('agreement/:sessionId/messages')
+  async getMessages(@Param('sessionId') sessionId: string, @Req() req) {
+    return this.agreementService.getMessages(sessionId, req.user.id);
+  }
+
+  @Post('agreement/:sessionId/messages')
+  async sendMessage(
+    @Param('sessionId') sessionId: string,
+    @Body() body: { content: string },
+    @Req() req,
+  ) {
+    return this.agreementService.sendMessage(sessionId, req.user.id, body.content);
+  }
 }

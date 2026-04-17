@@ -37,7 +37,12 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     apiErrorHandler?.(res.status);
-    throw new Error(`API Error: ${res.status}`);
+    let detail = '';
+    try {
+      const body = await res.json();
+      detail = body.message || JSON.stringify(body);
+    } catch { /* ignore parse errors */ }
+    throw new Error(detail || `API Error: ${res.status}`);
   }
   return res.json();
 }
@@ -70,6 +75,17 @@ export async function verifyNearAuth(params: {
   intent?: 'login' | 'signup';
 }): Promise<{ jwt: string; user: User }> {
   return apiFetch('/auth/near/verify', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+// === Auth (Dev Login) ===
+export async function devLogin(params: {
+  nearAccountId: string;
+  role: string;
+}): Promise<{ jwt: string; user: User }> {
+  return apiFetch('/auth/near/dev-login', {
     method: 'POST',
     body: JSON.stringify(params),
   });
@@ -261,24 +277,45 @@ export async function chatCreateJob(
   backendSessionId?: string,
 ): Promise<ChatCreateJobResult> {
   if (USE_DUMMY) {
-    if (messages.length >= 6) {
+    const sid = backendSessionId ?? 'dummy-session';
+    const userMsgCount = messages.filter((m) => m.role === 'user').length;
+
+    // Phase 3: After salary ceiling answer → complete
+    if (userMsgCount >= 5) {
       return {
-        sessionId: backendSessionId ?? 'dummy-session',
-        response: { complete: true, jobPosting: DUMMY_JOBS[0] },
+        sessionId: sid,
+        response: {
+          complete: true,
+          jobPosting: { ...DUMMY_JOBS[0], salaryMax: 90000 },
+          salaryRecommendation: { min: 70000, max: 95000, reasoning: 'Based on market data for Senior Backend Developers with TypeScript/React skills in the current market.' },
+        },
       };
     }
+
+    // Phase 2: After remote policy answer → salary recommendation
+    if (userMsgCount >= 4) {
+      return {
+        sessionId: sid,
+        response: {
+          complete: false,
+          salaryRecommendation: { min: 70000, max: 95000, reasoning: 'Based on market data for Senior Backend Developers with TypeScript/React skills in the current market.' },
+          question: 'Based on my market analysis, the typical salary range for this role is $70,000–$95,000/year. What would you like to set as your maximum negotiation ceiling? (Candidates won\'t see this number — the AI negotiator will use it as the upper limit.)',
+        },
+      };
+    }
+
+    // Phase 1: Collect info
     const questions = [
       'What position are you hiring for? (e.g. Senior Backend Developer)',
       'Can you describe the role and responsibilities?',
       'What are the required tech skills? (e.g. TypeScript, React, Node.js)',
-      "What's your maximum salary budget? This will be your negotiation ceiling — candidates won't see this number.",
       'What is the remote work policy? (Full Office / Hybrid / Full Remote)',
     ];
     return {
-      sessionId: backendSessionId ?? 'dummy-session',
+      sessionId: sid,
       response: {
         complete: false,
-        question: questions[Math.min(messages.length, questions.length - 1)],
+        question: questions[Math.min(userMsgCount, questions.length - 1)],
       },
     };
   }
@@ -299,9 +336,19 @@ export async function createJob(jobData: Partial<JobPosting>): Promise<JobPostin
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(jobData) });
 }
 
+export async function recommendSalary(dto: { title: string; description: string; skills: string[] }): Promise<{ salaryMin: number; salaryMax: number; reasoning: string }> {
+  if (USE_DUMMY) return { salaryMin: 60000, salaryMax: 80000, reasoning: 'Estimated based on role and skills.' };
+  return apiFetch('/jobs/salary-recommend', { method: 'POST', body: JSON.stringify(dto) });
+}
+
 export async function publishJob(jobId: string): Promise<JobPosting> {
   if (USE_DUMMY) return { ...DUMMY_JOBS[0], id: jobId, status: 'ACTIVE' } as JobPosting;
   return apiFetch(`/jobs/${jobId}/publish`, { method: 'POST' });
+}
+
+export async function closeJob(jobId: string): Promise<JobPosting> {
+  if (USE_DUMMY) return { ...DUMMY_JOBS[0], id: jobId, status: 'CLOSED' } as JobPosting;
+  return apiFetch(`/jobs/${jobId}/close`, { method: 'POST' });
 }
 
 // === Matching ===
@@ -392,6 +439,29 @@ export async function getAgreement(sessionId: string): Promise<AgreementRecord> 
   return apiFetch(`/agreement/${sessionId}`);
 }
 
+// === Interview Messages ===
+export async function getInterviewMessages(sessionId: string): Promise<import('./types').InterviewMessage[]> {
+  if (USE_DUMMY) return [];
+  return apiFetch(`/agreement/${sessionId}/messages`);
+}
+
+export async function sendInterviewMessage(sessionId: string, content: string): Promise<import('./types').InterviewMessage> {
+  if (USE_DUMMY) {
+    return {
+      id: `msg-${Date.now()}`,
+      sessionId,
+      senderId: 'dummy',
+      sender: { id: 'dummy', nearAccountId: 'dummy.testnet', role: 'EMPLOYER' },
+      content,
+      createdAt: new Date().toISOString(),
+    };
+  }
+  return apiFetch(`/agreement/${sessionId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+}
+
 // === Escrow ===
 function yoctoToNear(yocto: string): number {
   const YOCTO_PER_NEAR = 1e24;
@@ -420,6 +490,12 @@ export async function depositToEscrow(amount: string): Promise<{
     method: 'POST',
     body: JSON.stringify({ amount }),
   });
+}
+
+export async function getAgentPublicKey(): Promise<string> {
+  if (USE_DUMMY) return 'ed25519:DummyAgentKey1234567890abcdef';
+  const data = await apiFetch<{ publicKey: string }>('/escrow/agent-key');
+  return data.publicKey;
 }
 
 // === Encrypted Negotiation History ===

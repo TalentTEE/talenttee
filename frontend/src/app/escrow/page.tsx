@@ -3,12 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
-import { getEscrowBalance, getEscrowPayments } from '@/lib/api';
-import { getEscrowBalanceOnChain } from '@/lib/near';
+import { getEscrowBalance, getEscrowPayments, getAgentPublicKey } from '@/lib/api';
+import { getEscrowBalanceOnChain, hasAgentKeyOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
-import { utils } from 'near-api-js';
 import { actionCreators } from '@near-js/transactions';
+
+/** Convert a NEAR amount string (e.g. "1.5") to yoctoNEAR string */
+function parseNearAmount(amount: string): string {
+  const [whole, fraction = ''] = amount.split('.');
+  const padded = fraction.padEnd(24, '0').slice(0, 24);
+  return `${whole}${padded}`.replace(/^0+/, '') || '0';
+}
 
 const ESCROW_CONTRACT_ID =
   process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID || 'escrow.testnet';
@@ -30,10 +36,23 @@ export default function EscrowPage() {
   useEffect(() => {
     if (!user) return;
 
-    Promise.all([getEscrowBalance(user.nearAccountId), getEscrowPayments()])
-      .then(([balance, history]) => {
-        setEscrow(balance);
+    Promise.all([
+      getEscrowBalance(user.nearAccountId).catch(() => null),
+      getEscrowPayments().catch(() => []),
+      getAgentPublicKey().catch(() => ''),
+    ])
+      .then(([balance, history, agentKey]) => {
+        if (balance) setEscrow(balance);
         setPayments(history);
+        setAgentPubKey(agentKey);
+        // Check on-chain if agent key is already registered (non-blocking)
+        if (agentKey && user.nearAccountId) {
+          hasAgentKeyOnChain(user.nearAccountId, agentKey).then(keyExists => {
+            if (keyExists) {
+              setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
+            }
+          }).catch(() => {});
+        }
       })
       .finally(() => setIsLoading(false));
   }, [user]);
@@ -84,8 +103,7 @@ export default function EscrowPage() {
         setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
         const wallet = await selector.wallet();
-        const yoctoAmount = utils.format.parseNearAmount(depositAmount);
-        if (!yoctoAmount) throw new Error('Invalid amount');
+        const yoctoAmount = parseNearAmount(depositAmount);
 
         await wallet.signAndSendTransaction({
           receiverId: ESCROW_CONTRACT_ID,
@@ -128,7 +146,7 @@ export default function EscrowPage() {
         setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
         const wallet = await selector.wallet();
-        const allowance = utils.format.parseNearAmount('5') || '0';
+        const allowance = parseNearAmount('5');
 
         await wallet.signAndSendTransaction({
           receiverId: user.nearAccountId,
@@ -154,7 +172,6 @@ export default function EscrowPage() {
       }
     } finally {
       setIsSettingKey(false);
-      setAgentPubKey('');
     }
   };
 
@@ -312,19 +329,18 @@ export default function EscrowPage() {
           <span className="text-base font-medium">Agent Key Setup</span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Add your AI agent&apos;s public key to authorize automated escrow operations.
+          Register the AI agent&apos;s key to authorize automated profile payments from your escrow.
         </p>
         <div className="space-y-3">
           <input
             type="text"
             value={agentPubKey}
-            onChange={(e) => setAgentPubKey(e.target.value)}
-            placeholder="ed25519:..."
-            className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#39FF14]/30 transition-all font-mono"
+            readOnly
+            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground/70 outline-none font-mono truncate"
           />
           <button
             onClick={handleAddAgentKey}
-            disabled={!agentPubKey.trim() || isSettingKey}
+            disabled={!agentPubKey.trim() || isSettingKey || (escrow?.agentKeySet ?? false)}
             className="w-full py-3 rounded-xl bg-[#39FF14] text-[#0a0a0a] text-base font-semibold hover:bg-[#39FF14]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSettingKey ? (

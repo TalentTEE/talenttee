@@ -2,13 +2,37 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+// Mock scrollIntoView (not available in jsdom)
+Element.prototype.scrollIntoView = vi.fn();
+
 const mockGetAgreement = vi.fn();
 const mockApproveAgreement = vi.fn();
+const mockGetNegotiationRounds = vi.fn().mockResolvedValue([]);
+const mockRejectAgreement = vi.fn();
+const mockGetInterviewMessages = vi.fn().mockResolvedValue([]);
+const mockSendInterviewMessage = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   getAgreement: (...args: unknown[]) => mockGetAgreement(...args),
   approveAgreement: (...args: unknown[]) => mockApproveAgreement(...args),
+  getNegotiationRounds: (...args: unknown[]) => mockGetNegotiationRounds(...args),
+  getNegotiationSession: vi.fn().mockResolvedValue({}),
+  rejectAgreement: (...args: unknown[]) => mockRejectAgreement(...args),
+  getInterviewMessages: (...args: unknown[]) => mockGetInterviewMessages(...args),
+  sendInterviewMessage: (...args: unknown[]) => mockSendInterviewMessage(...args),
   USE_DUMMY: false,
+}));
+
+vi.mock('@/lib/auth', () => ({
+  useAuth: () => ({
+    user: { id: 'user-1', nearAccountId: 'alice.testnet', role: 'SEEKER', publicKey: 'ed25519:key', createdAt: '2026-01-01' },
+    login: vi.fn(), loginWithNear: vi.fn(), logout: vi.fn(), isLoading: false,
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@/lib/sse', () => ({
+  useSse: () => ({ on: vi.fn(() => vi.fn()) }),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -62,7 +86,7 @@ describe('AgreementPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Agreement Reached')).toBeInTheDocument();
       expect(screen.getByText('Full-stack Developer')).toBeInTheDocument();
-      expect(screen.getByText('7M KRW')).toBeInTheDocument();
+      expect(screen.getByText('$65M')).toBeInTheDocument();
       expect(screen.getByText('Full remote')).toBeInTheDocument();
       expect(screen.getByText('2026-08-01')).toBeInTheDocument();
       expect(screen.getByText('3 months')).toBeInTheDocument();
@@ -130,7 +154,7 @@ describe('AgreementPage', () => {
     render(<AgreementPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('On-Chain Transaction Confirmed')).toBeInTheDocument();
+      expect(screen.getByText('On-Chain Transaction')).toBeInTheDocument();
       expect(screen.getByText('0xabc123def456')).toBeInTheDocument();
     });
   });

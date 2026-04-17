@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { chatCreateJob, createJob, publishJob } from '@/lib/api';
+import { chatCreateJob, createJob, publishJob, recommendSalary } from '@/lib/api';
 import { ChatMessage, JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import {
@@ -125,33 +125,22 @@ export default function CreateJobPage() {
       </div>
 
       {activeTab === 'chat' ? (
-        <>
-          <div className="grid grid-cols-[260px_1fr] gap-4 h-[calc(100vh-14rem)] min-h-[600px]">
-            <ChatSidebar
-              sessions={sessions}
-              currentId={currentSessionId}
-              onSelect={handleSelectSession}
-              onNew={handleNewSession}
-              onDelete={handleDeleteSession}
-            />
-            {currentSession && (
-              <ChatMode
-                key={currentSession.id}
-                session={currentSession}
-                onSessionUpdated={refreshSessions}
-              />
-            )}
-          </div>
-          {currentSession?.completedJob && (
-            <JobPreviewCard
-              job={currentSession.completedJob}
-              onPublished={(updated) => {
-                saveSession({ ...currentSession, completedJob: updated });
-                refreshSessions();
-              }}
+        <div className="grid grid-cols-[260px_1fr] gap-4 h-[calc(100vh-14rem)] min-h-[600px]">
+          <ChatSidebar
+            sessions={sessions}
+            currentId={currentSessionId}
+            onSelect={handleSelectSession}
+            onNew={handleNewSession}
+            onDelete={handleDeleteSession}
+          />
+          {currentSession && (
+            <ChatMode
+              key={currentSession.id}
+              session={currentSession}
+              onSessionUpdated={refreshSessions}
             />
           )}
-        </>
+        </div>
       ) : (
         <div className="max-w-3xl">
           <FormMode />
@@ -263,6 +252,7 @@ function ChatMode({
   const [createdJob, setCreatedJob] = useState<JobPosting | null>(
     session.completedJob ?? null,
   );
+  const [salaryRec, setSalaryRec] = useState<{ min: number; max: number; reasoning: string } | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -291,9 +281,10 @@ function ChatMode({
       messages,
       backendSessionId,
       completedJob: createdJob ?? undefined,
+      salaryRecommendation: salaryRec ?? undefined,
     });
     onSessionUpdated();
-  }, [messages, backendSessionId, createdJob, session.id, onSessionUpdated]);
+  }, [messages, backendSessionId, createdJob, salaryRec, session.id, onSessionUpdated]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -319,15 +310,24 @@ function ChatMode({
           {
             role: 'agent',
             content:
-              "I've gathered enough information to create your job posting. Here's a preview:",
+              "Great! I've created your job posting. Here's a preview — you can publish it when ready.",
           },
         ]);
         setCreatedJob(response.jobPosting);
-      } else if (response.question) {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'agent', content: response.question! },
-        ]);
+        if (response.salaryRecommendation) {
+          setSalaryRec(response.salaryRecommendation);
+        }
+      } else {
+        // Salary recommendation phase or regular question
+        if (response.salaryRecommendation) {
+          setSalaryRec(response.salaryRecommendation);
+        }
+        if (response.question) {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'agent', content: response.question! },
+          ]);
+        }
       }
     } catch {
       setMessages((prev) => [
@@ -395,6 +395,35 @@ function ChatMode({
             </div>
           ))}
 
+          {/* Salary Recommendation Card — shown inline when AI recommends before completion */}
+          {salaryRec && !createdJob && (
+            <div className="max-w-[80%]">
+              <div className="rounded-2xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+                  <span className="material-symbols-outlined text-base">trending_up</span>
+                  AI Market Analysis
+                </div>
+                <div className="text-base font-semibold text-foreground">
+                  ${salaryRec.min.toLocaleString()} ~ ${salaryRec.max.toLocaleString()} / year
+                </div>
+                <p className="text-sm text-muted-foreground">{salaryRec.reasoning}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Job Preview Card — rendered inline after completion */}
+          {createdJob && (
+            <div className="pt-2">
+              <JobPreviewCard
+                job={createdJob}
+                salaryRecommendation={salaryRec}
+                onPublished={(updated) => {
+                  setCreatedJob(updated);
+                }}
+              />
+            </div>
+          )}
+
           {isLoading && (
             <div className="flex justify-start">
               <div className="flex items-start gap-3">
@@ -461,6 +490,25 @@ function FormMode() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [salaryRec, setSalaryRec] = useState<{ salaryMin: number; salaryMax: number; reasoning: string } | null>(null);
+  const [isLoadingSalary, setIsLoadingSalary] = useState(false);
+
+  const handleRecommendSalary = async () => {
+    if (!form.title) return;
+    setIsLoadingSalary(true);
+    try {
+      const result = await recommendSalary({
+        title: form.title,
+        description: form.description,
+        skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
+      });
+      setSalaryRec(result);
+    } catch {
+      // silently fail
+    } finally {
+      setIsLoadingSalary(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -583,10 +631,39 @@ function FormMode() {
 
       {/* Maximum Salary Budget */}
       <div className="space-y-2">
-        <label className="text-base font-medium text-foreground">
-          Maximum Salary Budget <span className="text-[#FFE600] text-sm font-medium">(Negotiation Ceiling)</span>
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-base font-medium text-foreground">
+            Maximum Salary Budget <span className="text-[#FFE600] text-sm font-medium">(Negotiation Ceiling)</span>
+          </label>
+          <button
+            type="button"
+            disabled={!form.title || isLoadingSalary}
+            onClick={handleRecommendSalary}
+            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-[#BF5AF2]/15 text-[#BF5AF2] hover:bg-[#BF5AF2]/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <span className={`material-symbols-outlined text-sm ${isLoadingSalary ? 'animate-spin' : ''}`}>
+              {isLoadingSalary ? 'progress_activity' : 'auto_awesome'}
+            </span>
+            {isLoadingSalary ? 'Analyzing...' : 'AI Recommend'}
+          </button>
+        </div>
         <span className="block text-sm text-muted-foreground">AI will negotiate up to this amount on your behalf. Candidates won't see this number.</span>
+        {salaryRec && (
+          <div className="rounded-xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-3 space-y-1">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+              <span className="material-symbols-outlined text-sm">trending_up</span>
+              Market Range: ${salaryRec.salaryMin.toLocaleString()} ~ ${salaryRec.salaryMax.toLocaleString()} / year
+            </div>
+            <p className="text-xs text-muted-foreground">{salaryRec.reasoning}</p>
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, salaryMax: String(salaryRec.salaryMax) }))}
+              className="text-xs font-semibold text-[#FFE600] hover:underline"
+            >
+              Use ${salaryRec.salaryMax.toLocaleString()} as ceiling
+            </button>
+          </div>
+        )}
         <input
           type="number"
           name="salaryMax"
@@ -643,9 +720,11 @@ function FormMode() {
 function JobPreviewCard({
   job,
   onPublished,
+  salaryRecommendation,
 }: {
   job: JobPosting;
   onPublished: (updated: JobPosting) => void;
+  salaryRecommendation?: { min: number; max: number; reasoning: string } | null;
 }) {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = useState(false);
@@ -714,6 +793,16 @@ function JobPreviewCard({
           </p>
         </div>
       </div>
+
+      {salaryRecommendation && (
+        <div className="rounded-xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-3 space-y-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+            <span className="material-symbols-outlined text-sm">trending_up</span>
+            Market Range: ${salaryRecommendation.min.toLocaleString()} ~ ${salaryRecommendation.max.toLocaleString()} / year
+          </div>
+          <p className="text-xs text-muted-foreground">{salaryRecommendation.reasoning}</p>
+        </div>
+      )}
 
       {job.remotePolicy && (
         <div className="flex items-center gap-2 text-base text-muted-foreground">
