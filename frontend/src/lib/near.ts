@@ -88,6 +88,23 @@ export async function getEscrowBalanceOnChain(
 }
 
 /**
+ * View seeker earnings (view count + total earned) from escrow contract.
+ * @param seekerId - The seeker's NEAR account ID
+ * @returns { view_count, total_earned } (total_earned in yoctoNEAR)
+ */
+export async function getSeekerEarningsOnChain(
+  seekerId: string,
+): Promise<{ view_count: number; total_earned: string }> {
+  const provider = getProvider();
+  const result = await provider.callFunction<{ view_count: number; total_earned: string }>({
+    contractId: ESCROW_CONTRACT_ID,
+    method: 'get_seeker_earnings',
+    args: { seeker_id: seekerId },
+  });
+  return result ?? { view_count: 0, total_earned: '0' };
+}
+
+/**
  * Check if a specific public key is registered as a FunctionCall access key
  * for pay_for_profile on the employer's account (on-chain check).
  */
