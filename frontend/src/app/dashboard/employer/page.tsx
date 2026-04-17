@@ -8,6 +8,7 @@ import { EscrowBalance } from '@/components/dashboard/escrow-balance';
 import { JobList } from '@/components/dashboard/job-list';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
 import { AIActionCard } from '@/components/dashboard/AIActionCard';
+import { NotificationFeed } from '@/components/dashboard/notification-feed';
 import { SkeletonGrid } from '@/components/ui/skeleton-card';
 
 export default function EmployerDashboard() {
@@ -61,8 +62,9 @@ export default function EmployerDashboard() {
       <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
         <JobList jobs={jobs} />
       </div>
-      <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '240ms' }}>
         <NegotiationList sessions={sessions} matches={matches} />
+        <NotificationFeed />
       </div>
     </div>
   );
