@@ -8,6 +8,7 @@ import { MatchResult } from '../entities/match-result.entity.js';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
 import { InterviewMessage } from '../entities/interview-message.entity.js';
 import { CryptoModule } from '../crypto/crypto.module.js';
+import { ProfileModule } from '../profile/profile.module.js';
 import { NegotiationController } from './negotiation.controller.js';
 import { NegotiationService } from './negotiation.service.js';
 import { RealNegotiationHandoff } from './real-negotiation-handoff.js';
@@ -18,6 +19,7 @@ import { MockMatchResultQuery } from '../common/mocks/mock-match-result-query.js
   imports: [
     TypeOrmModule.forFeature([NegotiationSession, NegotiationRound, JobPosting, User, MatchResult, ResumeProfile, InterviewMessage]),
     CryptoModule,
+    ProfileModule,
   ],
   controllers: [NegotiationController],
   providers: [

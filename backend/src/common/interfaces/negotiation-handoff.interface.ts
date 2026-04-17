@@ -6,5 +6,6 @@ export interface NegotiationHandoff {
     seekerId: string;
     employerId: string;
     matchId: string;
+    employerAccountId: string;
   }): Promise<{ sessionId: string }>;
 }
