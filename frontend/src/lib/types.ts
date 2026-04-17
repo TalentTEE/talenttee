@@ -292,4 +292,5 @@ export interface JobChatResponse {
   complete: boolean;
   question?: string;
   jobPosting?: JobPosting;
+  salaryRecommendation?: { min: number; max: number; reasoning: string };
 }

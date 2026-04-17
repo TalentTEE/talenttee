@@ -145,6 +145,7 @@ export default function CreateJobPage() {
           {currentSession?.completedJob && (
             <JobPreviewCard
               job={currentSession.completedJob}
+              salaryRecommendation={currentSession.salaryRecommendation}
               onPublished={(updated) => {
                 saveSession({ ...currentSession, completedJob: updated });
                 refreshSessions();
@@ -263,6 +264,7 @@ function ChatMode({
   const [createdJob, setCreatedJob] = useState<JobPosting | null>(
     session.completedJob ?? null,
   );
+  const [salaryRec, setSalaryRec] = useState<{ min: number; max: number; reasoning: string } | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -291,9 +293,10 @@ function ChatMode({
       messages,
       backendSessionId,
       completedJob: createdJob ?? undefined,
+      salaryRecommendation: salaryRec ?? undefined,
     });
     onSessionUpdated();
-  }, [messages, backendSessionId, createdJob, session.id, onSessionUpdated]);
+  }, [messages, backendSessionId, createdJob, salaryRec, session.id, onSessionUpdated]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -323,6 +326,9 @@ function ChatMode({
           },
         ]);
         setCreatedJob(response.jobPosting);
+        if (response.salaryRecommendation) {
+          setSalaryRec(response.salaryRecommendation);
+        }
       } else if (response.question) {
         setMessages((prev) => [
           ...prev,
@@ -691,9 +697,11 @@ function FormMode() {
 function JobPreviewCard({
   job,
   onPublished,
+  salaryRecommendation,
 }: {
   job: JobPosting;
   onPublished: (updated: JobPosting) => void;
+  salaryRecommendation?: { min: number; max: number; reasoning: string } | null;
 }) {
   const router = useRouter();
   const [isPublishing, setIsPublishing] = useState(false);
@@ -762,6 +770,16 @@ function JobPreviewCard({
           </p>
         </div>
       </div>
+
+      {salaryRecommendation && (
+        <div className="rounded-xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-3 space-y-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+            <span className="material-symbols-outlined text-sm">trending_up</span>
+            Market Range: ${salaryRecommendation.min.toLocaleString()} ~ ${salaryRecommendation.max.toLocaleString()} / year
+          </div>
+          <p className="text-xs text-muted-foreground">{salaryRecommendation.reasoning}</p>
+        </div>
+      )}
 
       {job.remotePolicy && (
         <div className="flex items-center gap-2 text-base text-muted-foreground">
