@@ -315,6 +315,11 @@ export async function createJob(jobData: Partial<JobPosting>): Promise<JobPostin
   return apiFetch('/jobs', { method: 'POST', body: JSON.stringify(jobData) });
 }
 
+export async function recommendSalary(dto: { title: string; description: string; skills: string[] }): Promise<{ salaryMin: number; salaryMax: number; reasoning: string }> {
+  if (USE_DUMMY) return { salaryMin: 60000, salaryMax: 80000, reasoning: 'Estimated based on role and skills.' };
+  return apiFetch('/jobs/salary-recommend', { method: 'POST', body: JSON.stringify(dto) });
+}
+
 export async function publishJob(jobId: string): Promise<JobPosting> {
   if (USE_DUMMY) return { ...DUMMY_JOBS[0], id: jobId, status: 'ACTIVE' } as JobPosting;
   return apiFetch(`/jobs/${jobId}/publish`, { method: 'POST' });

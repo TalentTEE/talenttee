@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { chatCreateJob, createJob, publishJob } from '@/lib/api';
+import { chatCreateJob, createJob, publishJob, recommendSalary } from '@/lib/api';
 import { ChatMessage, JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import {
@@ -461,6 +461,25 @@ function FormMode() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [salaryRec, setSalaryRec] = useState<{ salaryMin: number; salaryMax: number; reasoning: string } | null>(null);
+  const [isLoadingSalary, setIsLoadingSalary] = useState(false);
+
+  const handleRecommendSalary = async () => {
+    if (!form.title) return;
+    setIsLoadingSalary(true);
+    try {
+      const result = await recommendSalary({
+        title: form.title,
+        description: form.description,
+        skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
+      });
+      setSalaryRec(result);
+    } catch {
+      // silently fail
+    } finally {
+      setIsLoadingSalary(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -583,10 +602,39 @@ function FormMode() {
 
       {/* Maximum Salary Budget */}
       <div className="space-y-2">
-        <label className="text-base font-medium text-foreground">
-          Maximum Salary Budget <span className="text-[#FFE600] text-sm font-medium">(Negotiation Ceiling)</span>
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-base font-medium text-foreground">
+            Maximum Salary Budget <span className="text-[#FFE600] text-sm font-medium">(Negotiation Ceiling)</span>
+          </label>
+          <button
+            type="button"
+            disabled={!form.title || isLoadingSalary}
+            onClick={handleRecommendSalary}
+            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-[#BF5AF2]/15 text-[#BF5AF2] hover:bg-[#BF5AF2]/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <span className={`material-symbols-outlined text-sm ${isLoadingSalary ? 'animate-spin' : ''}`}>
+              {isLoadingSalary ? 'progress_activity' : 'auto_awesome'}
+            </span>
+            {isLoadingSalary ? 'Analyzing...' : 'AI Recommend'}
+          </button>
+        </div>
         <span className="block text-sm text-muted-foreground">AI will negotiate up to this amount on your behalf. Candidates won't see this number.</span>
+        {salaryRec && (
+          <div className="rounded-xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-3 space-y-1">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+              <span className="material-symbols-outlined text-sm">trending_up</span>
+              Market Range: ${salaryRec.salaryMin.toLocaleString()} ~ ${salaryRec.salaryMax.toLocaleString()} / year
+            </div>
+            <p className="text-xs text-muted-foreground">{salaryRec.reasoning}</p>
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, salaryMax: String(salaryRec.salaryMax) }))}
+              className="text-xs font-semibold text-[#FFE600] hover:underline"
+            >
+              Use ${salaryRec.salaryMax.toLocaleString()} as ceiling
+            </button>
+          </div>
+        )}
         <input
           type="number"
           name="salaryMax"
