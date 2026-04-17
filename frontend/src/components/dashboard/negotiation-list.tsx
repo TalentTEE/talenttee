@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
+import { useSse } from '@/lib/sse';
 import Link from 'next/link';
 
 const stateInfo: Record<string, { label: string; icon: string; className: string }> = {
@@ -52,24 +53,37 @@ const SECTIONS: SectionConfig[] = [
   },
 ];
 
+/** Real-time activity badge for a session */
+interface Activity {
+  label: string;
+  icon: string;
+  color: string;
+}
+
 function SessionRow({
   session,
   match,
   ctaLabel,
   ctaHref,
+  activity,
 }: {
   session: NegotiationSession;
   match?: MatchResultDisplay;
   ctaLabel: string;
   ctaHref: string;
+  activity?: Activity;
 }) {
   const isAgreed = session.state === 'AGREED';
   const score = match ? Math.round(match.rerankScore * 100) : null;
   const info = stateInfo[session.state] || stateInfo.INITIATED;
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-xl bg-accent/50 border border-border/5 hover:bg-accent transition-all">
-      <div className="flex items-center gap-3">
+    <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+      activity
+        ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10'
+        : 'bg-accent/50 border-border/5 hover:bg-accent'
+    }`}>
+      <div className="flex items-center gap-3 min-w-0">
         {score !== null ? (
           <div className="relative w-10 h-10 shrink-0">
             <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
@@ -92,24 +106,40 @@ function SessionRow({
             </span>
           </div>
         )}
-        <div>
-          <p className="text-base font-semibold text-foreground">
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-foreground truncate">
             {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${session.id}`}
           </p>
-          <div className={`flex items-center gap-1 text-sm font-medium ${info.className}`}>
-            <span className="material-symbols-outlined text-sm" style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
-              {info.icon}
-            </span>
-            {info.label}
-            {ACTIVE_STATES.has(session.state) && (
-              <span className="text-muted-foreground ml-1">R{session.currentRound}/{session.maxRounds}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className={`flex items-center gap-1 text-sm font-medium ${info.className}`}>
+              <span className="material-symbols-outlined text-sm" style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                {info.icon}
+              </span>
+              {info.label}
+              {ACTIVE_STATES.has(session.state) && (
+                <span className="text-muted-foreground ml-1">R{session.currentRound}/{session.maxRounds}</span>
+              )}
+            </div>
+            {activity && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold animate-[fadeSlideUp_300ms_ease-out_both]"
+                style={{
+                  backgroundColor: `color-mix(in srgb, ${activity.color} 15%, transparent)`,
+                  color: activity.color,
+                }}
+              >
+                <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {activity.icon}
+                </span>
+                {activity.label}
+              </span>
             )}
           </div>
         </div>
       </div>
       <Link
         href={ctaHref}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+        className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-300"
       >
         {ctaLabel}
         <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -125,8 +155,64 @@ export function NegotiationList({
   sessions: NegotiationSession[];
   matches?: MatchResultDisplay[];
 }) {
+  const { on } = useSse();
   const [endedOpen, setEndedOpen] = useState(false);
+  // sessionId → latest activity badge
+  const [activities, setActivities] = useState<Map<string, Activity>>(new Map());
   const matchByJobId = new Map(matches.map((m) => [m.jobId, m]));
+
+  // Listen for SSE events and show badges on affected sessions
+  useEffect(() => {
+    const unsubs: (() => void)[] = [];
+
+    unsubs.push(on('message', (data) => {
+      if (data.sessionId) {
+        setActivities((prev) => {
+          const next = new Map(prev);
+          const existing = prev.get(data.sessionId);
+          const count = existing?.label.startsWith('New message')
+            ? parseInt(existing.label.match(/\((\d+)\)/)?.[1] || '1') + 1
+            : 1;
+          next.set(data.sessionId, {
+            label: count > 1 ? `New messages (${count})` : 'New message',
+            icon: 'chat',
+            color: '#00F0FF',
+          });
+          return next;
+        });
+      }
+    }));
+
+    unsubs.push(on('negotiation_complete', (data) => {
+      if (data.sessionId) {
+        setActivities((prev) => {
+          const next = new Map(prev);
+          next.set(data.sessionId, {
+            label: 'Completed',
+            icon: 'check_circle',
+            color: '#39FF14',
+          });
+          return next;
+        });
+      }
+    }));
+
+    unsubs.push(on('agreement_update', (data) => {
+      if (data.sessionId) {
+        setActivities((prev) => {
+          const next = new Map(prev);
+          next.set(data.sessionId, {
+            label: data.action === 'approved' ? `${data.byRole} approved` : `${data.byRole} rejected`,
+            icon: data.action === 'approved' ? 'thumb_up' : 'thumb_down',
+            color: data.action === 'approved' ? '#FFE600' : '#f87171',
+          });
+          return next;
+        });
+      }
+    }));
+
+    return () => unsubs.forEach((fn) => fn());
+  }, [on]);
 
   const grouped: Record<string, NegotiationSession[]> = {
     active: sessions.filter((s) => ACTIVE_STATES.has(s.state)),
@@ -135,10 +221,18 @@ export function NegotiationList({
   };
 
   const hasAnySessions = sessions.length > 0;
+  const totalActivities = activities.size;
 
   return (
     <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
-      <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-4">Negotiations</h3>
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Negotiations</h3>
+        {totalActivities > 0 && (
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+            {totalActivities}
+          </span>
+        )}
+      </div>
       {!hasAnySessions && (
         <p className="text-base text-muted-foreground">No active negotiations.</p>
       )}
@@ -186,6 +280,7 @@ export function NegotiationList({
                       match={matchByJobId.get(s.jobId)}
                       ctaLabel={section.ctaLabel(s)}
                       ctaHref={section.ctaHref(s)}
+                      activity={activities.get(s.id)}
                     />
                   ))}
                 </div>
