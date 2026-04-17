@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { SidebarJobSeekToggle } from './sidebar-job-seek-toggle';
 import { SidebarSeekerEarnings } from './sidebar-seeker-earnings';
+import { SidebarEscrowBalance } from './sidebar-escrow-balance';
 
 const seekerLinks = [
   { href: '/dashboard/seeker', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
@@ -80,6 +81,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             );
           })}
         </nav>
+        {user?.role === 'EMPLOYER' && <SidebarEscrowBalance />}
         {user?.role === 'SEEKER' && <SidebarSeekerEarnings />}
         {user?.role === 'SEEKER' && <SidebarJobSeekToggle />}
       </aside>
