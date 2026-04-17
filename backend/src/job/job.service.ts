@@ -100,6 +100,18 @@ export class JobService {
     }
   }
 
+  async closeJob(jobId: string, employerId: string): Promise<JobPosting> {
+    const job = await this.getJob(jobId);
+    if (job.employerId !== employerId) {
+      throw new ForbiddenException('Not the job owner');
+    }
+    if (job.status === JobPostingStatus.CLOSED) {
+      return job; // idempotent
+    }
+    job.status = JobPostingStatus.CLOSED;
+    return this.jobRepo.save(job);
+  }
+
   async getJob(id: string): Promise<JobPosting> {
     const job = await this.jobRepo.findOne({ where: { id } });
     if (!job) throw new NotFoundException('Job posting not found');

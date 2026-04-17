@@ -54,9 +54,11 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
                   </div>
                 </div>
               </div>
-              <button className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-                Close
-              </button>
+              {j.status === 'CLOSED' && (
+                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted text-muted-foreground">
+                  Closed
+                </span>
+              )}
             </div>
           ))}
         </div>
