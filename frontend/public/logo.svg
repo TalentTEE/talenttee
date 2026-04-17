@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 420" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00EC97"/>
+      <stop offset="100%" stop-color="#00D4AA"/>
+    </linearGradient>
+    <linearGradient id="g1b" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00C9FF"/>
+      <stop offset="100%" stop-color="#00D4AA"/>
+    </linearGradient>
+    <linearGradient id="gShield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00EC97" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#00C9FF" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Soft shield background -->
+  <path d="M256 28 C256 28 88 80 88 80 C88 80 72 240 136 340 C190 420 256 400 256 400
+           C256 400 322 420 376 340 C440 240 424 80 424 80 C424 80 256 28 256 28Z"
+        fill="url(#gShield)" stroke="url(#g1)" stroke-width="6" stroke-linejoin="round" opacity="0.6"/>
+
+  <!-- ===== LEFT ROBOT (Seeker - green) ===== -->
+  <g transform="translate(120, 120)">
+    <!-- Body -->
+    <rect x="0" y="72" width="72" height="56" rx="16" fill="url(#g1)" opacity="0.7"/>
+    <!-- Head -->
+    <rect x="4" y="8" width="64" height="56" rx="18" fill="url(#g1)"/>
+    <!-- Antenna -->
+    <line x1="36" y1="8" x2="36" y2="-8" stroke="url(#g1)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="36" cy="-14" r="7" fill="url(#g1)"/>
+    <!-- Eyes -->
+    <circle cx="22" cy="32" r="11" fill="#0a0a0a"/>
+    <circle cx="50" cy="32" r="11" fill="#0a0a0a"/>
+    <circle cx="26" cy="28" r="4" fill="white"/>
+    <circle cx="54" cy="28" r="4" fill="white"/>
+    <circle cx="19" cy="34" r="2.5" fill="white" opacity="0.4"/>
+    <circle cx="47" cy="34" r="2.5" fill="white" opacity="0.4"/>
+    <!-- Happy smile -->
+    <path d="M22 48 Q36 58 50 48" stroke="#0a0a0a" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <!-- Ears -->
+    <rect x="-12" y="20" width="12" height="24" rx="5" fill="url(#g1)"/>
+    <rect x="72" y="20" width="12" height="24" rx="5" fill="url(#g1)"/>
+    <!-- Arm reaching to table -->
+    <path d="M64 96 Q90 100 110 108" stroke="url(#g1)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <!-- Briefcase -->
+    <rect x="-8" y="132" width="28" height="22" rx="5" fill="url(#g1)" opacity="0.5"/>
+    <line x1="-1" y1="132" x2="-1" y2="128" stroke="url(#g1)" stroke-width="3" stroke-linecap="round"/>
+    <line x1="13" y1="132" x2="13" y2="128" stroke="url(#g1)" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== RIGHT ROBOT (Employer - blue-green) ===== -->
+  <g transform="translate(320, 120)">
+    <!-- Body -->
+    <rect x="0" y="72" width="72" height="56" rx="16" fill="url(#g1b)" opacity="0.7"/>
+    <!-- Head -->
+    <rect x="4" y="8" width="64" height="56" rx="18" fill="url(#g1b)"/>
+    <!-- Antenna -->
+    <line x1="36" y1="8" x2="36" y2="-8" stroke="url(#g1b)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="36" cy="-14" r="7" fill="url(#g1b)"/>
+    <!-- Eyes -->
+    <circle cx="22" cy="32" r="11" fill="#0a0a0a"/>
+    <circle cx="50" cy="32" r="11" fill="#0a0a0a"/>
+    <circle cx="26" cy="28" r="4" fill="white"/>
+    <circle cx="54" cy="28" r="4" fill="white"/>
+    <circle cx="19" cy="34" r="2.5" fill="white" opacity="0.4"/>
+    <circle cx="47" cy="34" r="2.5" fill="white" opacity="0.4"/>
+    <!-- Happy smile -->
+    <path d="M22 48 Q36 58 50 48" stroke="#0a0a0a" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <!-- Ears -->
+    <rect x="-12" y="20" width="12" height="24" rx="5" fill="url(#g1b)"/>
+    <rect x="72" y="20" width="12" height="24" rx="5" fill="url(#g1b)"/>
+    <!-- Arm reaching to table -->
+    <path d="M8 96 Q-18 100 -38 108" stroke="url(#g1b)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <!-- Tie (employer look) -->
+    <path d="M32 72 L36 88 L40 72" stroke="url(#g1b)" stroke-width="3" fill="#0a0a0a" opacity="0.3"/>
+  </g>
+
+  <!-- ===== NEGOTIATION TABLE ===== -->
+  <!-- Table top -->
+  <rect x="140" y="248" width="232" height="12" rx="6" fill="url(#g1)" opacity="0.6"/>
+  <!-- Table legs -->
+  <rect x="168" y="260" width="8" height="40" rx="3" fill="url(#g1)" opacity="0.4"/>
+  <rect x="336" y="260" width="8" height="40" rx="3" fill="url(#g1)" opacity="0.4"/>
+
+  <!-- Document on table -->
+  <rect x="222" y="232" width="28" height="18" rx="3" fill="white" opacity="0.7"/>
+  <line x1="228" y1="238" x2="244" y2="238" stroke="url(#g1)" stroke-width="2"/>
+  <line x1="228" y1="243" x2="240" y2="243" stroke="url(#g1)" stroke-width="2"/>
+
+  <!-- Handshake sparkle above table -->
+  <g transform="translate(256, 222)">
+    <line x1="0" y1="-12" x2="0" y2="-6" stroke="#FFE600" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="-8" y1="-10" x2="-5" y2="-5" stroke="#FFE600" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="8" y1="-10" x2="5" y2="-5" stroke="#FFE600" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Lock (TEE) centered below table -->
+  <g transform="translate(256, 330)">
+    <rect x="-20" y="0" width="40" height="30" rx="8" fill="url(#g1)" opacity="0.6"/>
+    <path d="M-10 0 L-10 -10 C-10 -20 -4 -26 0 -26 C4 -26 10 -20 10 -10 L10 0"
+          stroke="url(#g1)" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.6"/>
+    <circle cx="0" cy="13" r="5" fill="#0a0a0a" opacity="0.4"/>
+    <rect x="-1.5" y="13" width="3" height="7" rx="1" fill="#0a0a0a" opacity="0.4"/>
+  </g>
+
+  <!-- Speech bubbles -->
+  <!-- Left bubble -->
+  <g transform="translate(108, 88)">
+    <rect x="0" y="0" width="40" height="24" rx="10" fill="url(#g1)" opacity="0.3"/>
+    <polygon points="30,24 26,32 22,24" fill="url(#g1)" opacity="0.3"/>
+    <text x="12" y="16" font-size="11" fill="#0a0a0a" font-family="sans-serif" opacity="0.6">$?</text>
+  </g>
+  <!-- Right bubble -->
+  <g transform="translate(364, 88)">
+    <rect x="0" y="0" width="40" height="24" rx="10" fill="url(#g1b)" opacity="0.3"/>
+    <polygon points="10,24 14,32 18,24" fill="url(#g1b)" opacity="0.3"/>
+    <text x="10" y="16" font-size="11" fill="#0a0a0a" font-family="sans-serif" opacity="0.6">OK</text>
+  </g>
+</svg>

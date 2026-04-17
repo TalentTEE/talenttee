@@ -14,7 +14,8 @@
 | **한쪽만 승인 시 대기 화면 부재** | `agree/page.tsx` | approve API가 `waiting_for_other_party` 반환하지만 UI에 미반영 |
 | **승인 완료 후 랜딩 없음** | 전체 | txHash 보여주고 끝. "채용 합의 완료" 안내 없음 |
 | **Negotiations 목록에 진행 중(IN_PROGRESS) 세션 미표시** | `negotiations/page.tsx:43-44` | AGREED/FAILED만 필터링, 진행 중인 협상이 보이지 않음 |
-| **대시보드에 완료 상태 미반영** | 대시보드 | 합의 완료/거절된 건의 상태 구분 없음 |
+| **대시보드에 완료 상태 미반영** | 
+대시보드 | 합의 완료/거절된 건의 상태 구분 없음 |
 | **NegotiationState에 REJECTED 없음** | `enums/index.ts` | 거절을 표현할 상태값 자체가 없음 |
 
 ---
