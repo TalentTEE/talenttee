@@ -10,11 +10,11 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Job Postings</h3>
         <Link
-          href="/jobs/create"
+          href="/jobs"
           className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FFE600] text-[#0a0a0a] text-sm font-bold hover:bg-[#FFE600]/90 transition-all"
         >
-          <span className="material-symbols-outlined text-base">add</span>
-          New Posting
+          <span className="material-symbols-outlined text-base">settings</span>
+          Manage
         </Link>
       </div>
       {jobs.length === 0 ? (
@@ -25,7 +25,7 @@ export function JobList({ jobs }: { jobs: JobPosting[] }) {
           <p className="text-base font-semibold text-foreground mb-1">No job postings yet</p>
           <p className="text-sm text-muted-foreground mb-4">Create your first posting to start matching with candidates.</p>
           <Link
-            href="/jobs/create"
+            href="/jobs"
             className="px-4 py-2 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all"
           >
             Create First Posting
