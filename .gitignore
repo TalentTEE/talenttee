@@ -6,3 +6,4 @@ dist/
 .superpowers/
 target/
 package-lock.json
+node_modules
