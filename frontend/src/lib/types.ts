@@ -208,6 +208,15 @@ export interface EscrowPayment {
   txHash: string;
 }
 
+export interface InterviewMessage {
+  id: string;
+  sessionId: string;
+  senderId: string;
+  sender: { id: string; nearAccountId: string; role: UserRole };
+  content: string;
+  createdAt: string;
+}
+
 export interface EncryptedNegotiationRound {
   id: string;
   sessionId: string;

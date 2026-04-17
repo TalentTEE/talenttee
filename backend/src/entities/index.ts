@@ -8,3 +8,4 @@ export { EscrowDeposit } from './escrow-deposit.entity.js';
 export { ProfileAccessGrant } from './profile-access-grant.entity.js';
 export { PaymentRecord } from './payment-record.entity.js';
 export { MatchResult } from './match-result.entity.js';
+export { InterviewMessage } from './interview-message.entity.js';

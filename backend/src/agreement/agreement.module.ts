@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
+import { InterviewMessage } from '../entities/interview-message.entity.js';
 import { AgreementController } from './agreement.controller.js';
 import { AgreementService } from './agreement.service.js';
 import { CryptoModule } from '../crypto/crypto.module.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NegotiationSession, NegotiationRound]), CryptoModule],
+  imports: [TypeOrmModule.forFeature([NegotiationSession, NegotiationRound, InterviewMessage]), CryptoModule],
   controllers: [AgreementController],
   providers: [AgreementService],
   exports: [AgreementService],

@@ -408,6 +408,29 @@ export async function getAgreement(sessionId: string): Promise<AgreementRecord> 
   return apiFetch(`/agreement/${sessionId}`);
 }
 
+// === Interview Messages ===
+export async function getInterviewMessages(sessionId: string): Promise<import('./types').InterviewMessage[]> {
+  if (USE_DUMMY) return [];
+  return apiFetch(`/agreement/${sessionId}/messages`);
+}
+
+export async function sendInterviewMessage(sessionId: string, content: string): Promise<import('./types').InterviewMessage> {
+  if (USE_DUMMY) {
+    return {
+      id: `msg-${Date.now()}`,
+      sessionId,
+      senderId: 'dummy',
+      sender: { id: 'dummy', nearAccountId: 'dummy.testnet', role: 'EMPLOYER' },
+      content,
+      createdAt: new Date().toISOString(),
+    };
+  }
+  return apiFetch(`/agreement/${sessionId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+}
+
 // === Escrow ===
 function yoctoToNear(yocto: string): number {
   const YOCTO_PER_NEAR = 1e24;

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { createHash } from 'crypto';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
+import { InterviewMessage } from '../entities/interview-message.entity.js';
 import { NegotiationState, NegotiationDecision } from '../common/enums/index.js';
 import { CryptoService } from '../crypto/crypto.service.js';
 
@@ -18,6 +19,8 @@ export class AgreementService {
     private readonly sessionRepo: Repository<NegotiationSession>,
     @InjectRepository(NegotiationRound)
     private readonly roundRepo: Repository<NegotiationRound>,
+    @InjectRepository(InterviewMessage)
+    private readonly messageRepo: Repository<InterviewMessage>,
     private readonly cryptoService: CryptoService,
   ) {}
 
@@ -209,6 +212,32 @@ export class AgreementService {
       onChainTxHash: session.onChainTxHash || null,
       rejected: session.state === NegotiationState.FAILED,
     };
+  }
+
+  async getMessages(sessionId: string, userId: string): Promise<InterviewMessage[]> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.seekerId !== userId && session.employerId !== userId) {
+      throw new ForbiddenException('Not a participant');
+    }
+    return this.messageRepo.find({
+      where: { sessionId },
+      relations: ['sender'],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async sendMessage(sessionId: string, userId: string, content: string): Promise<InterviewMessage> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.seekerId !== userId && session.employerId !== userId) {
+      throw new ForbiddenException('Not a participant');
+    }
+    if (!session.seekerApproved || !session.employerApproved) {
+      throw new ConflictException('Both parties must approve before messaging');
+    }
+    const message = this.messageRepo.create({ sessionId, senderId: userId, content });
+    return this.messageRepo.save(message);
   }
 
   async verifyAgreement(sessionId: string): Promise<boolean> {
