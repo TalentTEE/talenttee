@@ -331,6 +331,12 @@ export class MatchService {
 
   private async autoNegotiate(match: MatchResult, employerId: string): Promise<void> {
     try {
+      const employer = await this.userRepo.findOne({ where: { id: employerId } });
+      if (!employer?.nearAccountId) {
+        this.logger.warn(`Employer ${employerId} has no NEAR account, skipping auto-negotiate`);
+        return;
+      }
+
       match.seekerAgreed = true;
       match.employerAgreed = true;
       const result = await this.negotiationHandoff.createSession({
@@ -338,6 +344,7 @@ export class MatchService {
         seekerId: match.seekerId,
         employerId,
         matchId: match.id,
+        employerAccountId: employer.nearAccountId,
       });
       match.negotiationSessionId = result.sessionId;
       await this.matchRepo.save(match);
@@ -388,12 +395,13 @@ export class MatchService {
 
     // Both agreed → create negotiation session
     if (updated.seekerAgreed && updated.employerAgreed && !updated.negotiationSessionId) {
-      const job = await this.jobRepo.findOne({ where: { id: match.jobId } });
+      const job = await this.jobRepo.findOne({ where: { id: match.jobId }, relations: ['employer'] });
       const result = await this.negotiationHandoff.createSession({
         jobId: match.jobId,
         seekerId: match.seekerId,
         employerId: job!.employerId,
         matchId: match.id,
+        employerAccountId: job!.employer.nearAccountId,
       });
       updated.negotiationSessionId = result.sessionId;
       await this.matchRepo.save(updated);
