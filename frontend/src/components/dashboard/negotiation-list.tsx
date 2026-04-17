@@ -37,10 +37,10 @@ const SECTIONS: SectionConfig[] = [
   },
   {
     key: 'agreed',
-    title: 'Agreed — Review Required',
+    title: 'Agreed',
     badgeColor: '#39FF14',
     defaultOpen: true,
-    ctaLabel: () => 'Review & Approve',
+    ctaLabel: (s) => (s.seekerApproved && s.employerApproved) ? 'Open Chat' : 'Review & Approve',
     ctaHref: (s) => `/negotiation/${s.id}/agree`,
   },
   {
@@ -56,6 +56,7 @@ const SECTIONS: SectionConfig[] = [
 /** Real-time activity badge for a session */
 interface Activity {
   label: string;
+  count?: number;
   icon: string;
   color: string;
 }
@@ -63,13 +64,11 @@ interface Activity {
 function SessionRow({
   session,
   match,
-  ctaLabel,
   ctaHref,
   activity,
 }: {
   session: NegotiationSession;
   match?: MatchResultDisplay;
-  ctaLabel: string;
   ctaHref: string;
   activity?: Activity;
 }) {
@@ -78,11 +77,14 @@ function SessionRow({
   const info = stateInfo[session.state] || stateInfo.INITIATED;
 
   return (
-    <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-      activity
-        ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10'
-        : 'bg-accent/50 border-border/5 hover:bg-accent'
-    }`}>
+    <Link
+      href={ctaHref}
+      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
+        activity
+          ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10'
+          : 'bg-accent/50 border-border/5 hover:bg-accent'
+      }`}
+    >
       <div className="flex items-center gap-3 min-w-0">
         {score !== null ? (
           <div className="relative w-10 h-10 shrink-0">
@@ -132,19 +134,23 @@ function SessionRow({
                   {activity.icon}
                 </span>
                 {activity.label}
+                {activity.count && activity.count > 1 && (
+                  <span
+                    className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-md text-[10px] font-bold"
+                    style={{ backgroundColor: activity.color, color: '#0a0a0a' }}
+                  >
+                    {activity.count}
+                  </span>
+                )}
               </span>
             )}
           </div>
         </div>
       </div>
-      <Link
-        href={ctaHref}
-        className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-      >
-        {ctaLabel}
-        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-      </Link>
-    </div>
+      <span className="material-symbols-outlined text-lg text-muted-foreground shrink-0">
+        arrow_forward
+      </span>
+    </Link>
   );
 }
 
@@ -170,11 +176,10 @@ export function NegotiationList({
         setActivities((prev) => {
           const next = new Map(prev);
           const existing = prev.get(data.sessionId);
-          const count = existing?.label.startsWith('New message')
-            ? parseInt(existing.label.match(/\((\d+)\)/)?.[1] || '1') + 1
-            : 1;
+          const count = (existing?.count ?? 0) + 1;
           next.set(data.sessionId, {
-            label: count > 1 ? `New messages (${count})` : 'New message',
+            label: 'New message',
+            count,
             icon: 'chat',
             color: '#00F0FF',
           });
@@ -278,7 +283,6 @@ export function NegotiationList({
                       key={s.id}
                       session={s}
                       match={matchByJobId.get(s.jobId)}
-                      ctaLabel={section.ctaLabel(s)}
                       ctaHref={section.ctaHref(s)}
                       activity={activities.get(s.id)}
                     />
