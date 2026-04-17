@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useWallet } from '@/lib/wallet-selector';
 import { getEscrowBalance, getEscrowPayments, getAgentPublicKey } from '@/lib/api';
-import { getEscrowBalanceOnChain } from '@/lib/near';
+import { getEscrowBalanceOnChain, hasAgentKeyOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
 import { actionCreators } from '@near-js/transactions';
@@ -37,14 +37,22 @@ export default function EscrowPage() {
     if (!user) return;
 
     Promise.all([
-      getEscrowBalance(user.nearAccountId),
-      getEscrowPayments(),
-      getAgentPublicKey(),
+      getEscrowBalance(user.nearAccountId).catch(() => null),
+      getEscrowPayments().catch(() => []),
+      getAgentPublicKey().catch(() => ''),
     ])
       .then(([balance, history, agentKey]) => {
-        setEscrow(balance);
+        if (balance) setEscrow(balance);
         setPayments(history);
         setAgentPubKey(agentKey);
+        // Check on-chain if agent key is already registered (non-blocking)
+        if (agentKey && user.nearAccountId) {
+          hasAgentKeyOnChain(user.nearAccountId, agentKey).then(keyExists => {
+            if (keyExists) {
+              setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
+            }
+          }).catch(() => {});
+        }
       })
       .finally(() => setIsLoading(false));
   }, [user]);
@@ -164,7 +172,6 @@ export default function EscrowPage() {
       }
     } finally {
       setIsSettingKey(false);
-      setAgentPubKey('');
     }
   };
 

@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — near-api-js v7 re-exports JsonRpcProvider but Vercel TS resolution misses it
 import { Account, JsonRpcProvider, KeyPairSigner, nearToYocto, type KeyPairString } from 'near-api-js';
 
 const ESCROW_CONTRACT_ID =
@@ -83,4 +85,53 @@ export async function getEscrowBalanceOnChain(
     args: { employer_id: employerId },
   });
   return result ?? '0';
+}
+
+/**
+ * Check if a specific public key is registered as a FunctionCall access key
+ * for pay_for_profile on the employer's account (on-chain check).
+ */
+export async function hasAgentKeyOnChain(
+  accountId: string,
+  agentPublicKey: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(NEAR_RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'check-agent-key',
+        method: 'query',
+        params: {
+          request_type: 'view_access_key_list',
+          finality: 'final',
+          account_id: accountId,
+        },
+      }),
+    });
+    const json = await res.json();
+    const keys: Array<{
+      public_key: string;
+      access_key: {
+        permission: 'FullAccess' | {
+          FunctionCall: {
+            receiver_id: string;
+            method_names: string[];
+          };
+        };
+      };
+    }> = json.result?.keys ?? [];
+
+    return keys.some(
+      (k) =>
+        k.public_key === agentPublicKey &&
+        typeof k.access_key.permission === 'object' &&
+        'FunctionCall' in k.access_key.permission &&
+        k.access_key.permission.FunctionCall.receiver_id === ESCROW_CONTRACT_ID &&
+        k.access_key.permission.FunctionCall.method_names.includes('pay_for_profile'),
+    );
+  } catch {
+    return false;
+  }
 }
