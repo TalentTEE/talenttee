@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { SidebarJobSeekToggle } from './sidebar-job-seek-toggle';
+import { SidebarSeekerEarnings } from './sidebar-seeker-earnings';
 
 const seekerLinks = [
   { href: '/dashboard/seeker', label: 'Dashboard', icon: 'dashboard', neonColor: '' },
@@ -79,6 +80,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             );
           })}
         </nav>
+        {user?.role === 'SEEKER' && <SidebarSeekerEarnings />}
         {user?.role === 'SEEKER' && <SidebarJobSeekToggle />}
       </aside>
     </>

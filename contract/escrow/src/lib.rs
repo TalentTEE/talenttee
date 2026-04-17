@@ -3,6 +3,8 @@ use near_sdk::{env, json_types::U128, near, AccountId, NearToken, PanicOnDefault
 
 const DEFAULT_PROFILE_VIEW_COST: u128 = 100_000_000_000_000_000_000_000; // 0.1 NEAR
 const MAX_RECORDS_PER_EMPLOYER: usize = 1000;
+const SEEKER_SHARE_PERCENT: u128 = 80;
+const PLATFORM_SHARE_PERCENT: u128 = 20;
 
 #[near(serializers = [json, borsh])]
 #[derive(Clone)]
@@ -20,6 +22,13 @@ pub struct ProfileAccessRecord {
     pub timestamp: u64,
 }
 
+#[near(serializers = [json, borsh])]
+#[derive(Clone)]
+pub struct SeekerEarnings {
+    pub view_count: u64,
+    pub total_earned: u128,
+}
+
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
 pub struct EscrowContract {
@@ -28,6 +37,7 @@ pub struct EscrowContract {
     accounts: IterableMap<AccountId, EscrowAccount>,
     access_records: IterableMap<String, Vec<ProfileAccessRecord>>,
     authorized_agents: IterableMap<AccountId, Vec<AccountId>>,
+    seeker_earnings: IterableMap<AccountId, SeekerEarnings>,
 }
 
 #[near]
@@ -40,6 +50,7 @@ impl EscrowContract {
             accounts: IterableMap::new(b"a"),
             access_records: IterableMap::new(b"r"),
             authorized_agents: IterableMap::new(b"g"),
+            seeker_earnings: IterableMap::new(b"s"),
         }
     }
 
@@ -73,8 +84,20 @@ impl EscrowContract {
         account.balance -= self.profile_view_cost;
         self.accounts.insert(employer_id.clone(), account);
 
-        // Platform revenue: 100% of profile view cost goes to contract owner
-        let _ = Promise::new(self.owner.clone()).transfer(NearToken::from_yoctonear(self.profile_view_cost));
+        // Revenue split: 80% to seeker, 20% to platform owner
+        let seeker_share = self.profile_view_cost * SEEKER_SHARE_PERCENT / 100;
+        let platform_share = self.profile_view_cost - seeker_share;
+        let _ = Promise::new(seeker_id.clone()).transfer(NearToken::from_yoctonear(seeker_share));
+        let _ = Promise::new(self.owner.clone()).transfer(NearToken::from_yoctonear(platform_share));
+
+        // Track seeker earnings
+        let mut earnings = self.seeker_earnings.get(&seeker_id).cloned().unwrap_or(SeekerEarnings {
+            view_count: 0,
+            total_earned: 0,
+        });
+        earnings.view_count += 1;
+        earnings.total_earned += seeker_share;
+        self.seeker_earnings.insert(seeker_id.clone(), earnings);
 
         let record = ProfileAccessRecord {
             employer_id: employer_id.clone(),
@@ -139,6 +162,13 @@ impl EscrowContract {
 
     pub fn get_balance(&self, employer_id: AccountId) -> u128 {
         self.accounts.get(&employer_id).map(|a| a.balance).unwrap_or(0)
+    }
+
+    pub fn get_seeker_earnings(&self, seeker_id: AccountId) -> SeekerEarnings {
+        self.seeker_earnings.get(&seeker_id).cloned().unwrap_or(SeekerEarnings {
+            view_count: 0,
+            total_earned: 0,
+        })
     }
 
     pub fn get_access_history(&self, employer_id: AccountId) -> Vec<ProfileAccessRecord> {
@@ -232,8 +262,13 @@ mod tests {
 
         let history = contract.get_access_history(employer);
         assert_eq!(history.len(), 1);
-        assert_eq!(history[0].seeker_id, seeker);
+        assert_eq!(history[0].seeker_id, seeker.clone());
         assert_eq!(history[0].amount, DEFAULT_PROFILE_VIEW_COST);
+
+        // Verify seeker earnings: 80% of 0.1 NEAR = 0.08 NEAR
+        let earnings = contract.get_seeker_earnings(seeker);
+        assert_eq!(earnings.view_count, 1);
+        assert_eq!(earnings.total_earned, DEFAULT_PROFILE_VIEW_COST * 80 / 100);
     }
 
     #[test]
