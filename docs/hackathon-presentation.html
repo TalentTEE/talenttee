@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentTee — Hackathon Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ===== RESET ===== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ===== VARIABLES ===== */
+  :root {
+    --bg: #FAF7F2;
+    --surface: #F0EBE3;
+    --ink: #1C1917;
+    --ink-light: #44403C;
+    --muted: #78716C;
+    --border: #D6D3D1;
+    --border-light: #E7E5E4;
+    --red: #B91C1C;
+    --red-soft: #FEE2E2;
+    --teal: #0D9488;
+    --teal-soft: #CCFBF1;
+    --amber: #B45309;
+    --amber-soft: #FEF3C7;
+    --blue: #1D4ED8;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  }
+
+  /* ===== BASE ===== */
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 16px;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== NOISE TEXTURE ===== */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.018;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+
+  /* ===== LAYOUT ===== */
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 32px 60px;
+    position: relative;
+  }
+
+  .hero-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    animation: fadeUp 0.7s ease-out both;
+  }
+
+  .hero-rule {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 32px;
+    animation: fadeUp 0.7s ease-out 0.05s both;
+  }
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(64px, 11vw, 130px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -3px;
+    color: var(--ink);
+    margin-bottom: 32px;
+    animation: fadeUp 0.7s ease-out 0.1s both;
+  }
+
+  .accent-dot {
+    color: var(--red);
+  }
+
+  .hero-tagline {
+    font-size: clamp(17px, 2.2vw, 22px);
+    font-weight: 300;
+    line-height: 1.65;
+    color: var(--ink-light);
+    max-width: 640px;
+    margin-bottom: 48px;
+    animation: fadeUp 0.7s ease-out 0.2s both;
+  }
+
+  .hero-tagline strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 64px;
+    animation: fadeUp 0.7s ease-out 0.3s both;
+  }
+
+  .hero-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .hero-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    animation: fadeUp 0.7s ease-out 0.4s both;
+  }
+
+  .hero-feat {
+    padding: 28px 28px 28px 0;
+    border-top: 2px solid var(--ink);
+  }
+
+  .hero-feat:not(:last-child) {
+    border-right: 1px solid var(--border-light);
+    margin-right: 0;
+  }
+
+  .hero-feat:not(:first-child) {
+    padding-left: 28px;
+  }
+
+  .hero-feat h3 {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .hero-feat p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    padding: 100px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-head {
+    margin-bottom: 56px;
+  }
+
+  .section-num {
+    font-family: var(--font-serif);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* ===== PROBLEM / SOLUTION ===== */
+  .ps-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: start;
+  }
+
+  .ps-divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+    margin: 0 40px;
+  }
+
+  .ps-column h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ps-column h3 .marker {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ps-column.problem .marker { background: var(--red); }
+  .ps-column.solution .marker { background: var(--teal); }
+
+  .ps-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .ps-list li {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-light);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .ps-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  .problem .ps-list li::before { background: var(--red); }
+  .solution .ps-list li::before { background: var(--teal); }
+
+  .ps-list li:last-child { border-bottom: none; }
+
+  /* ===== USER FLOW ===== */
+  .flow {
+    margin-top: 8px;
+  }
+
+  .flow-entry {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .flow-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .flow-entry strong {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .flow-entry-line {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+    margin: 16px auto 0;
+  }
+
+  .flow-tracks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    margin-bottom: 0;
+  }
+
+  .flow-track {
+    position: relative;
+  }
+
+  .track-head {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .track-head--seeker { color: var(--red); border-bottom-color: var(--red); }
+  .track-head--employer { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .track-steps {
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .track-steps li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 40px;
+    padding-bottom: 24px;
+    min-height: 48px;
+  }
+
+  .track-steps li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 28px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border-light);
+  }
+
+  .track-steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: white;
+  }
+
+  .seeker .track-steps li::before { background: var(--red); }
+  .employer .track-steps li::before { background: var(--teal); }
+
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .step-desc {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-weight: 400;
+  }
+
+  .step-desc--escrow {
+    color: var(--amber);
+  }
+
+  .flow-merge {
+    position: relative;
+    text-align: center;
+    padding: 36px 0;
+  }
+
+  .flow-merge::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .flow-merge span {
+    position: relative;
+    display: inline-block;
+    background: var(--bg);
+    padding: 4px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-light);
+    border: 1px solid var(--border);
+  }
+
+  .flow-shared {
+    max-width: 640px;
+    margin: 0 auto;
+    list-style: none;
+    counter-reset: shared 4;
+  }
+
+  .flow-shared li {
+    counter-increment: shared;
+    position: relative;
+    padding-left: 44px;
+    padding-bottom: 28px;
+  }
+
+  .flow-shared li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 30px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border-light);
+  }
+
+  .flow-shared li::before {
+    content: counter(shared);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    background: var(--ink);
+  }
+
+  .flow-shared .step-title {
+    font-size: 16px;
+  }
+
+  .flow-shared .step-desc {
+    font-size: 12px;
+  }
+
+  /* ===== ARCHITECTURE ===== */
+  .arch {
+    margin-top: 8px;
+  }
+
+  .arch-layer {
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    background: white;
+    position: relative;
+  }
+
+  .arch-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .arch-connector {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 auto;
+  }
+
+  .arch-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .arch-chip {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-light);
+    padding: 4px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+  }
+
+  .arch-chip--amber {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .arch-services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .arch-service {
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+  }
+
+  .arch-service strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .arch-service span {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  .arch-flagship {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border-light);
+  }
+
+  .arch-service--lg {
+    border-left: 2px solid var(--red);
+  }
+
+  .arch-service--lg:nth-child(2) { border-left-color: var(--teal); }
+  .arch-service--lg:nth-child(3) { border-left-color: var(--amber); }
+
+  .arch-bottom {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0;
+  }
+
+  .arch-bottom .arch-layer:first-child {
+    border-right: none;
+  }
+
+  .arch-ext-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .arch-ext-grid div strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .arch-ext-grid div span {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  .arch-contracts {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-light);
+  }
+
+  .arch-contracts span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--amber);
+    padding: 3px 10px;
+    border: 1px solid var(--amber);
+    background: var(--amber-soft);
+  }
+
+  /* ===== TECH STACK ===== */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .stack-item {
+    padding-top: 20px;
+    border-top: 3px solid var(--ink);
+  }
+
+  .stack-item:nth-child(1) { border-top-color: var(--red); }
+  .stack-item:nth-child(2) { border-top-color: var(--teal); }
+  .stack-item:nth-child(3) { border-top-color: var(--red); }
+  .stack-item:nth-child(4) { border-top-color: var(--amber); }
+  .stack-item:nth-child(5) { border-top-color: var(--teal); }
+  .stack-item:nth-child(6) { border-top-color: var(--ink); }
+
+  .stack-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .stack-list {
+    list-style: none;
+  }
+
+  .stack-list li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .stack-list li:last-child { border-bottom: none; }
+
+  .stack-list li strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ===== DIFFERENTIATORS ===== */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px 64px;
+  }
+
+  .diff-item {
+    position: relative;
+  }
+
+  .diff-num {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--red);
+    opacity: 0.2;
+    line-height: 1;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .diff-item h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .diff-item p {
+    font-size: 14px;
+    color: var(--ink-light);
+    line-height: 1.7;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0;
+  }
+
+  .footer-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+
+  .footer-brand .accent-dot { color: var(--red); }
+
+  .footer-meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 24px;
+    font-family: var(--font-mono);
+  }
+
+  .footer-meta span {
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  .stagger-1.visible { transition-delay: 0s; }
+  .stagger-2.visible { transition-delay: 0.07s; }
+  .stagger-3.visible { transition-delay: 0.14s; }
+  .stagger-4.visible { transition-delay: 0.21s; }
+  .stagger-5.visible { transition-delay: 0.28s; }
+  .stagger-6.visible { transition-delay: 0.35s; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .hero-features { grid-template-columns: 1fr; gap: 0; }
+    .hero-feat { border-right: none !important; padding-left: 0 !important; padding-right: 0; }
+    .ps-grid { grid-template-columns: 1fr; }
+    .ps-divider { width: 100%; height: 1px; margin: 32px 0; }
+    .flow-tracks { grid-template-columns: 1fr; gap: 40px; }
+    .arch-flagship { grid-template-columns: 1fr; }
+    .arch-bottom { grid-template-columns: 1fr; }
+    .arch-bottom .arch-layer:first-child { border-right: 1px solid var(--border); border-bottom: none; }
+    .arch-ext-grid { grid-template-columns: 1fr; }
+    .stack-grid { grid-template-columns: 1fr 1fr; }
+    .diff-grid { grid-template-columns: 1fr; }
+    .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+    .footer-meta { flex-direction: column; gap: 8px; align-items: center; }
+  }
+
+  @media (max-width: 600px) {
+    .stack-grid { grid-template-columns: 1fr; }
+    .container { padding: 0 20px; }
+    .hero { padding: 60px 20px 40px; }
+    .hero-title { letter-spacing: -1px; }
+    .section { padding: 64px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">AI-Powered Talent Marketplace on NEAR Protocol</p>
+    <div class="hero-rule"></div>
+    <h1 class="hero-title">TalentTee<span class="accent-dot">.</span></h1>
+    <p class="hero-tagline">
+      <strong>AI 에이전트</strong>가 이력서 생성부터 연봉 협상까지,<br>
+      <strong>블록체인</strong>이 투명한 거래를 보장하는<br>
+      차세대 인재 마켓플레이스
+    </p>
+    <div class="hero-tags">
+      <span class="hero-tag">NEAR AI · Qwen 3.5-122B</span>
+      <span class="hero-tag">NEAR Protocol · Smart Contract</span>
+      <span class="hero-tag">pgvector · ANN Search</span>
+    </div>
+    <div class="hero-features">
+      <div class="hero-feat">
+        <h3>AI Resume & Matching</h3>
+        <p>GitHub, Slack 등 실제 활동 데이터에서 AI가 이력서를 생성하고, 벡터 검색으로 최적의 매칭을 찾습니다.</p>
+      </div>
+      <div class="hero-feat">
+        <h3>Autonomous Negotiation</h3>
+        <p>AI 에이전트가 구직자와 고용주를 대신해 자율적으로 연봉과 조건을 협상합니다. 암호화된 다라운드 프로토콜.</p>
+      </div>
+      <div class="hero-feat">
+        <h3>Blockchain Escrow</h3>
+        <p>NEAR 스마트 컨트랙트를 통한 에스크로로 투명한 지불을 보장하고, 합의 내용을 온체인에 기록합니다.</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 01 · PROBLEM / SOLUTION ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal stagger-1">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Problem & Solution</h2>
+      <p class="section-sub">기존 채용 시장의 한계를 AI와 블록체인으로 해결합니다</p>
+    </div>
+
+    <div class="ps-grid reveal stagger-2">
+      <div class="ps-column problem">
+        <h3><span class="marker"></span> 기존 채용 시장의 문제</h3>
+        <ul class="ps-list">
+          <li>이력서 작성에 많은 시간과 노력이 필요</li>
+          <li>구직자의 실제 역량이 이력서에 제대로 반영되지 않음</li>
+          <li>수동 매칭으로 인한 비효율적 채용 프로세스</li>
+          <li>연봉 협상에서 정보 비대칭 발생</li>
+          <li>채용 계약의 불투명한 이행 과정</li>
+          <li>지불 보증 장치 부재로 인한 신뢰 문제</li>
+        </ul>
+      </div>
+      <div class="ps-divider"></div>
+      <div class="ps-column solution">
+        <h3><span class="marker"></span> TalentTee의 솔루션</h3>
+        <ul class="ps-list">
+          <li>GitHub/Slack 등 실제 데이터 기반 AI 이력서 자동 생성</li>
+          <li>코드 활동, 커뮤니케이션 패턴에서 역량 객관적 분석</li>
+          <li>ANN + LLM 리랭킹으로 정밀한 자동 매칭</li>
+          <li>AI 에이전트가 양측의 이해를 대변하며 공정 협상</li>
+          <li>SHA-256 해시 + NEAR 블록체인으로 합의 무결성 보장</li>
+          <li>스마트 컨트랙트 에스크로로 지불 보증</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 · USER FLOW ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal stagger-1">
+      <span class="section-num">02</span>
+      <h2 class="section-title">User Flow</h2>
+      <p class="section-sub">구직자와 고용주의 여정</p>
+    </div>
+
+    <div class="flow reveal stagger-2">
+      <!-- Entry -->
+      <div class="flow-entry">
+        <span class="flow-badge">NEAR WALLET</span>
+        <strong>Sign Up / Login</strong>
+        <div class="flow-entry-line"></div>
+      </div>
+
+      <!-- Two tracks -->
+      <div class="flow-tracks">
+        <div class="flow-track seeker">
+          <div class="track-head track-head--seeker">JOB SEEKER</div>
+          <ol class="track-steps">
+            <li>
+              <div class="step-title">Connect Data Sources</div>
+              <div class="step-desc">GitHub · Slack · Discord · Gov24</div>
+            </li>
+            <li>
+              <div class="step-title">AI Resume Generation</div>
+              <div class="step-desc">스킬 추출 · 시장 가치 분석 · 벡터 임베딩</div>
+            </li>
+            <li>
+              <div class="step-title">Enable Job Seeking</div>
+              <div class="step-desc">자동 매칭 파이프라인 시작 · 6h 주기</div>
+            </li>
+            <li>
+              <div class="step-title">Review AI Matches</div>
+              <div class="step-desc">매칭 점수 · 직무 상세 · 동의/거절</div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="flow-track employer">
+          <div class="track-head track-head--employer">EMPLOYER</div>
+          <ol class="track-steps">
+            <li>
+              <div class="step-title">Create Job with AI Chat</div>
+              <div class="step-desc">AI 어시스턴트와 대화형 채용공고 작성</div>
+            </li>
+            <li>
+              <div class="step-title">Publish Job Posting</div>
+              <div class="step-desc">게시 → AI 임베딩 → 자동 매칭 탐색</div>
+            </li>
+            <li>
+              <div class="step-title">Deposit Escrow</div>
+              <div class="step-desc step-desc--escrow">NEAR 토큰 에스크로 예치 · 지불 보증</div>
+            </li>
+            <li>
+              <div class="step-title">Review Candidates</div>
+              <div class="step-desc">AI 매칭 인재 검토 · 프로필 확인</div>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Merge -->
+      <div class="flow-merge">
+        <span>양측 매칭 동의</span>
+      </div>
+
+      <!-- Shared steps -->
+      <ol class="flow-shared">
+        <li>
+          <div class="step-title">AI Autonomous Negotiation</div>
+          <div class="step-desc">Seeker Agent vs Employer Agent · 암호화 다라운드 · 최대 5회</div>
+        </li>
+        <li>
+          <div class="step-title">Agreement & Approval</div>
+          <div class="step-desc">양측 최종 합의 검토 · SHA-256 해시 · 쌍방 서명</div>
+        </li>
+        <li>
+          <div class="step-title">Blockchain Settlement</div>
+          <div class="step-desc">NEAR 온체인 기록 · 에스크로 자동 정산</div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 03 · ARCHITECTURE ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal stagger-1">
+      <span class="section-num">03</span>
+      <h2 class="section-title">System Architecture</h2>
+      <p class="section-sub">모듈형 백엔드, 벡터 검색, 블록체인 레이어</p>
+    </div>
+
+    <div class="arch reveal stagger-2">
+      <!-- Client -->
+      <div class="arch-layer">
+        <div class="arch-label">CLIENT</div>
+        <div class="arch-chips">
+          <span class="arch-chip">Next.js 16</span>
+          <span class="arch-chip">React 19</span>
+          <span class="arch-chip">Tailwind CSS 4</span>
+          <span class="arch-chip">shadcn/ui</span>
+          <span class="arch-chip arch-chip--amber">NEAR Wallet Selector</span>
+        </div>
+      </div>
+
+      <div class="arch-connector"></div>
+
+      <!-- API -->
+      <div class="arch-layer">
+        <div class="arch-label">API GATEWAY</div>
+        <div class="arch-chips">
+          <span class="arch-chip">NestJS 11 REST API</span>
+          <span class="arch-chip">JWT</span>
+          <span class="arch-chip">Passport</span>
+          <span class="arch-chip">Guards</span>
+        </div>
+      </div>
+
+      <div class="arch-connector"></div>
+
+      <!-- Core Services -->
+      <div class="arch-layer">
+        <div class="arch-label">CORE SERVICES</div>
+        <div class="arch-services-grid">
+          <div class="arch-service">
+            <strong>Auth</strong>
+            <span>NEP-413 · JWT</span>
+          </div>
+          <div class="arch-service">
+            <strong>Resume</strong>
+            <span>AI Generation</span>
+          </div>
+          <div class="arch-service">
+            <strong>Datasource</strong>
+            <span>GitHub · Slack</span>
+          </div>
+          <div class="arch-service">
+            <strong>Match Engine</strong>
+            <span>ANN + Rerank</span>
+          </div>
+          <div class="arch-service">
+            <strong>Job</strong>
+            <span>AI Chat Create</span>
+          </div>
+          <div class="arch-service">
+            <strong>Crypto</strong>
+            <span>Ed25519 · AES</span>
+          </div>
+          <div class="arch-service">
+            <strong>Event Bus</strong>
+            <span>EventEmitter</span>
+          </div>
+        </div>
+        <div class="arch-flagship">
+          <div class="arch-service arch-service--lg">
+            <strong>Negotiation Engine</strong>
+            <span>Multi-Round AI · Encrypted</span>
+          </div>
+          <div class="arch-service arch-service--lg">
+            <strong>Agreement</strong>
+            <span>SHA-256 · On-Chain · Dual</span>
+          </div>
+          <div class="arch-service arch-service--lg">
+            <strong>Escrow</strong>
+            <span>Deposit · Balance · Release</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-connector"></div>
+
+      <!-- Bottom: Data + External -->
+      <div class="arch-bottom">
+        <div class="arch-layer">
+          <div class="arch-label">DATA</div>
+          <div class="arch-chips" style="flex-direction:column">
+            <span class="arch-chip">PostgreSQL 16</span>
+            <span class="arch-chip">pgvector (1536d)</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-label">EXTERNAL</div>
+          <div class="arch-ext-grid">
+            <div>
+              <strong>NEAR AI</strong>
+              <span>Qwen 3.5 · Embed 0.6B</span>
+            </div>
+            <div>
+              <strong>NEAR Protocol</strong>
+              <span>Testnet · Contracts</span>
+            </div>
+            <div>
+              <strong>GitHub OAuth</strong>
+              <span>Repos · Activity</span>
+            </div>
+          </div>
+          <div class="arch-contracts">
+            <span>agreement.testnet</span>
+            <span>escrow.testnet</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 04 · TECH STACK ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal stagger-1">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Tech Stack</h2>
+      <p class="section-sub">검증된 기술로 구성된 풀스택 아키텍처</p>
+    </div>
+
+    <div class="stack-grid">
+      <div class="stack-item reveal stagger-1">
+        <div class="stack-label">Frontend</div>
+        <ul class="stack-list">
+          <li><strong>Next.js 16</strong> — App Router, Server Components</li>
+          <li><strong>React 19</strong> — Latest concurrent features</li>
+          <li><strong>Tailwind CSS 4</strong> — Utility-first styling</li>
+          <li><strong>shadcn/ui</strong> — Accessible component library</li>
+          <li><strong>TypeScript 5</strong> — Full type safety</li>
+        </ul>
+      </div>
+      <div class="stack-item reveal stagger-2">
+        <div class="stack-label">Backend</div>
+        <ul class="stack-list">
+          <li><strong>NestJS 11</strong> — Enterprise Node.js framework</li>
+          <li><strong>TypeORM</strong> — Database ORM & migrations</li>
+          <li><strong>Passport + JWT</strong> — Authentication layer</li>
+          <li><strong>EventEmitter</strong> — Async event processing</li>
+          <li><strong>Cron Schedule</strong> — Periodic matching jobs</li>
+        </ul>
+      </div>
+      <div class="stack-item reveal stagger-3">
+        <div class="stack-label">AI / ML</div>
+        <ul class="stack-list">
+          <li><strong>NEAR AI Cloud</strong> — OpenAI-compatible API</li>
+          <li><strong>Qwen 3.5-122B</strong> — Chat & reasoning</li>
+          <li><strong>Qwen 3-Embed-0.6B</strong> — 1536d vectors</li>
+          <li><strong>pgvector</strong> — ANN cosine similarity</li>
+          <li><strong>LLM Reranking</strong> — Semantic relevance scoring</li>
+        </ul>
+      </div>
+      <div class="stack-item reveal stagger-4">
+        <div class="stack-label">Blockchain</div>
+        <ul class="stack-list">
+          <li><strong>NEAR Protocol</strong> — Low-cost, fast finality</li>
+          <li><strong>Smart Contracts</strong> — Agreement & Escrow</li>
+          <li><strong>NEP-413</strong> — Signature authentication</li>
+          <li><strong>near-api-js</strong> — RPC interaction</li>
+          <li><strong>Borsh</strong> — Transaction serialization</li>
+        </ul>
+      </div>
+      <div class="stack-item reveal stagger-5">
+        <div class="stack-label">Database</div>
+        <ul class="stack-list">
+          <li><strong>PostgreSQL 16</strong> — Relational database</li>
+          <li><strong>pgvector extension</strong> — Vector similarity</li>
+          <li><strong>Docker Compose</strong> — Local development</li>
+          <li><strong>TypeORM Entities</strong> — Schema management</li>
+        </ul>
+      </div>
+      <div class="stack-item reveal stagger-6">
+        <div class="stack-label">Security</div>
+        <ul class="stack-list">
+          <li><strong>Ed25519</strong> — Digital signatures</li>
+          <li><strong>AES-GCM</strong> — Negotiation encryption</li>
+          <li><strong>HKDF</strong> — Session key derivation</li>
+          <li><strong>SHA-256</strong> — Agreement integrity</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 05 · DIFFERENTIATORS ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal stagger-1">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Key Differentiators</h2>
+      <p class="section-sub">TalentTee만의 차별점</p>
+    </div>
+
+    <div class="diff-grid">
+      <div class="diff-item reveal stagger-1">
+        <span class="diff-num">01</span>
+        <h4>Data-Driven Resume</h4>
+        <p>자기소개서 대신 GitHub 코드, Slack 대화 등 실제 활동 데이터에서 AI가 역량을 객관적으로 분석하여 이력서를 생성합니다.</p>
+      </div>
+      <div class="diff-item reveal stagger-2">
+        <span class="diff-num">02</span>
+        <h4>Hybrid AI Matching</h4>
+        <p>벡터 유사도 검색(ANN)으로 빠르게 후보를 찾고, LLM 리랭킹으로 의미론적 적합성을 정밀하게 평가합니다.</p>
+      </div>
+      <div class="diff-item reveal stagger-3">
+        <span class="diff-num">03</span>
+        <h4>Autonomous Negotiation</h4>
+        <p>AI 에이전트가 양측을 대리하여 암호화된 다라운드 협상을 수행합니다. 공정하고 효율적인 조건 도출.</p>
+      </div>
+      <div class="diff-item reveal stagger-4">
+        <span class="diff-num">04</span>
+        <h4>Trustless Settlement</h4>
+        <p>NEAR 블록체인 에스크로로 지불 보증, 합의 내용을 온체인에 기록하여 투명성과 신뢰를 확보합니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">TalentTee<span class="accent-dot">.</span></div>
+    <div class="footer-meta">
+      <span>Built with NEAR AI</span>
+      <span>Powered by NEAR Protocol</span>
+      <span>Hackathon 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  });
+</script>
+
+</body>
+</html>
