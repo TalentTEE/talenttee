@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { NegotiationSession, MatchResultDisplay } from '@/lib/types';
+import { useAuth } from '@/lib/auth';
 import { useSse } from '@/lib/sse';
 import Link from 'next/link';
 
@@ -66,15 +67,33 @@ function SessionRow({
   match,
   ctaHref,
   activity,
+  currentUserRole,
 }: {
   session: NegotiationSession;
   match?: MatchResultDisplay;
   ctaHref: string;
   activity?: Activity;
+  currentUserRole?: 'SEEKER' | 'EMPLOYER';
 }) {
   const isAgreed = session.state === 'AGREED';
   const score = match ? Math.round(match.rerankScore * 100) : null;
   const info = stateInfo[session.state] || stateInfo.INITIATED;
+
+  // Title: session.job?.title > match fallback > UUID fallback
+  const title = session.job?.title
+    ?? (match ? `${match.jobTitle} - ${match.companyName}` : null)
+    ?? `Session ${session.id.slice(0, 8)}…`;
+
+  // Did the current user approve?
+  const myApproved = currentUserRole === 'EMPLOYER'
+    ? session.employerApproved
+    : session.seekerApproved;
+  const bothApproved = session.seekerApproved && session.employerApproved;
+
+  const messageCount = session.messageCount ?? 0;
+  // Backend unreadCount + SSE real-time additions
+  const sseUnread = (activity?.icon === 'chat' && activity.count) ? activity.count : 0;
+  const unreadCount = (session.unreadCount ?? 0) + sseUnread;
 
   return (
     <Link
@@ -110,45 +129,77 @@ function SessionRow({
         )}
         <div className="min-w-0">
           <p className="text-base font-semibold text-foreground truncate">
-            {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${session.id}`}
+            {title}
           </p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className={`flex items-center gap-1 text-sm font-medium ${info.className}`}>
-              <span className="material-symbols-outlined text-sm" style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
-                {info.icon}
-              </span>
-              {info.label}
-              {ACTIVE_STATES.has(session.state) && (
-                <span className="text-muted-foreground ml-1">R{session.currentRound}/{session.maxRounds}</span>
+          {/* Agreed section: show phase status instead of state badge */}
+          {isAgreed ? (
+            <div className="flex items-center gap-2 mt-0.5">
+              {bothApproved ? (
+                <span className="inline-flex items-center gap-1 text-xs text-[#39FF14]">
+                  <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+                  {messageCount > 0 ? 'Interview scheduling' : 'Ready to chat'}
+                  {unreadCount > 0 && (
+                    <span
+                      className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold"
+                      style={{ backgroundColor: '#00F0FF', color: '#0a0a0a' }}
+                    >
+                      {unreadCount}
+                    </span>
+                  )}
+                </span>
+              ) : !myApproved ? (
+                <span className="inline-flex items-center gap-0.5 text-xs text-[#FFE600]">
+                  <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>rate_review</span>
+                  Needs your approval
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
+                  <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>hourglass_top</span>
+                  Waiting for other party
+                </span>
               )}
             </div>
-            {activity && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold animate-[fadeSlideUp_300ms_ease-out_both]"
-                style={{
-                  backgroundColor: `color-mix(in srgb, ${activity.color} 15%, transparent)`,
-                  color: activity.color,
-                }}
-              >
-                <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  {activity.icon}
-                </span>
-                {activity.label}
-                {activity.count && activity.count > 1 && (
+          ) : (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className={`flex items-center gap-1 text-sm font-medium ${info.className}`}>
+                  <span className="material-symbols-outlined text-sm">
+                    {info.icon}
+                  </span>
+                  {info.label}
+                  {ACTIVE_STATES.has(session.state) && (
+                    <span className="text-muted-foreground ml-1">R{session.currentRound}/{session.maxRounds}</span>
+                  )}
+                </div>
+                {activity && (
                   <span
-                    className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-md text-[10px] font-bold"
-                    style={{ backgroundColor: activity.color, color: '#0a0a0a' }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold animate-[fadeSlideUp_300ms_ease-out_both]"
+                    style={{
+                      backgroundColor: `color-mix(in srgb, ${activity.color} 15%, transparent)`,
+                      color: activity.color,
+                    }}
                   >
-                    {activity.count}
+                    <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      {activity.icon}
+                    </span>
+                    {activity.label}
+                    {activity.count && activity.count > 1 && (
+                      <span
+                        className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-md text-[10px] font-bold"
+                        style={{ backgroundColor: activity.color, color: '#0a0a0a' }}
+                      >
+                        {activity.count}
+                      </span>
+                    )}
                   </span>
                 )}
-              </span>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
       <span className="material-symbols-outlined text-lg text-muted-foreground shrink-0">
-        arrow_forward
+        chevron_right
       </span>
     </Link>
   );
@@ -161,6 +212,7 @@ export function NegotiationList({
   sessions: NegotiationSession[];
   matches?: MatchResultDisplay[];
 }) {
+  const { user } = useAuth();
   const { on } = useSse();
   const [endedOpen, setEndedOpen] = useState(false);
   // sessionId → latest activity badge
@@ -285,6 +337,7 @@ export function NegotiationList({
                       match={matchByJobId.get(s.jobId)}
                       ctaHref={section.ctaHref(s)}
                       activity={activities.get(s.id)}
+                      currentUserRole={user?.role}
                     />
                   ))}
                 </div>

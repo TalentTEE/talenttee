@@ -56,6 +56,12 @@ export class NegotiationSession {
   @Column({ name: 'employer_approved', type: 'boolean', default: false })
   employerApproved: boolean;
 
+  @Column({ name: 'seeker_last_read_at', type: 'timestamptz', nullable: true })
+  seekerLastReadAt: Date | null;
+
+  @Column({ name: 'employer_last_read_at', type: 'timestamptz', nullable: true })
+  employerLastReadAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

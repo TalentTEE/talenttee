@@ -1,9 +1,32 @@
 import { NegotiationSession, NegotiationRound } from '../types';
 
 export const DUMMY_SESSIONS: NegotiationSession[] = [
-  { id: 'session-1', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-1', state: 'EMPLOYER_COUNTER', currentRound: 3, maxRounds: 7, onChainTxHash: null },
-  { id: 'session-2', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-2', state: 'AGREED', currentRound: 5, maxRounds: 7, onChainTxHash: '0xabc123def456' },
-  { id: 'session-3', seekerId: 'user-1', employerId: 'user-3', jobId: 'job-3', state: 'FAILED', currentRound: 7, maxRounds: 7, onChainTxHash: null },
+  {
+    id: 'session-1', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-1',
+    state: 'EMPLOYER_COUNTER', currentRound: 3, maxRounds: 7, onChainTxHash: null,
+    job: { id: 'job-1', title: 'Senior Backend Engineer', salaryMin: 60000000, salaryMax: 80000000, remotePolicy: 'Hybrid' },
+    seeker: { id: 'user-1', nearAccountId: 'alice.testnet' },
+    employer: { id: 'user-2', nearAccountId: 'company-alpha.testnet' },
+    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'session-2', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-2',
+    state: 'AGREED', currentRound: 5, maxRounds: 7, onChainTxHash: '0xabc123def456',
+    seekerApproved: true, employerApproved: false,
+    job: { id: 'job-2', title: 'Frontend Developer', salaryMin: 50000000, salaryMax: 70000000, remotePolicy: 'Remote' },
+    seeker: { id: 'user-1', nearAccountId: 'alice.testnet' },
+    employer: { id: 'user-2', nearAccountId: 'company-alpha.testnet' },
+    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    messageCount: 0, unreadCount: 0,
+  },
+  {
+    id: 'session-3', seekerId: 'user-1', employerId: 'user-3', jobId: 'job-3',
+    state: 'FAILED', currentRound: 7, maxRounds: 7, onChainTxHash: null,
+    job: { id: 'job-3', title: 'DevOps Engineer', salaryMin: 55000000, salaryMax: 75000000, remotePolicy: 'On-site' },
+    seeker: { id: 'user-1', nearAccountId: 'alice.testnet' },
+    employer: { id: 'user-3', nearAccountId: 'company-beta.testnet' },
+    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
 ];
 
 export const DUMMY_ROUNDS: NegotiationRound[] = [

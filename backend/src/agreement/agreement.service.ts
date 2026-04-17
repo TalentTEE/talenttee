@@ -237,11 +237,19 @@ export class AgreementService {
     if (session.seekerId !== userId && session.employerId !== userId) {
       throw new ForbiddenException('Not a participant');
     }
-    return this.messageRepo.find({
+    const messages = await this.messageRepo.find({
       where: { sessionId },
       relations: ['sender'],
       order: { createdAt: 'ASC' },
     });
+    // Mark as read
+    const now = new Date();
+    if (session.seekerId === userId) {
+      await this.sessionRepo.update(sessionId, { seekerLastReadAt: now });
+    } else {
+      await this.sessionRepo.update(sessionId, { employerLastReadAt: now });
+    }
+    return messages;
   }
 
   async sendMessage(sessionId: string, userId: string, content: string): Promise<InterviewMessage> {
