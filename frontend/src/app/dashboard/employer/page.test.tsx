@@ -94,11 +94,10 @@ describe('EmployerDashboard', () => {
     render(<EmployerDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('negotiation-overview')).toBeInTheDocument();
+      expect(screen.getByTestId('ai-action-card')).toBeInTheDocument();
       expect(screen.getByTestId('negotiation-list')).toBeInTheDocument();
       expect(screen.getByTestId('escrow-balance')).toBeInTheDocument();
       expect(screen.getByTestId('job-list')).toBeInTheDocument();
-      expect(screen.queryByTestId('ai-action-card')).not.toBeInTheDocument();
     });
   });
 });

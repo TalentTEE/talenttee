@@ -7,7 +7,7 @@ import { EscrowAccount, JobPosting, MatchResultDisplay, NegotiationSession } fro
 import { EscrowBalance } from '@/components/dashboard/escrow-balance';
 import { JobList } from '@/components/dashboard/job-list';
 import { NegotiationList } from '@/components/dashboard/negotiation-list';
-import { NegotiationOverview } from '@/components/dashboard/negotiation-overview';
+// NegotiationOverview replaced by AIActionCard which includes PipelineProgress
 import { AIActionCard } from '@/components/dashboard/AIActionCard';
 import { SkeletonGrid } from '@/components/ui/skeleton-card';
 
@@ -76,14 +76,14 @@ export default function EmployerDashboard() {
         </>
       ) : (
         <>
-          {/* Active — NegotiationOverview + job-grouped list */}
+          {/* Active — AIActionCard with PipelineProgress + job-grouped list */}
           <div className="animate-[fadeSlideUp_300ms_ease-out_both]">
-            <NegotiationOverview sessions={sessions} />
+            <AIActionCard datasources={[]} resume={null} matches={matches} sessions={sessions} role="EMPLOYER" jobs={jobs} />
           </div>
           <div className="animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '80ms' }}>
             <NegotiationList sessions={sessions} matches={matches} jobs={jobs} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-6 animate-[fadeSlideUp_300ms_ease-out_both]" style={{ animationDelay: '160ms' }}>
             <EscrowBalance escrow={escrow} />
             <JobList jobs={jobs} />
           </div>
