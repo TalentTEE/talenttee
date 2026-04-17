@@ -208,6 +208,8 @@ function SessionRow({
   );
 }
 
+const PAGE_SIZE = 3;
+
 function JobGroupedList({
   sessions,
   matchByJobId,
@@ -234,17 +236,35 @@ function JobGroupedList({
     .sort((a, b) => a.title.localeCompare(b.title));
 
   const [activeJobId, setActiveJobId] = useState<string>(jobsWithSessions[0]?.id ?? '');
+  const [page, setPage] = useState(0);
 
   const selectedJob = jobsWithSessions.find((j) => j.id === activeJobId);
   const jobSessions = selectedJob ? (sessionsByJob.get(selectedJob.id) || []) : [];
-  const active = jobSessions.filter((s) => ACTIVE_STATES.has(s.state));
-  const agreed = jobSessions.filter((s) => s.state === 'AGREED');
-  const ended = jobSessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS');
+
+  // Flatten sessions in section order: active → agreed → ended
+  const allSorted = [
+    ...jobSessions.filter((s) => ACTIVE_STATES.has(s.state)),
+    ...jobSessions.filter((s) => s.state === 'AGREED'),
+    ...jobSessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS'),
+  ];
+  const totalPages = Math.max(1, Math.ceil(allSorted.length / PAGE_SIZE));
+  const paged = allSorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  const handleJobChange = (id: string) => {
+    setActiveJobId(id);
+    setPage(0);
+  };
+
+  // Find the section config for a session
+  const sectionFor = (s: NegotiationSession) =>
+    ACTIVE_STATES.has(s.state) ? SECTIONS[0]
+      : s.state === 'AGREED' ? SECTIONS[1]
+      : SECTIONS[2];
 
   return (
     <div>
       {/* Job tabs */}
-      <div className="flex gap-1 mb-4 overflow-x-auto scrollbar-none">
+      <div className="flex gap-1 mb-4 h-[38px] overflow-x-auto scrollbar-none">
         {jobsWithSessions.map((job) => {
           const count = sessionsByJob.get(job.id)?.length ?? 0;
           const isActive = job.id === activeJobId;
@@ -252,12 +272,12 @@ function JobGroupedList({
             <button
               key={job.id}
               type="button"
-              className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                 isActive
                   ? 'bg-[#FFE600]/15 text-[#FFE600] border border-[#FFE600]/30'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/30 border border-transparent'
               }`}
-              onClick={() => setActiveJobId(job.id)}
+              onClick={() => handleJobChange(job.id)}
             >
               <span className="material-symbols-outlined text-base">work</span>
               <span className="truncate max-w-[180px]">{job.title}</span>
@@ -271,50 +291,49 @@ function JobGroupedList({
         })}
       </div>
 
-      {/* Selected job's sessions */}
-      {selectedJob && (
-        <div className="space-y-3">
-          {SECTIONS.map((section) => {
-            const items = section.key === 'active' ? active
-              : section.key === 'agreed' ? agreed
-              : ended;
-            if (items.length === 0) return null;
-
-            return (
-              <div key={section.key}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-muted-foreground">{section.title}</span>
-                  <span
-                    className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold"
-                    style={{
-                      backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`,
-                      color: section.badgeColor,
-                    }}
-                  >
-                    {items.length}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {items.map((s) => {
-                    const candidate = currentUserRole === 'EMPLOYER'
-                      ? s.seeker?.nearAccountId?.split('.')[0]
-                      : s.employer?.nearAccountId?.split('.')[0];
-                    return (
-                      <SessionRow
-                        key={s.id}
-                        session={s}
-                        match={matchByJobId.get(s.jobId)}
-                        ctaHref={section.ctaHref(s)}
-                        activity={activities.get(s.id)}
-                        currentUserRole={currentUserRole}
-                        candidateLabel={candidate}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+      {/* Selected job's sessions — paginated */}
+      {selectedJob && allSorted.length > 0 && (
+        <div>
+          <div className="h-[216px] space-y-2">
+            {paged.map((s) => {
+              const section = sectionFor(s);
+              const candidate = currentUserRole === 'EMPLOYER'
+                ? s.seeker?.nearAccountId?.split('.')[0]
+                : s.employer?.nearAccountId?.split('.')[0];
+              return (
+                <SessionRow
+                  key={s.id}
+                  session={s}
+                  match={matchByJobId.get(s.jobId)}
+                  ctaHref={section.ctaHref(s)}
+                  activity={activities.get(s.id)}
+                  currentUserRole={currentUserRole}
+                  candidateLabel={candidate}
+                />
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <button
+              type="button"
+              disabled={page === 0}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <span className="material-symbols-outlined text-lg">chevron_left</span>
+            </button>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= totalPages - 1}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <span className="material-symbols-outlined text-lg">chevron_right</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -335,9 +354,18 @@ function StatusTabList({
   // Find first non-empty section as default
   const firstNonEmpty = SECTIONS.find((s) => (grouped[s.key]?.length ?? 0) > 0);
   const [activeTab, setActiveTab] = useState<string>(firstNonEmpty?.key ?? 'active');
+  const [page, setPage] = useState(0);
 
   const activeSection = SECTIONS.find((s) => s.key === activeTab);
   const items = activeSection ? (grouped[activeSection.key] || []) : [];
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const paged = items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // Reset page when tab changes
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    setPage(0);
+  };
 
   return (
     <div>
@@ -361,7 +389,7 @@ function StatusTabList({
                 color: section.badgeColor,
                 borderColor: `color-mix(in srgb, ${section.badgeColor} 30%, transparent)`,
               } : undefined}
-              onClick={() => setActiveTab(section.key)}
+              onClick={() => handleTabChange(section.key)}
             >
               {section.title}
               <span
@@ -380,19 +408,42 @@ function StatusTabList({
         })}
       </div>
 
-      {/* Selected status sessions */}
+      {/* Selected status sessions — fixed height for 3 rows */}
       {activeSection && items.length > 0 && (
-        <div className="space-y-2">
-          {items.map((s) => (
-            <SessionRow
-              key={s.id}
-              session={s}
-              match={matchByJobId.get(s.jobId)}
-              ctaHref={activeSection.ctaHref(s)}
-              activity={activities.get(s.id)}
-              currentUserRole={currentUserRole}
-            />
-          ))}
+        <div>
+          <div className="h-[216px] space-y-2">
+            {paged.map((s) => (
+              <SessionRow
+                key={s.id}
+                session={s}
+                match={matchByJobId.get(s.jobId)}
+                ctaHref={activeSection.ctaHref(s)}
+                activity={activities.get(s.id)}
+                currentUserRole={currentUserRole}
+              />
+            ))}
+          </div>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <button
+              type="button"
+              disabled={page === 0}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <span className="material-symbols-outlined text-lg">chevron_left</span>
+            </button>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= totalPages - 1}
+              className="p-1 rounded-md text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <span className="material-symbols-outlined text-lg">chevron_right</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
