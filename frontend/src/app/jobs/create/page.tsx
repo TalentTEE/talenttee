@@ -125,34 +125,22 @@ export default function CreateJobPage() {
       </div>
 
       {activeTab === 'chat' ? (
-        <>
-          <div className="grid grid-cols-[260px_1fr] gap-4 h-[calc(100vh-14rem)] min-h-[600px]">
-            <ChatSidebar
-              sessions={sessions}
-              currentId={currentSessionId}
-              onSelect={handleSelectSession}
-              onNew={handleNewSession}
-              onDelete={handleDeleteSession}
-            />
-            {currentSession && (
-              <ChatMode
-                key={currentSession.id}
-                session={currentSession}
-                onSessionUpdated={refreshSessions}
-              />
-            )}
-          </div>
-          {currentSession?.completedJob && (
-            <JobPreviewCard
-              job={currentSession.completedJob}
-              salaryRecommendation={currentSession.salaryRecommendation}
-              onPublished={(updated) => {
-                saveSession({ ...currentSession, completedJob: updated });
-                refreshSessions();
-              }}
+        <div className="grid grid-cols-[260px_1fr] gap-4 h-[calc(100vh-14rem)] min-h-[600px]">
+          <ChatSidebar
+            sessions={sessions}
+            currentId={currentSessionId}
+            onSelect={handleSelectSession}
+            onNew={handleNewSession}
+            onDelete={handleDeleteSession}
+          />
+          {currentSession && (
+            <ChatMode
+              key={currentSession.id}
+              session={currentSession}
+              onSessionUpdated={refreshSessions}
             />
           )}
-        </>
+        </div>
       ) : (
         <div className="max-w-3xl">
           <FormMode />
@@ -322,18 +310,24 @@ function ChatMode({
           {
             role: 'agent',
             content:
-              "I've gathered enough information to create your job posting. Here's a preview:",
+              "Great! I've created your job posting. Here's a preview — you can publish it when ready.",
           },
         ]);
         setCreatedJob(response.jobPosting);
         if (response.salaryRecommendation) {
           setSalaryRec(response.salaryRecommendation);
         }
-      } else if (response.question) {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'agent', content: response.question! },
-        ]);
+      } else {
+        // Salary recommendation phase or regular question
+        if (response.salaryRecommendation) {
+          setSalaryRec(response.salaryRecommendation);
+        }
+        if (response.question) {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'agent', content: response.question! },
+          ]);
+        }
       }
     } catch {
       setMessages((prev) => [
@@ -400,6 +394,35 @@ function ChatMode({
               </div>
             </div>
           ))}
+
+          {/* Salary Recommendation Card — shown inline when AI recommends before completion */}
+          {salaryRec && !createdJob && (
+            <div className="max-w-[80%]">
+              <div className="rounded-2xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+                  <span className="material-symbols-outlined text-base">trending_up</span>
+                  AI Market Analysis
+                </div>
+                <div className="text-base font-semibold text-foreground">
+                  ${salaryRec.min.toLocaleString()} ~ ${salaryRec.max.toLocaleString()} / year
+                </div>
+                <p className="text-sm text-muted-foreground">{salaryRec.reasoning}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Job Preview Card — rendered inline after completion */}
+          {createdJob && (
+            <div className="pt-2">
+              <JobPreviewCard
+                job={createdJob}
+                salaryRecommendation={salaryRec}
+                onPublished={(updated) => {
+                  setCreatedJob(updated);
+                }}
+              />
+            </div>
+          )}
 
           {isLoading && (
             <div className="flex justify-start">
