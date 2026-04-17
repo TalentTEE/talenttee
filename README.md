@@ -35,47 +35,11 @@ TalentTee connects job seekers and employers through intelligent AI matching, th
 
 ## Architecture
 
-> **Interactive architecture diagram**: Open [`docs/architecture-diagram.en.html`](docs/architecture-diagram.en.html) in a browser for the full interactive version.
+<p align="center">
+  <img src="docs/images/architecture-diagram.png" alt="TalentTee System Architecture" width="800" />
+</p>
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     CLIENT LAYER                         │
-│  ┌─────────────────────────┐  ┌───────────────────────┐ │
-│  │   Next.js 16 Frontend   │  │  NEAR Wallet Selector │ │
-│  │ React 19 · Tailwind v4  │←→│ MyNearWallet · Meteor │ │
-│  │ App Router · @noble/*   │  │ NEP-413 Signature     │ │
-│  └────────────┬────────────┘  └───────────────────────┘ │
-└───────────────┼─────────────────────────────────────────┘
-                │ REST API + SSE (Real-time)
-┌───────────────▼─────────────────────────────────────────┐
-│                     API GATEWAY                          │
-│          NestJS REST API · JWT Auth · Guards              │
-├─────────────────────────────────────────────────────────┤
-│                  CORE SERVICE MODULES                    │
-│                                                          │
-│  ┌────────┐ ┌────────┐ ┌──────────┐ ┌────────┐         │
-│  │  Auth  │ │ Resume │ │Datasource│ │  Match │         │
-│  │NEP-413 │ │ AI Gen │ │ GitHub   │ │ANN+    │         │
-│  │  JWT   │ │Mkt Val │ │ Slack    │ │Rerank  │         │
-│  └────────┘ └────────┘ └──────────┘ └────────┘         │
-│  ┌────────┐ ┌──────────────┐ ┌────────┐ ┌───────────┐  │
-│  │  Job   │ │ Negotiation  │ │ Escrow │ │  Crypto   │  │
-│  │AI Chat │ │ Dual AI Agent│ │  NEAR  │ │ECDH+HKDF  │  │
-│  │Boundary│ │ Round-Robin  │ │Deposit │ │XChaCha20  │  │
-│  └────────┘ └──────────────┘ └────────┘ └───────────┘  │
-└──────┬────────────────┬─────────────────┬───────────────┘
-       │                │                 │
-┌──────▼──────┐  ┌──────▼───────┐  ┌─────▼──────────────┐
-│ PostgreSQL  │  │  NEAR AI     │  │  NEAR Testnet      │
-│ + pgvector  │  │  Cloud API   │  │                    │
-│             │  │              │  │ ┌────────────────┐  │
-│ Users, Jobs │  │ Qwen3.5-122B│  │ │escrow.testnet  │  │
-│ Resumes     │  │ (Chat)      │  │ │ Deposit/Pay/   │  │
-│ Matches     │  │              │  │ │ Withdraw       │  │
-│ Embeddings  │  │ Qwen3-Embed │  │ │ 80/20 Split    │  │
-│ (1536-dim)  │  │ (Vectors)   │  │ └────────────────┘  │
-└─────────────┘  └──────────────┘  └─────────────────────┘
-```
+> Open [`docs/architecture-diagram.en.html`](docs/architecture-diagram.en.html) in a browser for the interactive version.
 
 ## Tech Stack
 
