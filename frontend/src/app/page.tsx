@@ -71,8 +71,8 @@ export default function LandingPage() {
       {/* Nav Bar */}
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-border/5">
         <nav className="flex justify-between items-center px-6 md:px-8 py-5 max-w-[1200px] mx-auto">
-          <div className="text-2xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
-            Talent-Tee
+          <div className="text-2xl font-black tracking-tight text-primary font-[var(--font-playfair)]">
+            TalentTee<span className="text-[#FF2DF1]">.</span>
           </div>
           {user ? (
             <div className="flex items-center gap-4">
@@ -149,7 +149,7 @@ export default function LandingPage() {
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-16">
               <h2 className="font-[var(--font-manrope)] text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-4">
-                Why Talent-Tee?
+                Why TalentTee?
               </h2>
               <p className="text-muted-foreground text-lg max-w-lg mx-auto">
                 AI agents work around the clock so you don&apos;t have to.
@@ -224,7 +224,7 @@ export default function LandingPage() {
               Ready to let AI negotiate for you?
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Join Talent-Tee and let your AI agent find the best career opportunities.
+              Join TalentTee and let your AI agent find the best career opportunities.
             </p>
             <Link
               href={user ? dashboardPath : '/signup'}
@@ -240,7 +240,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="w-full py-12 bg-card">
         <div className="flex flex-col md:flex-row justify-between items-center px-6 md:px-12 border-t border-border/10 pt-12 max-w-[1200px] mx-auto gap-8">
-          <div className="text-lg font-bold text-secondary-foreground">Talent-Tee</div>
+          <div className="text-lg font-black text-secondary-foreground font-[var(--font-playfair)]">TalentTee<span className="text-[#FF2DF1]">.</span></div>
           <div className="flex flex-wrap justify-center gap-8">
             <span className="text-muted-foreground hover:text-secondary-foreground transition-colors text-base font-medium tracking-wide cursor-pointer">
               Privacy Policy
@@ -253,7 +253,7 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="text-muted-foreground text-sm font-medium tracking-wide opacity-60">
-            &copy; 2024 Talent-Tee. Securely anchored on the Blockchain.
+            &copy; 2026 TalentTee. Securely anchored on the Blockchain.
           </div>
         </div>
       </footer>

@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentTee — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #FAF7F2;
+    --surface: #F0EBE3;
+    --ink: #1C1917;
+    --ink-light: #44403C;
+    --muted: #78716C;
+    --border: #D6D3D1;
+    --border-light: #E7E5E4;
+    --red: #B91C1C;
+    --red-soft: #FEE2E2;
+    --teal: #0D9488;
+    --teal-soft: #CCFBF1;
+    --amber: #B45309;
+    --amber-soft: #FEF3C7;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.018;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: var(--red);
+    z-index: 100;
+    transition: width 0.5s ease;
+  }
+
+  /* ===== DECK ===== */
+  .deck { position: relative; width: 100%; height: 100vh; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 48px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+    z-index: 2;
+  }
+
+  .slide-inner {
+    max-width: 1080px;
+    width: 100%;
+  }
+
+  /* ===== TYPOGRAPHY ===== */
+  .section-num {
+    font-family: var(--font-serif);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--red);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .slide-title {
+    font-family: var(--font-serif);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 12px;
+  }
+
+  .slide-subtitle {
+    font-size: 17px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 48px;
+    max-width: 640px;
+  }
+
+  .accent-dot { color: var(--red); }
+
+  /* ===== COVER ===== */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 80vh;
+  }
+
+  .cover-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .cover-rule {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 32px;
+  }
+
+  .cover-title {
+    font-family: var(--font-serif);
+    font-size: clamp(72px, 12vw, 140px);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -4px;
+    margin-bottom: 32px;
+  }
+
+  .cover-tagline {
+    font-size: clamp(17px, 2.2vw, 22px);
+    font-weight: 300;
+    line-height: 1.65;
+    color: var(--ink-light);
+    max-width: 640px;
+    margin-bottom: 48px;
+  }
+
+  .cover-tagline strong { font-weight: 600; color: var(--ink); }
+
+  .cover-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 64px;
+  }
+
+  .cover-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .cover-footer {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+
+  /* ===== PROBLEM CARDS ===== */
+  .problem-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .problem-card {
+    padding: 28px 24px;
+    border-top: 3px solid var(--red);
+    background: white;
+  }
+
+  .problem-card:nth-child(2) { border-top-color: var(--amber); }
+  .problem-card:nth-child(3) { border-top-color: var(--ink); }
+
+  .problem-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .problem-card p {
+    font-size: 14px;
+    color: var(--ink-light);
+    line-height: 1.7;
+  }
+
+  /* ===== SOLUTION PILLARS ===== */
+  .solution-pillars {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+
+  .pillar {
+    padding: 28px 28px 28px 0;
+    border-top: 2px solid var(--ink);
+  }
+
+  .pillar:not(:last-child) { border-right: 1px solid var(--border-light); }
+  .pillar:not(:first-child) { padding-left: 28px; }
+
+  .pillar-num {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--red);
+    opacity: 0.2;
+    display: block;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .pillar h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .pillar p {
+    font-size: 13px;
+    color: var(--ink-light);
+    line-height: 1.7;
+  }
+
+  /* ===== USER JOURNEY ===== */
+  .journey-tracks {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .journey-connector {
+    width: 1px;
+    background: var(--border);
+    margin: 0 32px;
+  }
+
+  .journey-track-head {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .journey-track-head.seeker { color: var(--red); border-bottom-color: var(--red); }
+  .journey-track-head.employer { color: var(--teal); border-bottom-color: var(--teal); }
+
+  .journey-steps { list-style: none; counter-reset: jstep; }
+
+  .journey-step {
+    counter-increment: jstep;
+    position: relative;
+    padding-left: 36px;
+    padding-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .journey-step::before {
+    content: counter(jstep);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: white;
+  }
+
+  .track-seeker .journey-step::before { background: var(--red); }
+  .track-employer .journey-step::before { background: var(--teal); }
+
+  .journey-merge {
+    text-align: center;
+    padding: 24px 0;
+    position: relative;
+  }
+
+  .journey-merge::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .journey-merge span {
+    position: relative;
+    display: inline-block;
+    background: var(--bg);
+    padding: 4px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-light);
+    border: 1px solid var(--border);
+  }
+
+  .journey-shared {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    text-align: center;
+  }
+
+  .journey-shared-step {
+    padding: 16px;
+    border-top: 2px solid var(--ink);
+  }
+
+  .journey-shared-step:not(:last-child) { border-right: 1px solid var(--border-light); }
+
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .step-name {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* ===== NEAR INTEGRATION ===== */
+  .near-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .near-card {
+    padding: 24px;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--red);
+  }
+
+  .near-card:nth-child(2) { border-left-color: var(--teal); }
+  .near-card:nth-child(3) { border-left-color: var(--amber); }
+  .near-card:nth-child(4) { border-left-color: var(--ink); }
+
+  .near-card-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .near-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .near-card p {
+    font-size: 13px;
+    color: var(--ink-light);
+    line-height: 1.7;
+  }
+
+  .near-card code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+
+  /* ===== ARCHITECTURE ===== */
+  .arch-stack { display: flex; flex-direction: column; gap: 0; }
+
+  .arch-layer {
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    background: white;
+  }
+
+  .arch-layer-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .arch-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .arch-chip {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-light);
+    padding: 3px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+  }
+
+  .arch-chip--accent {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .arch-services-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .arch-svc {
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+  }
+
+  .arch-svc strong { display: block; font-size: 11px; font-weight: 600; }
+  .arch-svc span { font-size: 9px; color: var(--muted); font-family: var(--font-mono); }
+
+  .arch-flagship-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-light);
+  }
+
+  .arch-svc--flag {
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-left: 2px solid var(--red);
+  }
+
+  .arch-svc--flag:nth-child(2) { border-left-color: var(--teal); }
+  .arch-svc--flag:nth-child(3) { border-left-color: var(--amber); }
+
+  .arch-svc--flag strong { display: block; font-size: 12px; font-weight: 600; }
+  .arch-svc--flag span { font-size: 10px; color: var(--muted); font-family: var(--font-mono); }
+
+  .arch-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0;
+  }
+
+  .arch-bottom-row .arch-layer:first-child { border-right: none; }
+
+  .arch-ext-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .arch-ext-item strong { display: block; font-size: 11px; font-weight: 600; }
+  .arch-ext-item span { font-size: 9px; color: var(--muted); font-family: var(--font-mono); }
+
+  .arch-contract-chips {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-light);
+  }
+
+  .arch-contract-chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--amber);
+    padding: 3px 10px;
+    border: 1px solid var(--amber);
+    background: var(--amber-soft);
+  }
+
+  /* ===== TECH GRID ===== */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .tech-card {
+    padding: 24px;
+    border-top: 3px solid var(--ink);
+    background: white;
+  }
+
+  .tech-card:nth-child(1) { border-top-color: var(--red); }
+  .tech-card:nth-child(2) { border-top-color: var(--teal); }
+  .tech-card:nth-child(3) { border-top-color: var(--amber); }
+  .tech-card:nth-child(4) { border-top-color: var(--ink); }
+
+  .tech-card-num {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--red);
+    opacity: 0.15;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .tech-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .tech-card p { font-size: 13px; color: var(--ink-light); line-height: 1.7; }
+
+  /* ===== STATS ===== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 40px;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 24px 16px;
+    border-top: 2px solid var(--ink);
+  }
+
+  .stat-item:not(:last-child) { border-right: 1px solid var(--border-light); }
+  .stat-item:nth-child(1) { border-top-color: var(--red); }
+  .stat-item:nth-child(2) { border-top-color: var(--teal); }
+  .stat-item:nth-child(3) { border-top-color: var(--amber); }
+
+  .stat-value {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  .milestones {
+    list-style: none;
+    margin-bottom: 24px;
+  }
+
+  .milestones li {
+    font-size: 14px;
+    color: var(--ink-light);
+    padding: 10px 0 10px 20px;
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+
+  .milestones li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+
+  .milestones li:last-child { border-bottom: none; }
+
+  .milestone-link {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--red);
+    text-decoration: none;
+    border-bottom: 1px solid var(--red);
+    padding-bottom: 2px;
+  }
+
+  .milestone-link:hover { opacity: 0.7; }
+
+  /* ===== ROADMAP ===== */
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+
+  .roadmap-phase {
+    padding: 24px 24px 24px 0;
+    border-top: 2px solid var(--ink);
+  }
+
+  .roadmap-phase:nth-child(1) { border-top-color: var(--red); }
+  .roadmap-phase:nth-child(2) { border-top-color: var(--teal); }
+  .roadmap-phase:nth-child(3) { border-top-color: var(--amber); }
+
+  .roadmap-phase:not(:last-child) { border-right: 1px solid var(--border-light); }
+  .roadmap-phase:not(:first-child) { padding-left: 24px; }
+
+  .roadmap-quarter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .roadmap-phase h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .roadmap-list {
+    list-style: none;
+  }
+
+  .roadmap-list li {
+    font-size: 13px;
+    color: var(--ink-light);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-light);
+    line-height: 1.5;
+  }
+
+  .roadmap-list li:last-child { border-bottom: none; }
+
+  /* ===== THANK YOU ===== */
+  .thankyou {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 80vh;
+  }
+
+  .thankyou-title {
+    font-family: var(--font-serif);
+    font-size: clamp(64px, 10vw, 120px);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -3px;
+    margin-bottom: 24px;
+  }
+
+  .thankyou-tagline {
+    font-size: clamp(16px, 2vw, 20px);
+    font-weight: 300;
+    color: var(--ink-light);
+    margin-bottom: 48px;
+    max-width: 560px;
+  }
+
+  .thankyou-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .thankyou-link {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-light);
+    text-decoration: none;
+  }
+
+  .thankyou-link:hover { color: var(--red); }
+
+  .thankyou-link-label {
+    display: inline-block;
+    width: 80px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: right;
+    margin-right: 12px;
+  }
+
+  .thankyou-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .thankyou-hackathon {
+    margin-top: 8px;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  /* ===== NAV ===== */
+  .nav-dots {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 50;
+  }
+
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 0;
+  }
+
+  .nav-dot.active {
+    background: var(--red);
+    border-color: var(--red);
+  }
+
+  .nav-dot:hover:not(.active) { border-color: var(--muted); }
+
+  .slide-counter {
+    position: fixed;
+    bottom: 28px;
+    right: 32px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    z-index: 50;
+  }
+
+  .slide-counter .current { color: var(--ink); font-weight: 500; }
+
+  .key-hint {
+    position: fixed;
+    bottom: 28px;
+    left: 32px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--border);
+    z-index: 50;
+    transition: opacity 0.5s;
+  }
+
+  .key-hint.faded { opacity: 0; }
+
+  .key-hint kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 11px;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide.active .animate-in { animation: fadeInUp 0.6s ease-out both; }
+  .slide.active .delay-1 { animation-delay: 0.1s; }
+  .slide.active .delay-2 { animation-delay: 0.2s; }
+  .slide.active .delay-3 { animation-delay: 0.3s; }
+  .slide.active .delay-4 { animation-delay: 0.4s; }
+  .slide.active .delay-5 { animation-delay: 0.5s; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .slide { padding: 48px 28px; }
+    .problem-cards { grid-template-columns: 1fr; gap: 16px; }
+    .solution-pillars { grid-template-columns: 1fr; }
+    .pillar { border-right: none !important; padding-left: 0 !important; padding-right: 0; }
+    .journey-tracks { grid-template-columns: 1fr; gap: 24px; }
+    .journey-connector { display: none; }
+    .journey-shared { grid-template-columns: 1fr; }
+    .journey-shared-step { border-right: none !important; }
+    .near-grid { grid-template-columns: 1fr; }
+    .tech-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .stat-item { border-right: none !important; }
+    .roadmap { grid-template-columns: 1fr; }
+    .roadmap-phase { border-right: none !important; padding-left: 0 !important; padding-right: 0; }
+    .arch-services-row { grid-template-columns: repeat(4, 1fr); }
+    .arch-flagship-row { grid-template-columns: 1fr; }
+    .arch-bottom-row { grid-template-columns: 1fr; }
+    .arch-ext-row { grid-template-columns: 1fr; }
+    .nav-dots { bottom: 16px; }
+    .slide-counter { bottom: 16px; right: 20px; }
+    .key-hint { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .slide { padding: 40px 20px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .arch-services-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    html, body { overflow: visible; height: auto; }
+    .deck { height: auto; overflow: visible; }
+    .slide {
+      position: relative;
+      opacity: 1 !important;
+      transform: none !important;
+      pointer-events: auto;
+      page-break-after: always;
+      min-height: 100vh;
+    }
+    .progress-bar, .nav-dots, .slide-counter, .key-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide active" data-slide="0">
+    <div class="slide-inner cover">
+      <p class="cover-eyebrow animate-in delay-1">AI-Powered Talent Marketplace on NEAR Protocol</p>
+      <div class="cover-rule animate-in delay-1"></div>
+      <h1 class="cover-title animate-in delay-2">TalentTee<span class="accent-dot">.</span></h1>
+      <p class="cover-tagline animate-in delay-3">
+        <strong>AI agents</strong> handle resume generation, matching, and salary negotiation &mdash;
+        <strong>blockchain</strong> guarantees every transaction.
+      </p>
+      <div class="cover-tags animate-in delay-4">
+        <span class="cover-tag">NEAR AI &middot; Qwen 3.5</span>
+        <span class="cover-tag">NEAR Protocol &middot; Smart Contracts</span>
+        <span class="cover-tag">pgvector &middot; ANN Search</span>
+      </div>
+      <div class="cover-footer animate-in delay-5">NEAR Hackathon 2026</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide" data-slide="1">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">01</span>
+      <h2 class="slide-title animate-in delay-1">Hiring is Broken</h2>
+      <p class="slide-subtitle animate-in delay-2">The traditional hiring pipeline is full of friction, bias, and broken trust.</p>
+      <div class="problem-cards animate-in delay-3">
+        <div class="problem-card">
+          <h3>Resume Theater</h3>
+          <p>Resumes don't reflect real capabilities. Self-reported skills miss the truth. Candidates spend hours crafting narratives employers can't verify.</p>
+        </div>
+        <div class="problem-card">
+          <h3>Negotiation Asymmetry</h3>
+          <p>Information imbalance leads to unfair salary outcomes. Employers hold market data; candidates negotiate blind. The result is inefficiency and resentment.</p>
+        </div>
+        <div class="problem-card">
+          <h3>Trust Deficit</h3>
+          <p>No payment guarantees. Opaque processes. No verifiable agreements. When deals fall apart, there's no recourse and no record.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: SOLUTION -->
+  <div class="slide" data-slide="2">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">02</span>
+      <h2 class="slide-title animate-in delay-1">AI + Blockchain, End-to-End</h2>
+      <p class="slide-subtitle animate-in delay-2">From data-driven resumes to autonomous negotiation to on-chain settlement &mdash; one seamless pipeline.</p>
+      <div class="solution-pillars animate-in delay-3">
+        <div class="pillar">
+          <span class="pillar-num">01</span>
+          <h3>AI Resume Generation</h3>
+          <p>Real activity data from GitHub &amp; Slack. AI analyzes coding patterns and contributions to generate objective resumes with vector embeddings.</p>
+        </div>
+        <div class="pillar">
+          <span class="pillar-num">02</span>
+          <h3>Autonomous Negotiation</h3>
+          <p>AI agents represent both parties through an encrypted multi-round protocol. Fair, efficient, and private. No more awkward back-and-forth.</p>
+        </div>
+        <div class="pillar">
+          <span class="pillar-num">03</span>
+          <h3>Blockchain Escrow</h3>
+          <p>NEAR smart contract escrow guarantees payment. Agreements are hashed and recorded on-chain. Trust is built into the protocol.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: USER JOURNEY -->
+  <div class="slide" data-slide="3">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">03</span>
+      <h2 class="slide-title animate-in delay-1">User Journey</h2>
+      <p class="slide-subtitle animate-in delay-2">Two paths converge into a shared, AI-driven, on-chain pipeline.</p>
+      <div class="animate-in delay-3">
+        <div class="journey-tracks">
+          <div class="journey-track track-seeker">
+            <div class="journey-track-head seeker">JOB SEEKER</div>
+            <ul class="journey-steps">
+              <li class="journey-step"><span class="journey-step-title">Sign Up with NEAR Wallet</span></li>
+              <li class="journey-step"><span class="journey-step-title">Connect Data Sources</span></li>
+              <li class="journey-step"><span class="journey-step-title">AI Generates Resume</span></li>
+              <li class="journey-step"><span class="journey-step-title">AI Matching</span></li>
+            </ul>
+          </div>
+          <div class="journey-connector"></div>
+          <div class="journey-track track-employer">
+            <div class="journey-track-head employer">EMPLOYER</div>
+            <ul class="journey-steps">
+              <li class="journey-step"><span class="journey-step-title">Sign Up with NEAR Wallet</span></li>
+              <li class="journey-step"><span class="journey-step-title">Create Job with AI Chat</span></li>
+              <li class="journey-step"><span class="journey-step-title">Deposit Escrow</span></li>
+              <li class="journey-step"><span class="journey-step-title">AI Matching</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="journey-merge"><span>Mutual Agreement</span></div>
+        <div class="journey-shared">
+          <div class="journey-shared-step">
+            <div class="step-label">STEP 5</div>
+            <div class="step-name">AI Negotiation</div>
+          </div>
+          <div class="journey-shared-step">
+            <div class="step-label">STEP 6</div>
+            <div class="step-name">Agreement Signing</div>
+          </div>
+          <div class="journey-shared-step">
+            <div class="step-label">STEP 7</div>
+            <div class="step-name">On-Chain Settlement</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: NEAR INTEGRATION -->
+  <div class="slide" data-slide="4">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">04</span>
+      <h2 class="slide-title animate-in delay-1">Built on NEAR, Through and Through</h2>
+      <p class="slide-subtitle animate-in delay-2">Deep integration across the entire NEAR ecosystem &mdash; from AI inference to on-chain settlement.</p>
+      <div class="near-grid animate-in delay-3">
+        <div class="near-card">
+          <div class="near-card-label">AI INFERENCE</div>
+          <h3>NEAR AI Cloud</h3>
+          <p><code>Qwen 3.5-122B</code> for reasoning and negotiation. <code>Qwen 3-Embed-0.6B</code> for 1536d vector embeddings. OpenAI-compatible API powering all AI features.</p>
+        </div>
+        <div class="near-card">
+          <div class="near-card-label">AUTHENTICATION</div>
+          <h3>NEAR Protocol</h3>
+          <p>NEP-413 signature-based authentication. No passwords, no email verification. Wallet-native login. Your NEAR account <em>is</em> your identity.</p>
+        </div>
+        <div class="near-card">
+          <div class="near-card-label">SMART CONTRACTS</div>
+          <h3>Rust Contracts</h3>
+          <p>Escrow: <code>deposit</code>, <code>pay_for_profile</code>, <code>withdraw</code>. Agreement: <code>store_agreement</code> with SHA-256 hash verification. Deployed on testnet.</p>
+        </div>
+        <div class="near-card">
+          <div class="near-card-label">DELEGATION</div>
+          <h3>FunctionCall Access Keys</h3>
+          <p>Server agent key with limited allowance for automated on-chain transactions. True delegation without exposing full account access. Zero-trust, capped spending.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: ARCHITECTURE -->
+  <div class="slide" data-slide="5">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">05</span>
+      <h2 class="slide-title animate-in delay-1">System Architecture</h2>
+      <p class="slide-subtitle animate-in delay-2">Modular layers from client to blockchain.</p>
+      <div class="arch-stack animate-in delay-3">
+        <div class="arch-layer">
+          <div class="arch-layer-label">CLIENT</div>
+          <div class="arch-chips">
+            <span class="arch-chip">Next.js 16</span>
+            <span class="arch-chip">React 19</span>
+            <span class="arch-chip">Tailwind CSS 4</span>
+            <span class="arch-chip arch-chip--accent">NEAR Wallet Selector</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">API GATEWAY</div>
+          <div class="arch-chips">
+            <span class="arch-chip">NestJS 11</span>
+            <span class="arch-chip">JWT</span>
+            <span class="arch-chip">Passport</span>
+            <span class="arch-chip">Guards</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">SERVICES</div>
+          <div class="arch-services-row">
+            <div class="arch-svc"><strong>Auth</strong><span>NEP-413</span></div>
+            <div class="arch-svc"><strong>Resume</strong><span>AI Gen</span></div>
+            <div class="arch-svc"><strong>Datasource</strong><span>GitHub</span></div>
+            <div class="arch-svc"><strong>Match</strong><span>ANN+LLM</span></div>
+            <div class="arch-svc"><strong>Job</strong><span>AI Chat</span></div>
+            <div class="arch-svc"><strong>Crypto</strong><span>Ed25519</span></div>
+            <div class="arch-svc"><strong>Events</strong><span>Bus</span></div>
+          </div>
+          <div class="arch-flagship-row">
+            <div class="arch-svc--flag"><strong>Negotiation Engine</strong><span>Multi-Round AI &middot; Encrypted</span></div>
+            <div class="arch-svc--flag"><strong>Agreement</strong><span>SHA-256 &middot; On-Chain</span></div>
+            <div class="arch-svc--flag"><strong>Escrow</strong><span>Deposit &middot; Pay &middot; Withdraw</span></div>
+          </div>
+        </div>
+        <div class="arch-bottom-row">
+          <div class="arch-layer">
+            <div class="arch-layer-label">DATA</div>
+            <div class="arch-chips" style="flex-direction:column;">
+              <span class="arch-chip">PostgreSQL 16</span>
+              <span class="arch-chip">pgvector (1536d)</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-label">EXTERNAL</div>
+            <div class="arch-ext-row">
+              <div class="arch-ext-item"><strong>NEAR AI</strong><span>Qwen 3.5 &middot; Embed</span></div>
+              <div class="arch-ext-item"><strong>NEAR Protocol</strong><span>Testnet &middot; Contracts</span></div>
+              <div class="arch-ext-item"><strong>GitHub OAuth</strong><span>Repos &middot; Activity</span></div>
+            </div>
+            <div class="arch-contract-chips">
+              <span class="arch-contract-chip">escrow.sooondae17.testnet</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: TECHNICAL HIGHLIGHTS -->
+  <div class="slide" data-slide="6">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">06</span>
+      <h2 class="slide-title animate-in delay-1">Under the Hood</h2>
+      <p class="slide-subtitle animate-in delay-2">Technical innovations that make TalentTee possible.</p>
+      <div class="tech-grid animate-in delay-3">
+        <div class="tech-card">
+          <div class="tech-card-num">01</div>
+          <h3>Hybrid AI Matching</h3>
+          <p>ANN vector search via pgvector cosine similarity finds candidates fast. LLM reranking evaluates semantic fit precisely. A two-stage pipeline balancing speed and accuracy.</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-num">02</div>
+          <h3>Encrypted Negotiation</h3>
+          <p>Ed25519 key exchange derives HKDF session keys for AES-GCM encryption. Each negotiation round is end-to-end encrypted. Only participants can read the terms.</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-num">03</div>
+          <h3>Agent Delegation</h3>
+          <p>FunctionCall Access Keys let the server act on behalf of employers with capped allowance. Automated on-chain transactions with zero trust compromise.</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-num">04</div>
+          <h3>Integrity Verification</h3>
+          <p>SHA-256 hashes of final agreements stored on NEAR. Dual-party signing ensures mutual consent. Tamper-proof settlement records for both sides.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: CURRENT STATUS -->
+  <div class="slide" data-slide="7">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">07</span>
+      <h2 class="slide-title animate-in delay-1">Current Status</h2>
+      <p class="slide-subtitle animate-in delay-2">A working full-stack MVP, live on NEAR testnet.</p>
+      <div class="stats-row animate-in delay-3">
+        <div class="stat-item"><div class="stat-value">140+</div><div class="stat-label">Tests</div></div>
+        <div class="stat-item"><div class="stat-value">9</div><div class="stat-label">Phases Complete</div></div>
+        <div class="stat-item"><div class="stat-value">Live</div><div class="stat-label">On Testnet</div></div>
+        <div class="stat-item"><div class="stat-value">Full</div><div class="stat-label">Stack MVP</div></div>
+      </div>
+      <ul class="milestones animate-in delay-4">
+        <li>AI resume generation from real GitHub activity data</li>
+        <li>Vector-based job matching with LLM reranking (pgvector + NEAR AI)</li>
+        <li>Multi-round encrypted AI negotiation powered by NEAR AI</li>
+        <li>Smart contract escrow deployed on NEAR testnet</li>
+        <li>Frontend on Vercel, Backend on Railway &mdash; fully deployed</li>
+      </ul>
+      <a href="https://talenttee-sepia.vercel.app" class="milestone-link animate-in delay-5" target="_blank">talenttee-sepia.vercel.app</a>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: ROADMAP -->
+  <div class="slide" data-slide="8">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">08</span>
+      <h2 class="slide-title animate-in delay-1">What's Next</h2>
+      <p class="slide-subtitle animate-in delay-2">A clear path from hackathon prototype to production platform.</p>
+      <div class="roadmap animate-in delay-3">
+        <div class="roadmap-phase">
+          <span class="roadmap-quarter">Q2 2026</span>
+          <h3>Polish &amp; Integrate</h3>
+          <ul class="roadmap-list">
+            <li>Pre-negotiation auto-payment + resume integration</li>
+            <li>Salary chat flow with AI recommendations</li>
+            <li>Post-agreement interview messaging</li>
+            <li>End-to-end test coverage expansion</li>
+          </ul>
+        </div>
+        <div class="roadmap-phase">
+          <span class="roadmap-quarter">Q3 2026</span>
+          <h3>Scale &amp; Expand</h3>
+          <ul class="roadmap-list">
+            <li>Mainnet deployment</li>
+            <li>Multi-source integration (LinkedIn, portfolio)</li>
+            <li>Advanced matching with feedback loops</li>
+            <li>Platform fee mechanism &amp; revenue model</li>
+          </ul>
+        </div>
+        <div class="roadmap-phase">
+          <span class="roadmap-quarter">Q4 2026</span>
+          <h3>Launch &amp; Grow</h3>
+          <ul class="roadmap-list">
+            <li>Platform marketplace public launch</li>
+            <li>Employer dashboard with analytics</li>
+            <li>Token economics design</li>
+            <li>Community governance exploration</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: THANK YOU -->
+  <div class="slide" data-slide="9">
+    <div class="slide-inner thankyou">
+      <h1 class="thankyou-title animate-in delay-1">TalentTee<span class="accent-dot">.</span></h1>
+      <p class="thankyou-tagline animate-in delay-2">The future of hiring is autonomous, encrypted, and on-chain.</p>
+      <div class="thankyou-links animate-in delay-3">
+        <a href="https://talenttee-sepia.vercel.app" class="thankyou-link" target="_blank">
+          <span class="thankyou-link-label">Live Demo</span> talenttee-sepia.vercel.app
+        </a>
+        <a href="https://github.com/TalentTEE/talent-tee" class="thankyou-link" target="_blank">
+          <span class="thankyou-link-label">GitHub</span> github.com/TalentTEE/talent-tee
+        </a>
+      </div>
+      <div class="thankyou-footer animate-in delay-4">
+        <span>Built with NEAR AI &middot; Powered by NEAR Protocol</span>
+        <span class="thankyou-hackathon">NEAR Hackathon 2026</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<nav class="nav-dots" id="navDots"></nav>
+<div class="slide-counter" id="slideCounter"></div>
+<div class="key-hint" id="keyHint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to navigate</div>
+
+<script>
+(function() {
+  'use strict';
+  const TOTAL = 10;
+  let current = 0;
+  let transitioning = false;
+
+  const deck = document.getElementById('deck');
+  const slides = deck.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progressBar');
+  const navDots = document.getElementById('navDots');
+  const slideCounter = document.getElementById('slideCounter');
+  const keyHint = document.getElementById('keyHint');
+
+  for (let i = 0; i < TOTAL; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    dot.addEventListener('click', () => goTo(i));
+    navDots.appendChild(dot);
+  }
+
+  function updateUI() {
+    progressBar.style.width = ((current + 1) / TOTAL * 100) + '%';
+    const num = String(current + 1).padStart(2, '0');
+    slideCounter.innerHTML = '<span class="current">' + num + '</span> / ' + String(TOTAL).padStart(2, '0');
+    navDots.querySelectorAll('.nav-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === current);
+    });
+  }
+
+  function goTo(index) {
+    if (index === current || index < 0 || index >= TOTAL || transitioning) return;
+    transitioning = true;
+    const dir = index > current ? 1 : -1;
+    const oldSlide = slides[current];
+    const newSlide = slides[index];
+
+    slides.forEach(s => s.classList.remove('active'));
+
+    newSlide.style.transition = 'none';
+    newSlide.style.transform = 'translateX(' + (dir * 60) + 'px)';
+    newSlide.style.opacity = '0';
+    void newSlide.offsetWidth;
+
+    newSlide.style.transition = '';
+    newSlide.classList.add('active');
+    newSlide.style.transform = '';
+    newSlide.style.opacity = '';
+
+    oldSlide.style.transform = 'translateX(' + (-dir * 60) + 'px)';
+    oldSlide.style.opacity = '0';
+
+    current = index;
+    updateUI();
+
+    if (keyHint && !keyHint.classList.contains('faded')) keyHint.classList.add('faded');
+    setTimeout(() => { transitioning = false; }, 550);
+  }
+
+  function next() { if (current < TOTAL - 1) goTo(current + 1); }
+  function prev() { if (current > 0) goTo(current - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    else if (e.key === 'End') { e.preventDefault(); goTo(TOTAL - 1); }
+  });
+
+  let touchStartX = 0;
+  deck.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+  deck.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+  }, { passive: true });
+
+  let wheelTimeout;
+  deck.addEventListener('wheel', (e) => {
+    if (wheelTimeout) return;
+    wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 800);
+    if (e.deltaY > 30) next();
+    else if (e.deltaY < -30) prev();
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+
+</body>
+</html>
