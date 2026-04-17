@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Inter, Manrope, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { OfflineBanner } from "@/components/ui/offline-banner";
@@ -14,8 +14,14 @@ const manrope = Manrope({
   subsets: ["latin"],
 });
 
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["700", "900"],
+});
+
 export const metadata: Metadata = {
-  title: "Talent-Tee | Blockchain AI Recruitment",
+  title: "TalentTee | Blockchain AI Recruitment",
   description: "AI agents negotiate job offers on your behalf, powered by NEAR Protocol",
 };
 
@@ -27,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${inter.variable} ${manrope.variable} dark antialiased`}
+      className={`${inter.variable} ${manrope.variable} ${playfair.variable} dark antialiased`}
     >
       <head>
         <link

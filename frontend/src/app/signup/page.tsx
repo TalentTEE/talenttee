@@ -114,7 +114,7 @@ export default function SignupPage() {
         </h1>
         <p className="text-muted-foreground text-lg">
           {step === 'role'
-            ? 'How will you use Talent-Tee?'
+            ? 'How will you use TalentTee?'
             : 'Connect your wallet to get started.'}
         </p>
       </div>

@@ -37,8 +37,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
           )}
-          <span className="lg:hidden text-xl font-extrabold tracking-tighter text-primary uppercase font-[var(--font-manrope)]">
-            Talent-Tee
+          <span className="lg:hidden text-xl font-black tracking-tight text-primary font-[var(--font-playfair)]">
+            TalentTee<span className="text-[#FF2DF1]">.</span>
           </span>
         </div>
         <div className="flex items-center gap-3 shrink-0">
