@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentTee - User Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 16px;
+    color: #888;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  svg { width: 100%; height: auto; display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>TalentTee User Flow</h1>
+    <p>Seeker &amp; Employer Journey</p>
+  </div>
+
+  <svg viewBox="0 0 1400 1080" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gSeeker" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1"/>
+        <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1"/>
+      </linearGradient>
+      <linearGradient id="gEmployer" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1"/>
+        <stop offset="100%" style="stop-color:#f472b6;stop-opacity:1"/>
+      </linearGradient>
+      <linearGradient id="gShared" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#10b981;stop-opacity:1"/>
+        <stop offset="100%" style="stop-color:#34d399;stop-opacity:1"/>
+      </linearGradient>
+      <linearGradient id="gChain" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1"/>
+        <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1"/>
+      </linearGradient>
+
+      <marker id="arrS" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6"/>
+      </marker>
+      <marker id="arrE" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#f472b6"/>
+      </marker>
+      <marker id="arrG" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+      </marker>
+      <marker id="arrO" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/>
+      </marker>
+
+      <filter id="shadow">
+        <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+      </filter>
+      <filter id="glowGreen">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a1a2e" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+
+    <rect width="1400" height="1080" fill="url(#grid)"/>
+
+    <!-- ===== Legend ===== -->
+    <g transform="translate(1060, 20)">
+      <text x="0" y="12" font-size="10" fill="#666" font-weight="600" letter-spacing="1">EXTERNAL SYSTEMS</text>
+      <circle cx="8" cy="28" r="4" fill="#3b82f6"/>
+      <text x="18" y="32" font-size="9" fill="#888">Data API</text>
+      <circle cx="82" cy="28" r="4" fill="#00EC97"/>
+      <text x="92" y="32" font-size="9" fill="#888">NEAR AI</text>
+      <circle cx="155" cy="28" r="4" fill="#f59e0b"/>
+      <text x="165" y="32" font-size="9" fill="#888">Blockchain</text>
+    </g>
+
+    <!-- ===== SHARED: Entry Point ===== -->
+    <g transform="translate(560, 20)">
+      <rect width="280" height="60" rx="30" fill="#1a1a30" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)"/>
+      <text x="140" y="28" text-anchor="middle" font-size="11" fill="#888" font-weight="600">NEAR WALLET</text>
+      <text x="140" y="46" text-anchor="middle" font-size="15" fill="#e0e0e0" font-weight="700">Sign Up / Login</text>
+    </g>
+
+    <!-- Split arrows -->
+    <line x1="630" y1="80" x2="250" y2="140" stroke="#8b5cf6" stroke-width="2" marker-end="url(#arrS)"/>
+    <line x1="770" y1="80" x2="1150" y2="140" stroke="#f472b6" stroke-width="2" marker-end="url(#arrE)"/>
+    <text x="380" y="100" font-size="12" fill="#a5b4fc" font-weight="600">SEEKER</text>
+    <text x="950" y="100" font-size="12" fill="#f9a8d4" font-weight="600">EMPLOYER</text>
+
+    <!-- ========== SEEKER FLOW (Left Side) ========== -->
+    <!-- Step 1: Connect Data -->
+    <g transform="translate(60, 145)">
+      <rect width="380" height="90" rx="12" fill="#12121f" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gSeeker)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">1</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Connect Data Sources</text>
+      <text x="60" y="50" font-size="11" fill="#888">Analyze code activity via GitHub OAuth</text>
+      <text x="60" y="66" font-size="11" fill="#888">Collect Slack, Discord, Gov24 data</text>
+    </g>
+    <line x1="250" y1="235" x2="250" y2="265" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrS)"/>
+
+    <!-- Step 2: AI Resume -->
+    <g transform="translate(60, 270)">
+      <rect width="380" height="100" rx="12" fill="#12121f" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gSeeker)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">2</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">AI Resume Generation</text>
+      <text x="60" y="50" font-size="11" fill="#888">AI auto-generates resume from collected data</text>
+      <text x="60" y="66" font-size="11" fill="#888">Skill extraction · experience analysis · market value</text>
+      <text x="60" y="82" font-size="11" fill="#888">Vector embedding generation (pgvector)</text>
+    </g>
+    <line x1="250" y1="370" x2="250" y2="400" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrS)"/>
+
+    <!-- Step 3: Enable Job Seeking -->
+    <g transform="translate(60, 405)">
+      <rect width="380" height="80" rx="12" fill="#12121f" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gSeeker)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">3</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Enable Job Seeking</text>
+      <text x="60" y="50" font-size="11" fill="#888">Toggle on → auto-matching pipeline starts</text>
+      <text x="60" y="66" font-size="11" fill="#888">6-hour re-matching cron schedule</text>
+    </g>
+    <line x1="250" y1="485" x2="250" y2="515" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrS)"/>
+
+    <!-- Step 4: Review Matches -->
+    <g transform="translate(60, 520)">
+      <rect width="380" height="80" rx="12" fill="#12121f" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gSeeker)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">4</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Review AI Matches</text>
+      <text x="60" y="50" font-size="11" fill="#888">Review ANN search + LLM reranking results</text>
+      <text x="60" y="66" font-size="11" fill="#888">Match score · job details · salary range</text>
+    </g>
+
+    <!-- ========== EMPLOYER FLOW (Right Side) ========== -->
+    <!-- Step 1: Create Job -->
+    <g transform="translate(960, 145)">
+      <rect width="380" height="90" rx="12" fill="#12121f" stroke="#ec4899" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gEmployer)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">1</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Create Job with AI Chat</text>
+      <text x="60" y="50" font-size="11" fill="#888">Draft job posting through AI assistant chat</text>
+      <text x="60" y="66" font-size="11" fill="#888">Set requirements · salary range · benefits</text>
+    </g>
+    <line x1="1150" y1="235" x2="1150" y2="265" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrE)"/>
+
+    <!-- Step 2: Publish -->
+    <g transform="translate(960, 270)">
+      <rect width="380" height="80" rx="12" fill="#12121f" stroke="#ec4899" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gEmployer)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">2</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Publish Job Posting</text>
+      <text x="60" y="50" font-size="11" fill="#888">Publish → AI embedding auto-generated</text>
+      <text x="60" y="66" font-size="11" fill="#888">Matching engine finds suitable talent</text>
+    </g>
+    <line x1="1150" y1="350" x2="1150" y2="380" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrE)"/>
+
+    <!-- Step 3: Deposit Escrow -->
+    <g transform="translate(960, 385)">
+      <rect width="380" height="80" rx="12" fill="#12121f" stroke="#f59e0b" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gChain)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">3</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Deposit Escrow (NEAR)</text>
+      <text x="60" y="50" font-size="11" fill="#888">Deposit NEAR tokens into escrow contract</text>
+      <text x="60" y="66" font-size="11" fill="#888">Transparent payment guarantee → trust</text>
+    </g>
+    <line x1="1150" y1="465" x2="1150" y2="515" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrE)"/>
+
+    <!-- Step 4: Review Candidates -->
+    <g transform="translate(960, 520)">
+      <rect width="380" height="80" rx="12" fill="#12121f" stroke="#ec4899" stroke-width="1.5" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gEmployer)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">4</text>
+      <text x="60" y="30" font-size="14" fill="#e0e0e0" font-weight="600">Review Matched Candidates</text>
+      <text x="60" y="50" font-size="11" fill="#888">Review AI-matched talent profiles</text>
+      <text x="60" y="66" font-size="11" fill="#888">Skill alignment · experience fit</text>
+    </g>
+
+    <!-- ========== EXTERNAL SYSTEMS ========== -->
+
+    <!-- Data Source badges with logos (right of Seeker Step 1) -->
+    <!-- Layout: x=455..590, well left of NEAR AI card at x=635 -->
+    <g>
+      <!-- GitHub badge -->
+      <rect x="455" y="155" width="115" height="28" rx="6" fill="#0f172a" stroke="#30363d" stroke-width="1.2"/>
+      <circle cx="474" cy="169" r="9" fill="#161b22"/>
+      <g transform="translate(468, 163) scale(0.75)">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z" fill="#e0e0e0"/>
+      </g>
+      <text x="490" y="173" font-size="11" fill="#e0e0e0" font-weight="600">GitHub</text>
+      <line x1="440" y1="169" x2="455" y2="169" stroke="#30363d" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.6"/>
+
+      <!-- Slack · Discord badge -->
+      <rect x="455" y="187" width="135" height="28" rx="6" fill="#0f172a" stroke="#611f69" stroke-width="1.2"/>
+      <g transform="translate(467, 194)">
+        <circle cx="3" cy="3" r="2.5" fill="#E01E5A"/>
+        <circle cx="9" cy="3" r="2.5" fill="#36C5F0"/>
+        <circle cx="3" cy="9" r="2.5" fill="#2EB67D"/>
+        <circle cx="9" cy="9" r="2.5" fill="#ECB22E"/>
+      </g>
+      <text x="490" y="205" font-size="10" fill="#e0e0e0" font-weight="600">Slack · Discord</text>
+      <line x1="440" y1="201" x2="455" y2="201" stroke="#611f69" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.6"/>
+
+      <!-- Gov24 badge -->
+      <rect x="455" y="219" width="105" height="28" rx="6" fill="#0f172a" stroke="#1a8870" stroke-width="1.2"/>
+      <g transform="translate(466, 225) scale(0.8)">
+        <path d="M8 1L2 5v1h12V5L8 1zM3 7v4h2V7H3zm4 0v4h2V7H7zm4 0v4h2V7h-2zM2 12v1h12v-1H2z" fill="#34d399"/>
+      </g>
+      <text x="490" y="237" font-size="11" fill="#e0e0e0" font-weight="600">Gov24</text>
+      <line x1="440" y1="233" x2="455" y2="233" stroke="#1a8870" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.6"/>
+    </g>
+
+    <!-- ===== NEAR AI CLOUD (center card, x=635..805) ===== -->
+    <g>
+      <rect x="635" y="180" width="170" height="400" rx="14" fill="#060d14" stroke="#00EC97" stroke-width="1.5" filter="url(#glowGreen)"/>
+
+      <!-- NEAR N Logo -->
+      <g transform="translate(704, 189) scale(2)">
+        <polygon points="2,14 2,2 5,2 12,11 12,2 14,2 14,14 11,14 4,5 4,14" fill="#00EC97"/>
+      </g>
+
+      <!-- Title -->
+      <text x="720" y="237" text-anchor="middle" font-size="16" fill="#00EC97" font-weight="800" letter-spacing="1">NEAR AI</text>
+      <text x="720" y="253" text-anchor="middle" font-size="10" fill="#4ade80" font-weight="600" letter-spacing="4">CLOUD</text>
+
+      <!-- Divider -->
+      <line x1="655" y1="265" x2="785" y2="265" stroke="#1a3a2a" stroke-width="1"/>
+
+      <!-- EMBEDDING section -->
+      <text x="720" y="285" text-anchor="middle" font-size="9" fill="#00EC97" font-weight="600" letter-spacing="2" opacity="0.7">EMBEDDING</text>
+      <text x="720" y="303" text-anchor="middle" font-size="11" fill="#c0c0c0">OpenAI API</text>
+      <text x="720" y="319" text-anchor="middle" font-size="11" fill="#c0c0c0">pgvector</text>
+
+      <!-- Vertical flow dots -->
+      <circle cx="720" cy="340" r="1.5" fill="#00EC97" opacity="0.4"/>
+      <circle cx="720" cy="355" r="1.5" fill="#00EC97" opacity="0.3"/>
+      <circle cx="720" cy="370" r="1.5" fill="#00EC97" opacity="0.2"/>
+      <circle cx="720" cy="470" r="1.5" fill="#00EC97" opacity="0.2"/>
+      <circle cx="720" cy="485" r="1.5" fill="#00EC97" opacity="0.3"/>
+      <circle cx="720" cy="500" r="1.5" fill="#00EC97" opacity="0.4"/>
+
+      <!-- MATCHING section -->
+      <text x="720" y="520" text-anchor="middle" font-size="9" fill="#00EC97" font-weight="600" letter-spacing="2" opacity="0.7">MATCHING</text>
+      <text x="720" y="538" text-anchor="middle" font-size="11" fill="#c0c0c0">ANN Search</text>
+      <text x="720" y="554" text-anchor="middle" font-size="11" fill="#c0c0c0">LLM Reranking</text>
+
+      <!-- Connection lines from NEAR AI CLOUD -->
+      <!-- left → Seeker Step 2 (resume generation) -->
+      <line x1="635" y1="305" x2="440" y2="320" stroke="#00EC97" stroke-width="1" stroke-dasharray="5,3" opacity="0.4"/>
+      <!-- right-up L-path → Employer Step 1 (AI chat) -->
+      <path d="M 805 295 L 860 295 L 860 190 L 960 190" stroke="#00EC97" stroke-width="1" stroke-dasharray="5,3" fill="none" opacity="0.4"/>
+      <!-- right → Employer Step 2 (embedding) -->
+      <line x1="805" y1="310" x2="960" y2="310" stroke="#00EC97" stroke-width="1" stroke-dasharray="5,3" opacity="0.4"/>
+      <!-- left → Seeker Step 4 (matching) -->
+      <line x1="635" y1="540" x2="440" y2="560" stroke="#00EC97" stroke-width="1" stroke-dasharray="5,3" opacity="0.4"/>
+      <!-- right → Employer Step 4 (matching) -->
+      <line x1="805" y1="540" x2="960" y2="560" stroke="#00EC97" stroke-width="1" stroke-dasharray="5,3" opacity="0.4"/>
+    </g>
+
+    <!-- NEAR Protocol / Blockchain card (left of Employer Step 3) -->
+    <g>
+      <rect x="840" y="400" width="110" height="36" rx="8" fill="#0f0f1a" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="895" y="416" text-anchor="middle" font-size="10" fill="#fbbf24" font-weight="700">BLOCKCHAIN</text>
+      <text x="895" y="430" text-anchor="middle" font-size="9" fill="#888">NEAR Protocol</text>
+      <line x1="950" y1="418" x2="960" y2="418" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+    </g>
+
+    <!-- ========== CONVERGENCE: Both agree ========== -->
+    <line x1="250" y1="600" x2="250" y2="660" stroke="#34d399" stroke-width="2" marker-end="url(#arrG)"/>
+    <line x1="1150" y1="600" x2="1150" y2="660" stroke="#34d399" stroke-width="2" marker-end="url(#arrG)"/>
+
+    <!-- Merge lines -->
+    <line x1="250" y1="660" x2="700" y2="660" stroke="#34d399" stroke-width="2"/>
+    <line x1="1150" y1="660" x2="700" y2="660" stroke="#34d399" stroke-width="2"/>
+    <line x1="700" y1="660" x2="700" y2="710" stroke="#34d399" stroke-width="2" marker-end="url(#arrG)"/>
+
+    <!-- Central merge label -->
+    <rect x="520" y="635" width="360" height="28" rx="14" fill="none" stroke="#34d399" stroke-width="1" stroke-dasharray="4,2"/>
+    <text x="700" y="654" text-anchor="middle" font-size="12" fill="#34d399" font-weight="600">Both sides accept match → negotiation begins</text>
+
+    <!-- ========== SHARED FLOW (+30px spacing) ========== -->
+    <!-- Step 5: AI Negotiation -->
+    <g transform="translate(420, 720)">
+      <rect width="560" height="100" rx="12" fill="#12121f" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gShared)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">5</text>
+      <text x="60" y="28" font-size="16" fill="#e0e0e0" font-weight="700">AI Autonomous Negotiation</text>
+      <text x="60" y="50" font-size="12" fill="#888">Seeker Agent vs Employer Agent — autonomous negotiation</text>
+      <text x="60" y="68" font-size="12" fill="#888">Max 5 rounds · encrypted proposals/counters · auto decisions</text>
+      <text x="60" y="86" font-size="12" fill="#888">Comprehensive negotiation: salary · benefits · work conditions</text>
+    </g>
+    <line x1="700" y1="820" x2="700" y2="850" stroke="#34d399" stroke-width="2" marker-end="url(#arrG)"/>
+
+    <!-- Step 6: Agreement -->
+    <g transform="translate(420, 855)">
+      <rect width="560" height="80" rx="12" fill="#12121f" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gShared)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">6</text>
+      <text x="60" y="28" font-size="16" fill="#e0e0e0" font-weight="700">Dual-Party Agreement</text>
+      <text x="60" y="50" font-size="12" fill="#888">Both parties review and approve the final agreement</text>
+      <text x="60" y="68" font-size="12" fill="#888">SHA-256 hash generated · integrity of agreement guaranteed</text>
+    </g>
+    <line x1="700" y1="935" x2="700" y2="965" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrO)"/>
+
+    <!-- Step 7: Blockchain -->
+    <g transform="translate(420, 970)">
+      <rect width="560" height="80" rx="12" fill="#12121f" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+      <circle cx="30" cy="30" r="16" fill="url(#gChain)"/>
+      <text x="30" y="35" text-anchor="middle" font-size="13" fill="white" font-weight="700">7</text>
+      <text x="60" y="28" font-size="16" fill="#e0e0e0" font-weight="700">Blockchain Settlement</text>
+      <text x="60" y="50" font-size="12" fill="#888">Record agreement on NEAR · execute smart contract</text>
+      <text x="60" y="68" font-size="12" fill="#888">Auto-settle escrow funds · transparent transaction complete</text>
+    </g>
+
+    <!-- NEAR Chain badge (right of Shared Step 7) -->
+    <g>
+      <rect x="998" y="992" width="108" height="24" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="1"/>
+      <text x="1052" y="1008" text-anchor="middle" font-size="10" fill="#fbbf24" font-weight="600">NEAR Chain</text>
+      <line x1="980" y1="1004" x2="998" y2="1004" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>
+    </g>
+
+    <!-- Side annotations -->
+    <!-- AI bubble left -->
+    <g transform="translate(60, 710)">
+      <rect width="320" height="50" rx="8" fill="#1a1a30" stroke="#ec4899" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="160" y="22" text-anchor="middle" font-size="11" fill="#f9a8d4" font-weight="600">🤖 Seeker AI Agent</text>
+      <text x="160" y="40" text-anchor="middle" font-size="10" fill="#888">Represents the seeker · negotiates optimal terms</text>
+    </g>
+    <!-- AI bubble right -->
+    <g transform="translate(1020, 710)">
+      <rect width="320" height="50" rx="8" fill="#1a1a30" stroke="#ec4899" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="160" y="22" text-anchor="middle" font-size="11" fill="#f9a8d4" font-weight="600">🤖 Employer AI Agent</text>
+      <text x="160" y="40" text-anchor="middle" font-size="10" fill="#888">Negotiates within employer's budget &amp; requirements</text>
+    </g>
+
+    <!-- Connecting lines to AI bubbles -->
+    <line x1="380" y1="735" x2="420" y2="750" stroke="#ec4899" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="1020" y1="735" x2="980" y2="750" stroke="#ec4899" stroke-width="1" stroke-dasharray="3,3"/>
+  </svg>
+</div>
+</body>
+</html>

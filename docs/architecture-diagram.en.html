@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentTee - System Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .header h1 {
+    font-size: 36px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    font-size: 16px;
+    color: #888;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #aaa;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>TalentTee System Architecture</h1>
+    <p>Blockchain-Powered AI Talent Marketplace</p>
+  </div>
+
+  <svg viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      </linearGradient>
+      <linearGradient id="gradPink" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#f472b6;stop-opacity:1" />
+      </linearGradient>
+      <linearGradient id="gradCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:1" />
+      </linearGradient>
+      <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#34d399;stop-opacity:1" />
+      </linearGradient>
+      <linearGradient id="gradOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:1" />
+      </linearGradient>
+      <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:1" />
+      </linearGradient>
+
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+
+      <filter id="shadow">
+        <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+      </filter>
+
+      <marker id="arrowPurple" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6"/>
+      </marker>
+      <marker id="arrowCyan" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/>
+      </marker>
+      <marker id="arrowPink" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#f472b6"/>
+      </marker>
+      <marker id="arrowGreen" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+      </marker>
+      <marker id="arrowOrange" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/>
+      </marker>
+    </defs>
+
+    <!-- Background grid -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a1a2e" stroke-width="0.5"/>
+    </pattern>
+    <rect width="1200" height="900" fill="url(#grid)"/>
+
+    <!-- ========== CLIENT LAYER ========== -->
+    <rect x="30" y="30" width="1140" height="140" rx="16" fill="#12121f" stroke="#2a2a40" stroke-width="1" filter="url(#shadow)"/>
+    <text x="60" y="58" font-size="11" fill="#888" font-weight="600" letter-spacing="3">CLIENT LAYER</text>
+
+    <!-- Users -->
+    <g transform="translate(70, 80)">
+      <circle cx="20" cy="12" r="12" fill="none" stroke="#6366f1" stroke-width="2"/>
+      <text x="20" y="16" text-anchor="middle" font-size="14">👤</text>
+      <text x="20" y="38" text-anchor="middle" font-size="11" fill="#ccc">Seeker</text>
+    </g>
+    <g transform="translate(160, 80)">
+      <circle cx="20" cy="12" r="12" fill="none" stroke="#ec4899" stroke-width="2"/>
+      <text x="20" y="16" text-anchor="middle" font-size="14">🏢</text>
+      <text x="20" y="38" text-anchor="middle" font-size="11" fill="#ccc">Employer</text>
+    </g>
+
+    <!-- Next.js Frontend Box -->
+    <rect x="280" y="70" width="520" height="80" rx="12" fill="#1a1a30" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="540" y="98" text-anchor="middle" font-size="15" fill="#e0e0e0" font-weight="600">Next.js 16 Frontend</text>
+    <text x="540" y="118" text-anchor="middle" font-size="11" fill="#888">React 19 · Tailwind CSS · shadcn/ui</text>
+    <text x="540" y="136" text-anchor="middle" font-size="11" fill="#888">App Router · Server Components</text>
+
+    <!-- NEAR Wallet -->
+    <rect x="870" y="70" width="260" height="80" rx="12" fill="#1a1a30" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="1000" y="98" text-anchor="middle" font-size="15" fill="#e0e0e0" font-weight="600">NEAR Wallet Selector</text>
+    <text x="1000" y="118" text-anchor="middle" font-size="11" fill="#888">MyNearWallet · Meteor · Here</text>
+    <text x="1000" y="136" text-anchor="middle" font-size="11" fill="#888">NEP-413 Signature Auth</text>
+
+    <!-- Arrow: Users → Frontend -->
+    <line x1="200" y1="100" x2="275" y2="100" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowPurple)" stroke-dasharray="6,3"/>
+    <!-- Arrow: Frontend ↔ Wallet -->
+    <line x1="800" y1="110" x2="865" y2="110" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+    <!-- ========== API GATEWAY ========== -->
+    <rect x="30" y="200" width="1140" height="80" rx="16" fill="#12121f" stroke="#2a2a40" stroke-width="1" filter="url(#shadow)"/>
+    <text x="60" y="228" font-size="11" fill="#888" font-weight="600" letter-spacing="3">API GATEWAY</text>
+
+    <rect x="280" y="215" width="640" height="50" rx="10" fill="#1a1a30" stroke="#06b6d4" stroke-width="1.5"/>
+    <text x="600" y="238" text-anchor="middle" font-size="14" fill="#e0e0e0" font-weight="600">NestJS REST API</text>
+    <text x="600" y="254" text-anchor="middle" font-size="11" fill="#888">JWT Auth · Passport · Guards · Interceptors</text>
+
+    <!-- Arrow: Frontend → API -->
+    <line x1="540" y1="150" x2="540" y2="210" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#arrowCyan)" stroke-dasharray="6,3"/>
+    <text x="555" y="185" font-size="10" fill="#22d3ee">REST API</text>
+
+    <!-- ========== CORE SERVICES ========== -->
+    <rect x="30" y="310" width="1140" height="260" rx="16" fill="#12121f" stroke="#2a2a40" stroke-width="1" filter="url(#shadow)"/>
+    <text x="60" y="338" font-size="11" fill="#888" font-weight="600" letter-spacing="3">CORE SERVICE MODULES</text>
+
+    <!-- Row 1: Service boxes -->
+    <g>
+      <!-- Auth -->
+      <rect x="60" y="355" width="155" height="70" rx="8" fill="#1e1e35" stroke="#6366f1" stroke-width="1"/>
+      <text x="137" y="382" text-anchor="middle" font-size="13" fill="#a5b4fc" font-weight="600">Auth</text>
+      <text x="137" y="400" text-anchor="middle" font-size="10" fill="#777">NEP-413 · JWT</text>
+      <text x="137" y="414" text-anchor="middle" font-size="10" fill="#777">Signature Verify</text>
+    </g>
+    <g>
+      <!-- Resume -->
+      <rect x="235" y="355" width="155" height="70" rx="8" fill="#1e1e35" stroke="#ec4899" stroke-width="1"/>
+      <text x="312" y="382" text-anchor="middle" font-size="13" fill="#f9a8d4" font-weight="600">Resume</text>
+      <text x="312" y="400" text-anchor="middle" font-size="10" fill="#777">AI Generation</text>
+      <text x="312" y="414" text-anchor="middle" font-size="10" fill="#777">Market Value Analysis</text>
+    </g>
+    <g>
+      <!-- Datasource -->
+      <rect x="410" y="355" width="155" height="70" rx="8" fill="#1e1e35" stroke="#06b6d4" stroke-width="1"/>
+      <text x="487" y="382" text-anchor="middle" font-size="13" fill="#67e8f9" font-weight="600">Datasource</text>
+      <text x="487" y="400" text-anchor="middle" font-size="10" fill="#777">GitHub · Slack</text>
+      <text x="487" y="414" text-anchor="middle" font-size="10" fill="#777">Discord · Gov24</text>
+    </g>
+    <g>
+      <!-- Match -->
+      <rect x="585" y="355" width="155" height="70" rx="8" fill="#1e1e35" stroke="#10b981" stroke-width="1"/>
+      <text x="662" y="382" text-anchor="middle" font-size="13" fill="#6ee7b7" font-weight="600">Match Engine</text>
+      <text x="662" y="400" text-anchor="middle" font-size="10" fill="#777">ANN Search</text>
+      <text x="662" y="414" text-anchor="middle" font-size="10" fill="#777">LLM Reranking</text>
+    </g>
+    <g>
+      <!-- Job -->
+      <rect x="760" y="355" width="155" height="70" rx="8" fill="#1e1e35" stroke="#f59e0b" stroke-width="1"/>
+      <text x="837" y="382" text-anchor="middle" font-size="13" fill="#fcd34d" font-weight="600">Job</text>
+      <text x="837" y="400" text-anchor="middle" font-size="10" fill="#777">AI Creation Chat</text>
+      <text x="837" y="414" text-anchor="middle" font-size="10" fill="#777">CRUD · Embedding</text>
+    </g>
+    <g>
+      <!-- Crypto -->
+      <rect x="935" y="355" width="195" height="70" rx="8" fill="#1e1e35" stroke="#8b5cf6" stroke-width="1"/>
+      <text x="1032" y="382" text-anchor="middle" font-size="13" fill="#c4b5fd" font-weight="600">Crypto</text>
+      <text x="1032" y="400" text-anchor="middle" font-size="10" fill="#777">Session Key Derivation</text>
+      <text x="1032" y="414" text-anchor="middle" font-size="10" fill="#777">Ed25519 · Encryption</text>
+    </g>
+
+    <!-- Row 2 -->
+    <g>
+      <!-- Negotiation -->
+      <rect x="60" y="445" width="250" height="70" rx="8" fill="#1e1e35" stroke="#ec4899" stroke-width="1.5"/>
+      <text x="185" y="472" text-anchor="middle" font-size="13" fill="#f9a8d4" font-weight="600">Negotiation Engine</text>
+      <text x="185" y="490" text-anchor="middle" font-size="10" fill="#777">Multi-Round AI Agents · Encrypted Proposals</text>
+      <text x="185" y="504" text-anchor="middle" font-size="10" fill="#777">Seeker Agent vs Employer Agent</text>
+    </g>
+    <g>
+      <!-- Agreement -->
+      <rect x="330" y="445" width="250" height="70" rx="8" fill="#1e1e35" stroke="#10b981" stroke-width="1.5"/>
+      <text x="455" y="472" text-anchor="middle" font-size="13" fill="#6ee7b7" font-weight="600">Agreement</text>
+      <text x="455" y="490" text-anchor="middle" font-size="10" fill="#777">SHA-256 Hash · On-Chain Record</text>
+      <text x="455" y="504" text-anchor="middle" font-size="10" fill="#777">Dual-Party Approval</text>
+    </g>
+    <g>
+      <!-- Escrow -->
+      <rect x="600" y="445" width="250" height="70" rx="8" fill="#1e1e35" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="725" y="472" text-anchor="middle" font-size="13" fill="#fcd34d" font-weight="600">Escrow</text>
+      <text x="725" y="490" text-anchor="middle" font-size="10" fill="#777">NEAR Deposit · Balance Tracking</text>
+      <text x="725" y="504" text-anchor="middle" font-size="10" fill="#777">Automated Release</text>
+    </g>
+    <g>
+      <!-- Event Bus -->
+      <rect x="870" y="445" width="260" height="70" rx="8" fill="#1e1e35" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="1000" y="472" text-anchor="middle" font-size="13" fill="#c4b5fd" font-weight="600">Event Bus</text>
+      <text x="1000" y="490" text-anchor="middle" font-size="10" fill="#777">NestJS EventEmitter</text>
+      <text x="1000" y="504" text-anchor="middle" font-size="10" fill="#777">Fire-and-Forget Async</text>
+    </g>
+
+    <!-- Arrow: API → Services -->
+    <line x1="600" y1="265" x2="600" y2="305" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#arrowCyan)"/>
+
+    <!-- ========== DATA LAYER ========== -->
+    <rect x="30" y="600" width="540" height="140" rx="16" fill="#12121f" stroke="#2a2a40" stroke-width="1" filter="url(#shadow)"/>
+    <text x="60" y="628" font-size="11" fill="#888" font-weight="600" letter-spacing="3">DATA LAYER</text>
+
+    <!-- PostgreSQL -->
+    <rect x="60" y="645" width="220" height="75" rx="10" fill="#1a1a30" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="170" y="672" text-anchor="middle" font-size="14" fill="#93c5fd" font-weight="600">PostgreSQL 16</text>
+    <text x="170" y="690" text-anchor="middle" font-size="11" fill="#888">TypeORM · Entities</text>
+    <text x="170" y="706" text-anchor="middle" font-size="11" fill="#888">Users · Jobs · Resumes · Matches</text>
+
+    <!-- pgvector -->
+    <rect x="310" y="645" width="220" height="75" rx="10" fill="#1a1a30" stroke="#10b981" stroke-width="1.5"/>
+    <text x="420" y="672" text-anchor="middle" font-size="14" fill="#6ee7b7" font-weight="600">pgvector</text>
+    <text x="420" y="690" text-anchor="middle" font-size="11" fill="#888">1536-dim Embeddings</text>
+    <text x="420" y="706" text-anchor="middle" font-size="11" fill="#888">ANN Cosine Similarity</text>
+
+    <!-- Arrow: Services → DB -->
+    <line x1="300" y1="570" x2="300" y2="595" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrowPurple)"/>
+
+    <!-- ========== EXTERNAL SERVICES ========== -->
+    <rect x="630" y="600" width="540" height="270" rx="16" fill="#12121f" stroke="#2a2a40" stroke-width="1" filter="url(#shadow)"/>
+    <text x="660" y="628" font-size="11" fill="#888" font-weight="600" letter-spacing="3">EXTERNAL SERVICES</text>
+
+    <!-- NEAR AI -->
+    <rect x="660" y="645" width="230" height="95" rx="10" fill="#1a1a30" stroke="#ec4899" stroke-width="1.5"/>
+    <text x="775" y="672" text-anchor="middle" font-size="14" fill="#f9a8d4" font-weight="600">NEAR AI</text>
+    <text x="775" y="690" text-anchor="middle" font-size="11" fill="#888">Qwen 3.5-122B (Chat)</text>
+    <text x="775" y="706" text-anchor="middle" font-size="11" fill="#888">Qwen 3-Embedding-0.6B</text>
+    <text x="775" y="722" text-anchor="middle" font-size="11" fill="#888">Resume · Matching · Negotiation</text>
+
+    <!-- NEAR Protocol -->
+    <rect x="910" y="645" width="230" height="95" rx="10" fill="#1a1a30" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="1025" y="672" text-anchor="middle" font-size="14" fill="#fcd34d" font-weight="600">NEAR Protocol</text>
+    <text x="1025" y="690" text-anchor="middle" font-size="11" fill="#888">Testnet RPC</text>
+    <text x="1025" y="706" text-anchor="middle" font-size="11" fill="#888">Agreement Contract</text>
+    <text x="1025" y="722" text-anchor="middle" font-size="11" fill="#888">Escrow Contract</text>
+
+    <!-- GitHub OAuth -->
+    <rect x="660" y="760" width="230" height="65" rx="10" fill="#1a1a30" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="775" y="787" text-anchor="middle" font-size="14" fill="#a5b4fc" font-weight="600">GitHub OAuth</text>
+    <text x="775" y="805" text-anchor="middle" font-size="11" fill="#888">Repos · Languages · Contributions</text>
+
+    <!-- Other Data Sources -->
+    <rect x="910" y="760" width="230" height="65" rx="10" fill="#1a1a30" stroke="#06b6d4" stroke-width="1.5"/>
+    <text x="1025" y="787" text-anchor="middle" font-size="14" fill="#67e8f9" font-weight="600">Data Sources</text>
+    <text x="1025" y="805" text-anchor="middle" font-size="11" fill="#888">Slack · Discord · Gov24</text>
+
+    <!-- Arrows: Services → External -->
+    <line x1="700" y1="570" x2="700" y2="595" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrowPink)"/>
+    <text x="715" y="588" font-size="10" fill="#f472b6">OpenAI-compat API</text>
+
+    <line x1="1000" y1="570" x2="1000" y2="595" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+    <text x="1015" y="588" font-size="10" fill="#fbbf24">RPC / Tx</text>
+
+    <!-- ========== SMART CONTRACTS (Bottom) ========== -->
+    <rect x="30" y="770" width="540" height="100" rx="16" fill="#12121f" stroke="#2a2a40" stroke-width="1" filter="url(#shadow)"/>
+    <text x="60" y="798" font-size="11" fill="#888" font-weight="600" letter-spacing="3">SMART CONTRACTS (NEAR TESTNET)</text>
+
+    <rect x="60" y="810" width="240" height="45" rx="8" fill="#1a1a30" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="180" y="835" text-anchor="middle" font-size="13" fill="#fcd34d" font-weight="600">agreement.testnet</text>
+    <text x="180" y="848" text-anchor="middle" font-size="10" fill="#888">Record negotiated terms on-chain</text>
+
+    <rect x="320" y="810" width="220" height="45" rx="8" fill="#1a1a30" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="430" y="835" text-anchor="middle" font-size="13" fill="#fcd34d" font-weight="600">escrow.testnet</text>
+    <text x="430" y="848" text-anchor="middle" font-size="10" fill="#888">Hold & release NEAR tokens</text>
+
+    <!-- Arrow: Services → Contracts -->
+    <line x1="300" y1="570" x2="300" y2="765" stroke="#f59e0b" stroke-width="1" marker-end="url(#arrowOrange)" stroke-dasharray="6,3"/>
+  </svg>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#6366f1"></div>
+      <span>Authentication</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#ec4899"></div>
+      <span>AI / Intelligence</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#06b6d4"></div>
+      <span>Data Integration</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#10b981"></div>
+      <span>Matching / Vector</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#f59e0b"></div>
+      <span>Blockchain / NEAR</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#3b82f6"></div>
+      <span>Database</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
