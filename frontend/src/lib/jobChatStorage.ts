@@ -8,6 +8,7 @@ export interface JobChatSession {
   createdAt: string;
   updatedAt: string;
   completedJob?: JobPosting;
+  salaryRecommendation?: { min: number; max: number; reasoning: string };
 }
 
 const STORAGE_KEY = 'talentee:jobChatSessions';
