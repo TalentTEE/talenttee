@@ -11,7 +11,7 @@ export class MockEscrowPayment implements EscrowPayment {
 
   async payForProfile(
     _employerAccountId: string,
-    _amount: string,
+    _seekerAccountId: string,
   ): Promise<{ txHash: string }> {
     return { txHash: randomUUID().replace(/-/g, '') };
   }

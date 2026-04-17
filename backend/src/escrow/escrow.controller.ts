@@ -1,10 +1,14 @@
 import { Controller, Get, Post, Body, Query, Req, UseGuards } from '@nestjs/common';
 import { EscrowService } from './escrow.service.js';
+import { RealEscrowPayment } from './real-escrow-payment.js';
 import { JwtGuard } from '../auth/jwt.guard.js';
 
 @Controller('escrow')
 export class EscrowController {
-  constructor(private readonly escrowService: EscrowService) {}
+  constructor(
+    private readonly escrowService: EscrowService,
+    private readonly realEscrow: RealEscrowPayment,
+  ) {}
 
   @UseGuards(JwtGuard)
   @Get('balance')
@@ -24,5 +28,11 @@ export class EscrowController {
   async getPaymentHistory(@Req() req) {
     const userId = req.user.id;
     return this.escrowService.getPaymentHistory(userId);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('agent-key')
+  getAgentKey() {
+    return { publicKey: this.realEscrow.getAgentPublicKey() };
   }
 }
