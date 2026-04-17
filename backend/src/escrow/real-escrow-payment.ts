@@ -2,21 +2,31 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { createHash } from 'crypto';
 import nacl from 'tweetnacl';
 import bs58 from 'bs58';
-import { Account, JsonRpcProvider, KeyPairSigner } from 'near-api-js';
 import type { EscrowPayment } from '../common/interfaces/escrow-payment.interface.js';
+
+// near-api-js v7 is ESM-only; we dynamic-import it at init time.
+let Account: any;
+let JsonRpcProvider: any;
+let KeyPairSigner: any;
 
 @Injectable()
 export class RealEscrowPayment implements EscrowPayment, OnModuleInit {
   private readonly logger = new Logger(RealEscrowPayment.name);
-  private agentSigner: KeyPairSigner;
-  private agentPublicKey: string; // "ed25519:..." format
-  private provider: JsonRpcProvider;
+  private agentSigner: any;
+  private agentPublicKey: string;
+  private provider: any;
   private readonly escrowContractId =
     process.env.ESCROW_CONTRACT_ID || 'escrow.testnet';
   private readonly nearNodeUrl =
     process.env.NEAR_NODE_URL || 'https://rpc.testnet.near.org';
 
-  onModuleInit() {
+  async onModuleInit() {
+    // Dynamic import for ESM-only near-api-js
+    const nearApi = await import('near-api-js');
+    Account = nearApi.Account;
+    JsonRpcProvider = nearApi.JsonRpcProvider;
+    KeyPairSigner = nearApi.KeyPairSigner;
+
     this.provider = new JsonRpcProvider({ url: this.nearNodeUrl });
 
     const seedHex = process.env.SERVER_KEYPAIR_SEED;
@@ -100,7 +110,9 @@ export class RealEscrowPayment implements EscrowPayment, OnModuleInit {
     });
 
     const txHash = `pay-${employerAccountId}-${seekerAccountId}-${Date.now()}`;
-    this.logger.log(`Profile payment: ${employerAccountId} → ${seekerAccountId} (${txHash})`);
+    this.logger.log(
+      `Profile payment: ${employerAccountId} → ${seekerAccountId} (${txHash})`,
+    );
     return { txHash };
   }
 }
