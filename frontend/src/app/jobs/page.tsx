@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getJobs } from '@/lib/api';
+import { getJobs, closeJob } from '@/lib/api';
 import { JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import { SkeletonGrid } from '@/components/ui/skeleton-card';
@@ -99,9 +99,24 @@ export default function JobPostingsPage() {
                   </div>
                 </div>
               </div>
-              <button className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-                Close
-              </button>
+              {j.status === 'CLOSED' ? (
+                <span className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground">
+                  Closed
+                </span>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Close "${j.title}"? New matches will stop, but ongoing negotiations continue.`)) return;
+                    try {
+                      const updated = await closeJob(j.id);
+                      setJobs((prev) => prev.map((p) => (p.id === j.id ? updated : p)));
+                    } catch { /* ignore */ }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all"
+                >
+                  Close
+                </button>
+              )}
             </div>
           ))}
         </div>

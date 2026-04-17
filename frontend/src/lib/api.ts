@@ -346,6 +346,11 @@ export async function publishJob(jobId: string): Promise<JobPosting> {
   return apiFetch(`/jobs/${jobId}/publish`, { method: 'POST' });
 }
 
+export async function closeJob(jobId: string): Promise<JobPosting> {
+  if (USE_DUMMY) return { ...DUMMY_JOBS[0], id: jobId, status: 'CLOSED' } as JobPosting;
+  return apiFetch(`/jobs/${jobId}/close`, { method: 'POST' });
+}
+
 // === Matching ===
 export async function getSeekerMatches(): Promise<MatchResultDisplay[]> {
   if (USE_DUMMY) return DUMMY_SEEKER_MATCHES;
