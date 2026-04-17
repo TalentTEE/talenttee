@@ -99,14 +99,9 @@ export default function JobPostingsPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button className="px-3 py-1.5 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-accent transition-all border border-border/10">
-                  Edit
-                </button>
-                <button className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-                  Close
-                </button>
-              </div>
+              <button className="px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+                Close
+              </button>
             </div>
           ))}
         </div>
