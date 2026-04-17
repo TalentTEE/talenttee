@@ -47,7 +47,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         )}
       >
         <Link href="/" className="flex items-center gap-2 px-3 pt-4 pb-6 hover:opacity-80 transition-opacity">
-          <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+          <img src="/icon.svg" alt="TalentTee" className="w-7 h-7" />
           <span className="text-xl font-black tracking-tight text-primary font-[var(--font-playfair)]">
             TalentTee<span className="text-[#FF2DF1]">.</span>
           </span>
