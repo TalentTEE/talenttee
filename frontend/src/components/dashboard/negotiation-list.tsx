@@ -68,19 +68,22 @@ function SessionRow({
   ctaHref,
   activity,
   currentUserRole,
+  candidateLabel,
 }: {
   session: NegotiationSession;
   match?: MatchResultDisplay;
   ctaHref: string;
   activity?: Activity;
   currentUserRole?: 'SEEKER' | 'EMPLOYER';
+  candidateLabel?: string;
 }) {
   const isAgreed = session.state === 'AGREED';
   const score = match ? Math.round(match.rerankScore * 100) : null;
   const info = stateInfo[session.state] || stateInfo.INITIATED;
 
-  // Title: session.job?.title > match fallback > UUID fallback
-  const title = session.job?.title
+  // When inside a job group, show candidate name; otherwise show job title
+  const title = candidateLabel
+    ?? session.job?.title
     ?? (match ? `${match.jobTitle} - ${match.companyName}` : null)
     ?? `Session ${session.id.slice(0, 8)}…`;
 
@@ -309,16 +312,22 @@ function JobGroupedList({
                         </span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {items.map((s) => (
-                          <SessionRow
-                            key={s.id}
-                            session={s}
-                            match={matchByJobId.get(s.jobId)}
-                            ctaHref={section.ctaHref(s)}
-                            activity={activities.get(s.id)}
-                            currentUserRole={currentUserRole}
-                          />
-                        ))}
+                        {items.map((s) => {
+                          const candidate = currentUserRole === 'EMPLOYER'
+                            ? s.seeker?.nearAccountId?.split('.')[0]
+                            : s.employer?.nearAccountId?.split('.')[0];
+                          return (
+                            <SessionRow
+                              key={s.id}
+                              session={s}
+                              match={matchByJobId.get(s.jobId)}
+                              ctaHref={section.ctaHref(s)}
+                              activity={activities.get(s.id)}
+                              currentUserRole={currentUserRole}
+                              candidateLabel={candidate}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   );
