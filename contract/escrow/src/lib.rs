@@ -73,7 +73,8 @@ impl EscrowContract {
         account.balance -= self.profile_view_cost;
         self.accounts.insert(employer_id.clone(), account);
 
-        Promise::new(seeker_id.clone()).transfer(NearToken::from_yoctonear(self.profile_view_cost));
+        // Platform revenue: 100% of profile view cost goes to contract owner
+        let _ = Promise::new(self.owner.clone()).transfer(NearToken::from_yoctonear(self.profile_view_cost));
 
         let record = ProfileAccessRecord {
             employer_id: employer_id.clone(),
@@ -102,7 +103,7 @@ impl EscrowContract {
         assert!(account.balance >= withdraw_amount, "Insufficient escrow balance for withdrawal");
         account.balance -= withdraw_amount;
         self.accounts.insert(employer_id.clone(), account);
-        Promise::new(employer_id).transfer(NearToken::from_yoctonear(withdraw_amount));
+        let _ = Promise::new(employer_id).transfer(NearToken::from_yoctonear(withdraw_amount));
     }
 
     pub fn authorize_agent(&mut self, agent_id: AccountId) {
