@@ -402,6 +402,38 @@
   .roadmap-list li { font-size: 13px; color: var(--ink-light); padding: 6px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
   .roadmap-list li:last-child { border-bottom: none; }
 
+  /* ===== BUSINESS MODEL ===== */
+  .bm-streams { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+
+  .bm-card { padding: 28px 24px; border-top: 3px solid var(--cyan); background: var(--surface); }
+  .bm-card:nth-child(2) { border-top-color: var(--green); }
+  .bm-card:nth-child(3) { border-top-color: var(--yellow); }
+
+  .bm-card-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+  .bm-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+
+  .bm-price { font-family: var(--font-serif); font-size: 36px; font-weight: 900; color: var(--cyan); line-height: 1; margin-bottom: 14px; }
+  .bm-card:nth-child(2) .bm-price { color: var(--green); }
+  .bm-card:nth-child(3) .bm-price { color: var(--yellow); }
+  .bm-unit { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--muted); }
+
+  .bm-card p { font-size: 13px; color: var(--ink-light); line-height: 1.7; }
+  .bm-card p strong { color: var(--ink); font-weight: 600; }
+
+  .bm-split { margin-top: 14px; }
+  .bm-split-bar { display: flex; height: 24px; border-radius: 2px; overflow: hidden; font-family: var(--font-mono); font-size: 10px; font-weight: 500; }
+  .bm-split-talent { background: var(--cyan); color: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .bm-split-platform { background: rgba(0, 240, 255, 0.2); color: var(--cyan); display: flex; align-items: center; justify-content: center; }
+
+  .bm-market { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .bm-market-item { text-align: center; padding: 20px 16px; border-top: 2px solid var(--cyan); }
+  .bm-market-item:not(:last-child) { border-right: 1px solid var(--border); }
+  .bm-market-item:nth-child(2) { border-top-color: var(--green); }
+  .bm-market-item:nth-child(3) { border-top-color: var(--yellow); }
+  .bm-market-item:nth-child(4) { border-top-color: var(--pink); }
+  .bm-market-value { font-family: var(--font-serif); font-size: 28px; font-weight: 900; line-height: 1; margin-bottom: 6px; color: var(--cyan); }
+  .bm-market-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--muted); }
+
   /* ===== THANK YOU ===== */
   .thankyou { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 80vh; }
 
@@ -462,6 +494,9 @@
     .stat-item { border-right: none !important; }
     .roadmap { grid-template-columns: 1fr; }
     .roadmap-phase { border-right: none !important; padding-left: 0 !important; padding-right: 0; }
+    .bm-streams { grid-template-columns: 1fr; gap: 16px; }
+    .bm-market { grid-template-columns: repeat(2, 1fr); }
+    .bm-market-item { border-right: none !important; }
     .arch-services-row { grid-template-columns: repeat(4, 1fr); }
     .arch-flagship-row { grid-template-columns: 1fr; }
     .arch-bottom-row { grid-template-columns: 1fr; }
@@ -738,10 +773,63 @@
     </div>
   </div>
 
-  <!-- SLIDE 8: CURRENT STATUS -->
+  <!-- SLIDE 8: BUSINESS MODEL -->
   <div class="slide" data-slide="7">
     <div class="slide-inner">
       <span class="section-num animate-in delay-1">07</span>
+      <h2 class="slide-title-kr animate-in delay-1">비즈니스 모델</h2>
+      <p class="slide-subtitle animate-in delay-2">온체인 마이크로페이먼트 + 크레딧 + 구독, 3단계 수익 구조.</p>
+      <div class="bm-streams animate-in delay-3">
+        <div class="bm-card">
+          <div class="bm-card-label">PER-TRANSACTION</div>
+          <h3>이력서 열람비</h3>
+          <div class="bm-price">0.1 <span class="bm-unit">NEAR / 건</span></div>
+          <p>고용주가 프로필 열람 시 에스크로에서 자동 결제. 수익의 <strong>80%는 구직자</strong>에게, 20%는 플랫폼에 귀속.</p>
+          <div class="bm-split">
+            <div class="bm-split-bar">
+              <div class="bm-split-talent" style="width:80%">80% 구직자</div>
+              <div class="bm-split-platform" style="width:20%">20%</div>
+            </div>
+          </div>
+        </div>
+        <div class="bm-card">
+          <div class="bm-card-label">CREDIT-BASED</div>
+          <h3>AI 협상 크레딧</h3>
+          <div class="bm-price">0.5 <span class="bm-unit">NEAR / 회</span></div>
+          <p>AI 자율 협상 이용권. 3회 / 10회 / 30회 패키지 구매. 대량 구매 시 최대 20% 할인 적용.</p>
+        </div>
+        <div class="bm-card">
+          <div class="bm-card-label">SUBSCRIPTION</div>
+          <h3>Enterprise 구독</h3>
+          <div class="bm-price">50 <span class="bm-unit">NEAR / 월</span></div>
+          <p>다수 채용 기업용 월정액. 무제한 프로필 열람, 무제한 AI 협상, 우선 매칭, 분석 대시보드.</p>
+        </div>
+      </div>
+      <div class="bm-market animate-in delay-4">
+        <div class="bm-market-item">
+          <div class="bm-market-value">$102.7B</div>
+          <div class="bm-market-label">채용 플랫폼 TAM 2030</div>
+        </div>
+        <div class="bm-market-item">
+          <div class="bm-market-value">66K+</div>
+          <div class="bm-market-label">Web3 신규 채용 / 연</div>
+        </div>
+        <div class="bm-market-item">
+          <div class="bm-market-value">0</div>
+          <div class="bm-market-label">NEAR 채용 경쟁자</div>
+        </div>
+        <div class="bm-market-item">
+          <div class="bm-market-value">80:20</div>
+          <div class="bm-market-label">구직자 우선 수익 분배</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: CURRENT STATUS -->
+  <div class="slide" data-slide="8">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">08</span>
       <h2 class="slide-title-kr animate-in delay-1">현재 상태</h2>
       <p class="slide-subtitle animate-in delay-2">NEAR 테스트넷에서 동작하는 풀스택 MVP.</p>
       <div class="stats-row animate-in delay-3">
@@ -761,10 +849,10 @@
     </div>
   </div>
 
-  <!-- SLIDE 9: ROADMAP -->
-  <div class="slide" data-slide="8">
+  <!-- SLIDE 10: ROADMAP -->
+  <div class="slide" data-slide="9">
     <div class="slide-inner">
-      <span class="section-num animate-in delay-1">08</span>
+      <span class="section-num animate-in delay-1">09</span>
       <h2 class="slide-title-kr animate-in delay-1">앞으로의 계획</h2>
       <p class="slide-subtitle animate-in delay-2">해커톤 프로토타입에서 프로덕션 플랫폼으로의 명확한 경로.</p>
       <div class="roadmap animate-in delay-3">
@@ -802,8 +890,8 @@
     </div>
   </div>
 
-  <!-- SLIDE 10: THANK YOU -->
-  <div class="slide" data-slide="9">
+  <!-- SLIDE 11: THANK YOU -->
+  <div class="slide" data-slide="10">
     <div class="slide-inner thankyou">
       <img src="../frontend/public/icon.svg" alt="TalentTee" class="thankyou-logo animate-in delay-1">
       <h1 class="thankyou-title animate-in delay-1">TalentTee<span class="accent-dot">.</span></h1>
@@ -832,7 +920,7 @@
 <script>
 (function() {
   'use strict';
-  const TOTAL = 10;
+  const TOTAL = 11;
   let current = 0;
   let transitioning = false;
 

@@ -674,6 +674,37 @@
 
   .roadmap-list li:last-child { border-bottom: none; }
 
+  /* ===== BUSINESS MODEL ===== */
+  .bm-streams { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+
+  .bm-card { padding: 28px 24px; border-top: 3px solid var(--red); background: white; }
+  .bm-card:nth-child(2) { border-top-color: var(--teal); }
+  .bm-card:nth-child(3) { border-top-color: var(--amber); }
+
+  .bm-card-label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+  .bm-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+
+  .bm-price { font-family: var(--font-serif); font-size: 36px; font-weight: 900; color: var(--ink); line-height: 1; margin-bottom: 14px; }
+  .bm-unit { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--muted); }
+
+  .bm-card p { font-size: 13px; color: var(--ink-light); line-height: 1.7; }
+  .bm-card p strong { color: var(--ink); font-weight: 600; }
+
+  .bm-split { margin-top: 14px; }
+  .bm-split-bar { display: flex; height: 24px; border-radius: 2px; overflow: hidden; font-family: var(--font-mono); font-size: 10px; font-weight: 500; }
+  .bm-split-talent { background: var(--teal); color: white; display: flex; align-items: center; justify-content: center; }
+  .bm-split-platform { background: var(--teal-soft); color: var(--teal); display: flex; align-items: center; justify-content: center; }
+
+  .bm-market { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .bm-market-item { text-align: center; padding: 20px 16px; border-top: 2px solid var(--ink); }
+  .bm-market-item:not(:last-child) { border-right: 1px solid var(--border-light); }
+  .bm-market-item:nth-child(1) { border-top-color: var(--red); }
+  .bm-market-item:nth-child(2) { border-top-color: var(--teal); }
+  .bm-market-item:nth-child(3) { border-top-color: var(--amber); }
+  .bm-market-item:nth-child(4) { border-top-color: var(--ink); }
+  .bm-market-value { font-family: var(--font-serif); font-size: 28px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+  .bm-market-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--muted); }
+
   /* ===== THANK YOU ===== */
   .thankyou {
     display: flex;
@@ -835,6 +866,9 @@
     .stat-item { border-right: none !important; }
     .roadmap { grid-template-columns: 1fr; }
     .roadmap-phase { border-right: none !important; padding-left: 0 !important; padding-right: 0; }
+    .bm-streams { grid-template-columns: 1fr; gap: 16px; }
+    .bm-market { grid-template-columns: repeat(2, 1fr); }
+    .bm-market-item { border-right: none !important; }
     .arch-services-row { grid-template-columns: repeat(4, 1fr); }
     .arch-flagship-row { grid-template-columns: 1fr; }
     .arch-bottom-row { grid-template-columns: 1fr; }
@@ -1115,10 +1149,63 @@
     </div>
   </div>
 
-  <!-- SLIDE 8: CURRENT STATUS -->
+  <!-- SLIDE 8: BUSINESS MODEL -->
   <div class="slide" data-slide="7">
     <div class="slide-inner">
       <span class="section-num animate-in delay-1">07</span>
+      <h2 class="slide-title animate-in delay-1">Business Model</h2>
+      <p class="slide-subtitle animate-in delay-2">Three revenue streams: on-chain micropayments, credits, and subscriptions.</p>
+      <div class="bm-streams animate-in delay-3">
+        <div class="bm-card">
+          <div class="bm-card-label">PER-TRANSACTION</div>
+          <h3>Resume Access Fee</h3>
+          <div class="bm-price">0.1 <span class="bm-unit">NEAR / view</span></div>
+          <p>Employers pay on-chain to view candidate profiles. <strong>80% goes to the talent</strong>, 20% to the platform. Talent-first economics.</p>
+          <div class="bm-split">
+            <div class="bm-split-bar">
+              <div class="bm-split-talent" style="width:80%">80% Talent</div>
+              <div class="bm-split-platform" style="width:20%">20%</div>
+            </div>
+          </div>
+        </div>
+        <div class="bm-card">
+          <div class="bm-card-label">CREDIT-BASED</div>
+          <h3>AI Negotiation Credits</h3>
+          <div class="bm-price">0.5 <span class="bm-unit">NEAR / session</span></div>
+          <p>Pay-per-use AI negotiation. Packages of 3 / 10 / 30 credits. Volume discounts up to 20% for bulk purchases.</p>
+        </div>
+        <div class="bm-card">
+          <div class="bm-card-label">SUBSCRIPTION</div>
+          <h3>Enterprise Plan</h3>
+          <div class="bm-price">50 <span class="bm-unit">NEAR / mo</span></div>
+          <p>Monthly plan for high-volume recruiters. Unlimited profile views, unlimited AI negotiations, priority matching, and analytics.</p>
+        </div>
+      </div>
+      <div class="bm-market animate-in delay-4">
+        <div class="bm-market-item">
+          <div class="bm-market-value">$102.7B</div>
+          <div class="bm-market-label">Recruitment TAM 2030</div>
+        </div>
+        <div class="bm-market-item">
+          <div class="bm-market-value">66K+</div>
+          <div class="bm-market-label">Web3 Jobs / Year</div>
+        </div>
+        <div class="bm-market-item">
+          <div class="bm-market-value">0</div>
+          <div class="bm-market-label">NEAR Competitors</div>
+        </div>
+        <div class="bm-market-item">
+          <div class="bm-market-value">80:20</div>
+          <div class="bm-market-label">Talent-First Revenue Split</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: CURRENT STATUS -->
+  <div class="slide" data-slide="8">
+    <div class="slide-inner">
+      <span class="section-num animate-in delay-1">08</span>
       <h2 class="slide-title animate-in delay-1">Current Status</h2>
       <p class="slide-subtitle animate-in delay-2">A working full-stack MVP, live on NEAR testnet.</p>
       <div class="stats-row animate-in delay-3">
@@ -1138,10 +1225,10 @@
     </div>
   </div>
 
-  <!-- SLIDE 9: ROADMAP -->
-  <div class="slide" data-slide="8">
+  <!-- SLIDE 10: ROADMAP -->
+  <div class="slide" data-slide="9">
     <div class="slide-inner">
-      <span class="section-num animate-in delay-1">08</span>
+      <span class="section-num animate-in delay-1">09</span>
       <h2 class="slide-title animate-in delay-1">What's Next</h2>
       <p class="slide-subtitle animate-in delay-2">A clear path from hackathon prototype to production platform.</p>
       <div class="roadmap animate-in delay-3">
@@ -1179,8 +1266,8 @@
     </div>
   </div>
 
-  <!-- SLIDE 10: THANK YOU -->
-  <div class="slide" data-slide="9">
+  <!-- SLIDE 11: THANK YOU -->
+  <div class="slide" data-slide="10">
     <div class="slide-inner thankyou">
       <h1 class="thankyou-title animate-in delay-1">TalentTee<span class="accent-dot">.</span></h1>
       <p class="thankyou-tagline animate-in delay-2">The future of hiring is autonomous, encrypted, and on-chain.</p>
@@ -1208,7 +1295,7 @@
 <script>
 (function() {
   'use strict';
-  const TOTAL = 10;
+  const TOTAL = 11;
   let current = 0;
   let transitioning = false;
 
