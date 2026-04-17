@@ -321,6 +321,84 @@ function JobGroupedList({
   );
 }
 
+function StatusTabList({
+  grouped,
+  matchByJobId,
+  activities,
+  currentUserRole,
+}: {
+  grouped: Record<string, NegotiationSession[]>;
+  matchByJobId: Map<string, MatchResultDisplay>;
+  activities: Map<string, Activity>;
+  currentUserRole?: 'SEEKER' | 'EMPLOYER';
+}) {
+  // Find first non-empty section as default
+  const firstNonEmpty = SECTIONS.find((s) => (grouped[s.key]?.length ?? 0) > 0);
+  const [activeTab, setActiveTab] = useState<string>(firstNonEmpty?.key ?? 'active');
+
+  const activeSection = SECTIONS.find((s) => s.key === activeTab);
+  const items = activeSection ? (grouped[activeSection.key] || []) : [];
+
+  return (
+    <div>
+      {/* Status tabs */}
+      <div className="flex gap-1 mb-4">
+        {SECTIONS.map((section) => {
+          const count = grouped[section.key]?.length ?? 0;
+          if (count === 0) return null;
+          const isActive = section.key === activeTab;
+          return (
+            <button
+              key={section.key}
+              type="button"
+              className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                isActive
+                  ? 'border'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/30 border border-transparent'
+              }`}
+              style={isActive ? {
+                backgroundColor: `color-mix(in srgb, ${section.badgeColor} 15%, transparent)`,
+                color: section.badgeColor,
+                borderColor: `color-mix(in srgb, ${section.badgeColor} 30%, transparent)`,
+              } : undefined}
+              onClick={() => setActiveTab(section.key)}
+            >
+              {section.title}
+              <span
+                className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-xs font-bold ${
+                  !isActive ? 'bg-muted text-muted-foreground' : ''
+                }`}
+                style={isActive ? {
+                  backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`,
+                  color: section.badgeColor,
+                } : undefined}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected status sessions */}
+      {activeSection && items.length > 0 && (
+        <div className="space-y-2">
+          {items.map((s) => (
+            <SessionRow
+              key={s.id}
+              session={s}
+              match={matchByJobId.get(s.jobId)}
+              ctaHref={activeSection.ctaHref(s)}
+              activity={activities.get(s.id)}
+              currentUserRole={currentUserRole}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function NegotiationList({
   sessions,
   matches = [],
@@ -332,7 +410,6 @@ export function NegotiationList({
 }) {
   const { user } = useAuth();
   const { on } = useSse();
-  const [endedOpen, setEndedOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'job' | 'status'>('job');
   // sessionId → latest activity badge
   const [activities, setActivities] = useState<Map<string, Activity>>(new Map());
@@ -401,38 +478,6 @@ export function NegotiationList({
 
   // Employer mode: toggle between job-grouped and status-grouped
   if (jobs && jobs.length > 0) {
-    const statusContent = (
-      <div className="space-y-5">
-        {SECTIONS.map((section) => {
-          const items = grouped[section.key];
-          if (!items || items.length === 0) return null;
-          const isCollapsible = section.key === 'ended';
-          const isOpen = isCollapsible ? endedOpen : section.defaultOpen;
-          return (
-            <div key={section.key}>
-              <button
-                type="button"
-                className={`flex items-center gap-2 mb-2 ${isCollapsible ? 'cursor-pointer' : 'cursor-default'}`}
-                onClick={() => isCollapsible && setEndedOpen((o) => !o)}
-                disabled={!isCollapsible}
-              >
-                <span className="text-sm font-semibold text-muted-foreground">{section.title}</span>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold" style={{ backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`, color: section.badgeColor }}>{items.length}</span>
-                {isCollapsible && <span className={`material-symbols-outlined text-sm text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>}
-              </button>
-              {isOpen && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {items.map((s) => (
-                    <SessionRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} ctaHref={section.ctaHref(s)} activity={activities.get(s.id)} currentUserRole={user?.role} />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-
     return (
       <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -471,7 +516,14 @@ export function NegotiationList({
             activities={activities}
             currentUserRole={user?.role}
           />
-        ) : statusContent}
+        ) : (
+          <StatusTabList
+            grouped={grouped}
+            matchByJobId={matchByJobId}
+            activities={activities}
+            currentUserRole={user?.role}
+          />
+        )}
       </div>
     );
   }
@@ -487,59 +539,16 @@ export function NegotiationList({
           </span>
         )}
       </div>
-      {!hasAnySessions && (
+      {!hasAnySessions ? (
         <p className="text-base text-muted-foreground">No active negotiations.</p>
+      ) : (
+        <StatusTabList
+          grouped={grouped}
+          matchByJobId={matchByJobId}
+          activities={activities}
+          currentUserRole={user?.role}
+        />
       )}
-      <div className="space-y-5">
-        {SECTIONS.map((section) => {
-          const items = grouped[section.key];
-          if (!items || items.length === 0) return null;
-
-          const isCollapsible = section.key === 'ended';
-          const isOpen = isCollapsible ? endedOpen : section.defaultOpen;
-
-          return (
-            <div key={section.key}>
-              <button
-                type="button"
-                className={`flex items-center gap-2 mb-2 ${isCollapsible ? 'cursor-pointer' : 'cursor-default'}`}
-                onClick={() => isCollapsible && setEndedOpen((o) => !o)}
-                disabled={!isCollapsible}
-              >
-                <span className="text-sm font-semibold text-muted-foreground">{section.title}</span>
-                <span
-                  className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
-                  style={{
-                    backgroundColor: `color-mix(in srgb, ${section.badgeColor} 20%, transparent)`,
-                    color: section.badgeColor,
-                  }}
-                >
-                  {items.length}
-                </span>
-                {isCollapsible && (
-                  <span className={`material-symbols-outlined text-sm text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-                    expand_more
-                  </span>
-                )}
-              </button>
-              {isOpen && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {items.map((s) => (
-                    <SessionRow
-                      key={s.id}
-                      session={s}
-                      match={matchByJobId.get(s.jobId)}
-                      ctaHref={section.ctaHref(s)}
-                      activity={activities.get(s.id)}
-                      currentUserRole={user?.role}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
