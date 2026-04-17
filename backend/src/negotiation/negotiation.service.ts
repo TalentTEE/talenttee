@@ -1,6 +1,7 @@
 import { Injectable, Inject, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import bs58 from 'bs58';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
@@ -16,6 +17,7 @@ import type { NearAiClient } from '../common/interfaces/near-ai-client.interface
 import { MATCH_RESULT_QUERY } from '../common/interfaces/match-result-query.interface.js';
 import type { MatchResultQuery } from '../common/interfaces/match-result-query.interface.js';
 import { CryptoService } from '../crypto/crypto.service.js';
+import { SSE_EVENTS } from '../common/events/sse.events.js';
 import { getActorForState, transition, isTerminal } from './negotiation-engine.js';
 import { buildSeekerPrompt } from './prompts/seeker-agent.en.prompt.js';
 import { buildEmployerPrompt } from './prompts/employer-agent.en.prompt.js';
@@ -43,6 +45,7 @@ export class NegotiationService {
     @Inject(MATCH_RESULT_QUERY)
     private readonly matchQuery: MatchResultQuery,
     private readonly cryptoService: CryptoService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async listSessions(userId: string): Promise<NegotiationSession[]> {
@@ -237,6 +240,16 @@ export class NegotiationService {
     }
 
     this.logger.log(`Session ${session.id} finished: ${session.state}`);
+
+    // Notify both parties that negotiation is complete
+    if (session.state === NegotiationState.AGREED || session.state === NegotiationState.FAILED) {
+      for (const uid of [session.seekerId, session.employerId]) {
+        this.eventEmitter.emit(SSE_EVENTS.NEGOTIATION_COMPLETE, {
+          recipientUserId: uid,
+          sessionId: session.id,
+        });
+      }
+    }
   }
 
   async getDecryptedRounds(sessionId: string): Promise<any[]> {

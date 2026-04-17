@@ -8,6 +8,7 @@ import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js
 import type { NearAiClient } from '../common/interfaces/near-ai-client.interface.js';
 import { ResumeStatus } from '../common/enums/index.js';
 import { MATCH_EVENTS } from '../common/events/match.events.js';
+import { SSE_EVENTS } from '../common/events/sse.events.js';
 import { DATA_CLASSIFY_PROMPT } from './prompts/data-classify.en.prompt.js';
 import { RESUME_GENERATE_PROMPT } from './prompts/resume-generate.en.prompt.js';
 import { MARKET_VALUE_PROMPT } from './prompts/market-value.en.prompt.js';
@@ -236,6 +237,8 @@ export class ResumeService {
 
       // 9. Emit event for auto-matching
       this.eventEmitter.emit(MATCH_EVENTS.RESUME_COMPLETED, { seekerId: userId });
+      // 10. Notify user via SSE
+      this.eventEmitter.emit(SSE_EVENTS.RESUME_COMPLETE, { recipientUserId: userId });
     } catch (err) {
       await this.resumeRepo.update(resumeId, {
         status: ResumeStatus.ERROR,

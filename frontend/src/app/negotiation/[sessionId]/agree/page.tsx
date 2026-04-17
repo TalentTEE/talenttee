@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, getInterviewMessages, sendInterviewMessage, USE_DUMMY } from '@/lib/api';
 import { AgreementRecord, NegotiationRound, InterviewMessage, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import { useAuth } from '@/lib/auth';
+import { useSse } from '@/lib/sse';
 
 type FlowState = 'idle' | 'approving' | 'waiting' | 'completed' | 'rejected';
 
@@ -53,24 +54,19 @@ export default function AgreementPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { on } = useSse();
   const sessionId = params.sessionId as string;
 
   const [agreement, setAgreement] = useState<AgreementRecord | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Interview messages
   const [messages, setMessages] = useState<InterviewMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  // Cleanup poll on unmount
-  useEffect(() => {
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -126,23 +122,36 @@ export default function AgreementPage() {
       });
   }, [sessionId]);
 
-  // Poll for other party's approval (real mode)
-  const startPolling = useCallback(() => {
-    if (pollRef.current) return;
-    pollRef.current = setInterval(async () => {
+  // SSE: listen for agreement updates (approval/rejection by other party)
+  useEffect(() => {
+    if (!sessionId) return;
+    return on('agreement_update', async (data) => {
+      if (data.sessionId !== sessionId) return;
       try {
         const updated = await getAgreement(sessionId);
-        if (updated.seekerApproved && updated.employerApproved) {
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-          setAgreement(updated);
+        setAgreement(updated);
+        if (updated.rejected) {
+          setFlowState('rejected');
+        } else if (updated.seekerApproved && updated.employerApproved) {
           setTxHash(updated.onChainTxHash ?? null);
           setFlowState('completed');
         }
-      } catch {
-        // Keep polling
-      }
-    }, 3000);
-  }, [sessionId]);
+      } catch { /* ignore */ }
+    });
+  }, [sessionId, on]);
+
+  // SSE: listen for new interview messages
+  useEffect(() => {
+    if (!sessionId || flowState !== 'completed') return;
+    return on('message', async (data) => {
+      if (data.sessionId !== sessionId) return;
+      // Reload messages to get the full message object (avoid duplicates by id)
+      try {
+        const msgs = await getInterviewMessages(sessionId);
+        setMessages(msgs);
+      } catch { /* ignore */ }
+    });
+  }, [sessionId, flowState, on]);
 
   // Load messages when completed
   useEffect(() => {
@@ -198,9 +207,8 @@ export default function AgreementPage() {
             return;
           }
         } catch {
-          // Not yet — start polling
+          // Not yet — SSE will notify when the other party acts
         }
-        startPolling();
       }
     } catch (err) {
       setFlowState('idle');

@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createHash } from 'crypto';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { InterviewMessage } from '../entities/interview-message.entity.js';
 import { NegotiationState, NegotiationDecision } from '../common/enums/index.js';
+import { SSE_EVENTS } from '../common/events/sse.events.js';
 import { CryptoService } from '../crypto/crypto.service.js';
 
 @Injectable()
@@ -22,6 +24,7 @@ export class AgreementService {
     @InjectRepository(InterviewMessage)
     private readonly messageRepo: Repository<InterviewMessage>,
     private readonly cryptoService: CryptoService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private parsePublicKey(key: string): Uint8Array {
@@ -59,6 +62,13 @@ export class AgreementService {
       await manager.save(session);
 
       if (!session.seekerApproved || !session.employerApproved) {
+        const otherUserId = isSeeker ? session.employerId : session.seekerId;
+        this.eventEmitter.emit(SSE_EVENTS.AGREEMENT_UPDATE, {
+          recipientUserId: otherUserId,
+          sessionId,
+          action: 'approved',
+          byRole: isSeeker ? 'seeker' : 'employer',
+        });
         return { status: 'waiting_for_other_party' };
       }
 
@@ -140,6 +150,13 @@ export class AgreementService {
 
     session.state = NegotiationState.FAILED;
     await this.sessionRepo.save(session);
+    const otherUserId = isSeeker ? session.employerId : session.seekerId;
+    this.eventEmitter.emit(SSE_EVENTS.AGREEMENT_UPDATE, {
+      recipientUserId: otherUserId,
+      sessionId,
+      action: 'rejected',
+      byRole: isSeeker ? 'seeker' : 'employer',
+    });
     this.logger.log(`Session ${sessionId} rejected by ${isSeeker ? 'seeker' : 'employer'} ${userId}`);
     return { status: 'rejected' };
   }
@@ -237,7 +254,15 @@ export class AgreementService {
       throw new ConflictException('Both parties must approve before messaging');
     }
     const message = this.messageRepo.create({ sessionId, senderId: userId, content });
-    return this.messageRepo.save(message);
+    const saved = await this.messageRepo.save(message);
+    const recipientUserId = session.seekerId === userId ? session.employerId : session.seekerId;
+    this.eventEmitter.emit(SSE_EVENTS.NEW_MESSAGE, {
+      recipientUserId,
+      sessionId,
+      senderId: userId,
+      preview: content.slice(0, 100),
+    });
+    return saved;
   }
 
   async verifyAgreement(sessionId: string): Promise<boolean> {
