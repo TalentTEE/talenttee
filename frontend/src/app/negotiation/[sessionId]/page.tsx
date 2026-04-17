@@ -129,6 +129,7 @@ export default function NegotiationMonitorPage() {
       {/* Final Terms Summary */}
       {isTerminal && rounds.length > 0 && (() => {
         const lastProposal = rounds[rounds.length - 1].proposal;
+        if (!lastProposal) return null;
         return (
           <div className="bg-card rounded-2xl border border-border/10 p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -144,11 +145,11 @@ export default function NegotiationMonitorPage() {
               </div>
               <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
                 <p className="text-sm text-muted-foreground mb-1">Remote Policy</p>
-                <p className="text-base font-bold text-foreground">{lastProposal.remotePolicy}</p>
+                <p className="text-base font-bold text-foreground">{lastProposal.remotePolicy ?? 'N/A'}</p>
               </div>
               <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
                 <p className="text-sm text-muted-foreground mb-1">Working Hours</p>
-                <p className="text-base font-bold text-foreground">{lastProposal.workingHours}</p>
+                <p className="text-base font-bold text-foreground">{lastProposal.workingHours ?? 'N/A'}</p>
               </div>
               <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
                 <p className="text-sm text-muted-foreground mb-1">Signing Bonus</p>
@@ -182,8 +183,8 @@ export default function NegotiationMonitorPage() {
       {/* Chat Conversation */}
       <div className="space-y-4">
         {rounds.map((round, idx) => {
-          const prevSalary = idx > 0 ? rounds[idx - 1].proposal.salary : null;
-          const salaryDelta = prevSalary !== null ? round.proposal.salary - prevSalary : null;
+          const prevSalary = idx > 0 ? rounds[idx - 1].proposal?.salary ?? null : null;
+          const salaryDelta = prevSalary !== null && round.proposal?.salary != null ? round.proposal.salary - prevSalary : null;
           const isSeeker = round.actor === 'SEEKER_AGENT';
 
           return (
@@ -228,6 +229,7 @@ export default function NegotiationMonitorPage() {
                   </div>
 
                   {/* Proposal Card */}
+                  {round.proposal ? (
                   <div className={`rounded-xl border border-border/10 p-3 w-full ${
                     isSeeker ? 'bg-[#FF2DF1]/5' : 'bg-accent/30'
                   }`}>
@@ -242,10 +244,10 @@ export default function NegotiationMonitorPage() {
                         )}
                       </span>
                       <span className="inline-flex items-center px-2 py-1 rounded-lg bg-background/50 text-sm text-foreground/80">
-                        {round.proposal.remotePolicy}
+                        {round.proposal.remotePolicy ?? 'N/A'}
                       </span>
                       <span className="inline-flex items-center px-2 py-1 rounded-lg bg-background/50 text-sm text-foreground/80">
-                        {round.proposal.workingHours}
+                        {round.proposal.workingHours ?? 'N/A'}
                       </span>
                       {round.proposal.signingBonus && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-sm text-foreground/80">
@@ -254,11 +256,12 @@ export default function NegotiationMonitorPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{round.proposal.title}</span>
+                      <span>{round.proposal.title ?? 'N/A'}</span>
                       <span>·</span>
-                      <span>Start {round.proposal.startDate}</span>
+                      <span>Start {round.proposal.startDate ?? 'TBD'}</span>
                     </div>
                   </div>
+                  ) : null}
 
                   {/* Decision Badge */}
                   <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'}`}>
