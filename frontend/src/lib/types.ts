@@ -138,6 +138,18 @@ export interface NegotiationSession {
   onChainTxHash: string | null;
   seekerApproved?: boolean;
   employerApproved?: boolean;
+  job?: {
+    id: string;
+    title: string;
+    salaryMin: number | null;
+    salaryMax: number | null;
+    remotePolicy: string | null;
+  };
+  seeker?: { id: string; nearAccountId: string };
+  employer?: { id: string; nearAccountId: string };
+  updatedAt?: string;
+  messageCount?: number;
+  unreadCount?: number;
 }
 
 export interface NegotiationProposal {
