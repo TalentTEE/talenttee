@@ -7,8 +7,10 @@ import { useRouter } from 'next/navigation';
 import { UserRole } from '@/lib/types';
 import Link from 'next/link';
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+
 export default function SignupPage() {
-  const { signup } = useAuth();
+  const { signup, devLogin, logout } = useAuth();
   const { modal, signedAccountId } = useWallet();
   const router = useRouter();
 
@@ -17,6 +19,29 @@ export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [walletReady, setWalletReady] = useState(false);
+
+  // Dev login state
+  const [devAccountId, setDevAccountId] = useState('alice.testnet');
+  const [devRole, setDevRole] = useState<UserRole>('SEEKER');
+  const [devSubmitting, setDevSubmitting] = useState(false);
+
+  const handleDevLogin = async () => {
+    setDevSubmitting(true);
+    setError(null);
+    try {
+      await devLogin(devAccountId, devRole);
+      router.push(devRole === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Dev login failed');
+    } finally {
+      setDevSubmitting(false);
+    }
+  };
+
+  // Clear any stale session so the new signup starts fresh
+  useEffect(() => {
+    logout();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
@@ -172,6 +197,41 @@ export default function SignupPage() {
               {error}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Dev Login Panel */}
+      {IS_DEV && (
+        <div className="w-full max-w-xl mt-10 rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-yellow-500 text-xl">science</span>
+            <h3 className="font-[var(--font-manrope)] text-lg font-bold text-yellow-500">Dev Login</h3>
+            <span className="text-xs text-yellow-500/60 ml-auto">No wallet required</span>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              value={devAccountId}
+              onChange={(e) => setDevAccountId(e.target.value)}
+              placeholder="account.testnet"
+              className="flex-1 px-3 py-2 rounded-lg bg-background border border-border/20 text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:border-yellow-500/50"
+            />
+            <select
+              value={devRole}
+              onChange={(e) => setDevRole(e.target.value as UserRole)}
+              className="px-3 py-2 rounded-lg bg-background border border-border/20 text-foreground text-base focus:outline-none focus:border-yellow-500/50"
+            >
+              <option value="SEEKER">Seeker</option>
+              <option value="EMPLOYER">Employer</option>
+            </select>
+            <button
+              onClick={handleDevLogin}
+              disabled={devSubmitting || !devAccountId.trim()}
+              className="px-5 py-2 rounded-lg bg-yellow-500 text-black text-base font-bold hover:bg-yellow-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {devSubmitting ? 'Logging in...' : 'Dev Login'}
+            </button>
+          </div>
         </div>
       )}
 

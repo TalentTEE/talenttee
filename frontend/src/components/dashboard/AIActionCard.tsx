@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession } from '@/lib/types';
+import { DataSourceConnection, ResumeProfile, MatchResultDisplay, NegotiationSession, JobPosting } from '@/lib/types';
 import { PipelineProgress, PipelineStage } from './PipelineProgress';
 
 interface AIActionCardProps {
@@ -10,6 +10,7 @@ interface AIActionCardProps {
   matches: MatchResultDisplay[];
   sessions: NegotiationSession[];
   role: 'SEEKER' | 'EMPLOYER';
+  jobs?: JobPosting[];
 }
 
 interface ActionState {
@@ -143,6 +144,7 @@ function getSeekerAction(
 }
 
 function getEmployerAction(
+  jobs: JobPosting[],
   sessions: NegotiationSession[],
   matches: MatchResultDisplay[],
 ): ActionState {
@@ -150,6 +152,30 @@ function getEmployerAction(
     (s) => s.state !== 'AGREED' && s.state !== 'FAILED' && s.state !== 'MAX_ROUNDS',
   );
   const agreedSessions = sessions.filter((s) => s.state === 'AGREED');
+
+  if (jobs.length === 0) {
+    return {
+      icon: 'edit_note',
+      message: 'Post your first job',
+      detail: 'Create a job posting to start matching with candidates.',
+      ctaLabel: 'Create Job',
+      ctaHref: '/jobs/create',
+      stage: 'post',
+      animating: false,
+    };
+  }
+
+  if (matches.length === 0 && sessions.length === 0) {
+    return {
+      icon: 'account_balance',
+      message: 'Fund your escrow',
+      detail: 'Deposit NEAR to begin matching with candidates.',
+      ctaLabel: 'Go to Escrow',
+      ctaHref: '/escrow',
+      stage: 'fund',
+      animating: false,
+    };
+  }
 
   if (matches.length > 0 && sessions.length === 0) {
     const negotiatingMatch = matches.find((m) => m.negotiationSessionId);
@@ -193,19 +219,19 @@ function getEmployerAction(
       message: 'Agreement reached!',
       detail: 'Review the negotiation outcome.',
       ctaLabel: 'View Agreement',
-      ctaHref: `/negotiation/${agreedSessions[0].id}`,
-      stage: 'agree',
+      ctaHref: `/negotiation/${agreedSessions[0].id}/agree`,
+      stage: 'hire',
       animating: false,
     };
   }
 
   return {
-    icon: 'account_balance',
-    message: 'Deposit NEAR to start',
-    detail: 'Fund your escrow to begin matching with candidates.',
-    ctaLabel: 'Go to Escrow',
-    ctaHref: '/escrow',
-    stage: 'connect',
+    icon: 'smart_toy',
+    message: 'AI is ready',
+    detail: 'Your agent is standing by to find candidates.',
+    ctaLabel: 'View Dashboard',
+    ctaHref: '/dashboard/employer',
+    stage: 'hire',
     animating: false,
   };
 }
@@ -216,13 +242,16 @@ const stageColors: Record<PipelineStage, string> = {
   match: '#39FF14',
   negotiate: '#FF2DF1',
   agree: '#FFE600',
+  post: '#FFE600',
+  fund: '#39FF14',
+  hire: '#00F0FF',
 };
 
-export function AIActionCard({ datasources, resume, matches, sessions, role }: AIActionCardProps) {
+export function AIActionCard({ datasources, resume, matches, sessions, role, jobs = [] }: AIActionCardProps) {
   const action =
     role === 'SEEKER'
       ? getSeekerAction(datasources, resume, matches, sessions)
-      : getEmployerAction(sessions, matches);
+      : getEmployerAction(jobs, sessions, matches);
 
   const neon = stageColors[action.stage];
 
@@ -264,7 +293,7 @@ export function AIActionCard({ datasources, resume, matches, sessions, role }: A
       </div>
 
       {/* Pipeline Progress */}
-      {role === 'SEEKER' && <PipelineProgress currentStage={action.stage} />}
+      <PipelineProgress currentStage={action.stage} role={role} />
     </div>
   );
 }

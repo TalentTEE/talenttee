@@ -20,13 +20,14 @@ vi.mock('@/lib/api', () => ({
   getNegotiationSessions: (...args: unknown[]) => mockGetNegotiationSessions(...args),
   getSeekerMatches: (...args: unknown[]) => mockGetSeekerMatches(...args),
   getEmployerMatches: vi.fn().mockResolvedValue([]),
+  getJobs: vi.fn().mockResolvedValue([]),
 }));
 
 import NegotiationsPage from './page';
 
 const MOCK_SESSIONS = [
-  { id: 'session-1', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-1', state: 'EMPLOYER_COUNTER', currentRound: 3, maxRounds: 7, onChainTxHash: null },
-  { id: 'session-2', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-2', state: 'AGREED', currentRound: 5, maxRounds: 7, onChainTxHash: '0xabc123' },
+  { id: 'session-1', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-1', state: 'AGREED', currentRound: 5, maxRounds: 7, seekerApproved: false, employerApproved: false, onChainTxHash: null },
+  { id: 'session-2', seekerId: 'user-1', employerId: 'user-2', jobId: 'job-2', state: 'FAILED', currentRound: 7, maxRounds: 7, seekerApproved: false, employerApproved: false, onChainTxHash: null },
 ];
 
 const MOCK_MATCHES = [
@@ -40,16 +41,16 @@ describe('NegotiationsPage', () => {
     mockGetSeekerMatches.mockResolvedValue(MOCK_MATCHES);
   });
 
-  it('renders In Progress and Completed sections', async () => {
+  it('renders Agreement Reached and Failed sections', async () => {
     render(<NegotiationsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('In Progress')).toBeInTheDocument();
-      expect(screen.getByText('Completed')).toBeInTheDocument();
+      expect(screen.getByText('Agreement Reached')).toBeInTheDocument();
+      expect(screen.getByText('Failed')).toBeInTheDocument();
     });
   });
 
-  it('shows session rows with job titles', async () => {
+  it('shows session rows with job titles from matches', async () => {
     render(<NegotiationsPage />);
 
     await waitFor(() => {
@@ -58,38 +59,23 @@ describe('NegotiationsPage', () => {
     });
   });
 
-  it('shows Negotiating status for in-progress sessions', async () => {
-    render(<NegotiationsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Negotiating')).toBeInTheDocument();
-    });
-  });
-
-  it('shows Agreed status for completed sessions', async () => {
-    render(<NegotiationsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Agreed')).toBeInTheDocument();
-    });
-  });
-
-  it('shows round progress for in-progress session', async () => {
-    render(<NegotiationsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('R3/7')).toBeInTheDocument();
-    });
-  });
-
-  it('generates correct links for sessions', async () => {
+  it('generates correct links for agreed sessions', async () => {
     render(<NegotiationsPage />);
 
     await waitFor(() => {
       const links = screen.getAllByRole('link');
       const hrefs = links.map((l) => l.getAttribute('href'));
-      expect(hrefs).toContain('/negotiation/session-1');
-      expect(hrefs).toContain('/negotiation/session-2/agree');
+      expect(hrefs).toContain('/negotiation/session-1/agree');
+    });
+  });
+
+  it('generates correct links for failed sessions', async () => {
+    render(<NegotiationsPage />);
+
+    await waitFor(() => {
+      const links = screen.getAllByRole('link');
+      const hrefs = links.map((l) => l.getAttribute('href'));
+      expect(hrefs).toContain('/negotiation/session-2');
     });
   });
 

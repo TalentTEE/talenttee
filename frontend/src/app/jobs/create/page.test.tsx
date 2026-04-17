@@ -2,12 +2,55 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+// Mock auth
+vi.mock('@/lib/auth', () => ({
+  useAuth: () => ({
+    user: { id: 'user-2', nearAccountId: 'bob.testnet', role: 'EMPLOYER', publicKey: 'ed25519:key', createdAt: '2026-01-01' },
+    login: vi.fn(),
+    loginWithNear: vi.fn(),
+    logout: vi.fn(),
+    isLoading: false,
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+  useParams: () => ({}),
+  usePathname: () => '/jobs/create',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// Mock jobChatStorage — return a single session with initial greeting
+const INITIAL_GREETING = "Hi! I'm your AI hiring assistant. I'll help you create the perfect job posting. Let's start — what position are you looking to fill?";
+const mockSession = {
+  id: 'test-session-1',
+  title: 'New conversation',
+  messages: [{ role: 'agent', content: INITIAL_GREETING }],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+vi.mock('@/lib/jobChatStorage', () => ({
+  createSession: vi.fn(() => ({ ...mockSession })),
+  deleteSession: vi.fn(),
+  getSession: vi.fn(() => ({ ...mockSession })),
+  listSessions: vi.fn(() => [{ ...mockSession }]),
+  saveSession: vi.fn(),
+}));
+
+vi.mock('@/lib/format', () => ({
+  formatSalary: vi.fn((v: number) => `${Math.round(v / 10000)}M`),
+}));
+
 const mockChatCreateJob = vi.fn();
 const mockCreateJob = vi.fn();
 
 vi.mock('@/lib/api', () => ({
   chatCreateJob: (...args: unknown[]) => mockChatCreateJob(...args),
   createJob: (...args: unknown[]) => mockCreateJob(...args),
+  publishJob: vi.fn(),
+  recommendSalary: vi.fn(),
 }));
 
 import CreateJobPage from './page';
@@ -18,11 +61,10 @@ describe('CreateJobPage', () => {
     mockCreateJob.mockReset();
   });
 
-  it('renders Chat Mode tab active by default', () => {
+  it('renders AI Chat Mode tab active by default', () => {
     render(<CreateJobPage />);
-    expect(screen.getByText('Chat Mode')).toBeInTheDocument();
+    expect(screen.getByText('AI Chat Mode')).toBeInTheDocument();
     expect(screen.getByText('Form Mode')).toBeInTheDocument();
-    // Chat mode content should be visible
     expect(screen.getByPlaceholderText('Type your answer...')).toBeInTheDocument();
   });
 
@@ -44,8 +86,11 @@ describe('CreateJobPage', () => {
   describe('Chat Mode', () => {
     it('sends user message and displays agent response', async () => {
       mockChatCreateJob.mockResolvedValue({
-        complete: false,
-        question: 'What are the required tech skills?',
+        sessionId: 'backend-session-1',
+        response: {
+          complete: false,
+          question: 'What are the required tech skills?',
+        },
       });
 
       const user = userEvent.setup();
@@ -63,8 +108,11 @@ describe('CreateJobPage', () => {
 
     it('calls chatCreateJob with messages on send', async () => {
       mockChatCreateJob.mockResolvedValue({
-        complete: false,
-        question: 'What experience level?',
+        sessionId: 'backend-session-1',
+        response: {
+          complete: false,
+          question: 'What experience level?',
+        },
       });
 
       const user = userEvent.setup();
@@ -80,27 +128,31 @@ describe('CreateJobPage', () => {
             expect.objectContaining({ role: 'agent' }),
             expect.objectContaining({ role: 'user', content: 'Hello' }),
           ]),
+          undefined,
         );
       });
     });
 
     it('shows job preview when chat is complete', async () => {
       mockChatCreateJob.mockResolvedValue({
-        complete: true,
-        jobPosting: {
-          id: 'job-1',
-          employerId: 'user-2',
-          title: 'Senior Backend Developer',
-          description: 'NestJS backend',
-          requiredSkills: ['TypeScript', 'NestJS'],
-          preferredSkills: [],
-          salaryMin: 60000000,
-          salaryMax: 80000000,
-          remotePolicy: '3 days office',
-          workingHours: '09:00-18:00',
-          benefits: '',
-          status: 'ACTIVE',
-          negotiationBoundary: null,
+        sessionId: 'backend-session-1',
+        response: {
+          complete: true,
+          jobPosting: {
+            id: 'job-1',
+            employerId: 'user-2',
+            title: 'Senior Backend Developer',
+            description: 'NestJS backend',
+            requiredSkills: ['TypeScript', 'NestJS'],
+            preferredSkills: [],
+            salaryMin: 60000000,
+            salaryMax: 80000000,
+            remotePolicy: '3 days office',
+            workingHours: '09:00-18:00',
+            benefits: '',
+            status: 'ACTIVE',
+            negotiationBoundary: null,
+          },
         },
       });
 
@@ -113,7 +165,6 @@ describe('CreateJobPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Senior Backend Developer')).toBeInTheDocument();
-        expect(screen.getByText('Job Preview')).toBeInTheDocument();
       });
     });
   });
@@ -134,8 +185,7 @@ describe('CreateJobPage', () => {
       await user.type(screen.getByPlaceholderText('e.g. Senior Backend Developer'), 'Test Job');
       await user.type(screen.getByPlaceholderText(/Describe the role/), 'A great role');
       await user.type(screen.getByPlaceholderText(/comma-separated/), 'TypeScript, React');
-      await user.type(screen.getByPlaceholderText('Minimum'), '50000000');
-      await user.type(screen.getByPlaceholderText('Maximum'), '80000000');
+      await user.type(screen.getByPlaceholderText(/KRW\/year/), '80000000');
 
       await user.click(screen.getByRole('button', { name: /Create Job Posting/ }));
 

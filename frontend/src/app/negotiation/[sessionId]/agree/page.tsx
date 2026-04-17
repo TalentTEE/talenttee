@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, USE_DUMMY } from '@/lib/api';
-import { AgreementRecord, NegotiationRound, isStructuredReasoning } from '@/lib/types';
+import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, getInterviewMessages, sendInterviewMessage, USE_DUMMY } from '@/lib/api';
+import { AgreementRecord, NegotiationRound, InterviewMessage, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
+import { useAuth } from '@/lib/auth';
+import { useSse } from '@/lib/sse';
 
 type FlowState = 'idle' | 'approving' | 'waiting' | 'completed' | 'rejected';
 
@@ -51,18 +53,20 @@ function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('
 export default function AgreementPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const { on } = useSse();
   const sessionId = params.sessionId as string;
 
   const [agreement, setAgreement] = useState<AgreementRecord | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Cleanup poll on unmount
-  useEffect(() => {
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
+  // Interview messages
+  const [messages, setMessages] = useState<InterviewMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -73,9 +77,18 @@ export default function AgreementPage() {
       .then((data) => {
         setAgreement(data);
         // Restore state from existing agreement
-        if (data.seekerApproved && data.employerApproved) {
+        if (data.rejected) {
+          setFlowState('rejected');
+        } else if (data.seekerApproved && data.employerApproved) {
           setFlowState('completed');
           if (data.onChainTxHash) setTxHash(data.onChainTxHash);
+        } else {
+          // Check if *I* already approved — if so, waiting for the other party
+          const myApproval = user?.role === 'SEEKER' ? data.seekerApproved : data.employerApproved;
+          if (myApproval) {
+            setFlowState('waiting');
+          }
+          // Otherwise stay 'idle' — show approve/reject buttons
         }
       })
       .catch(async () => {
@@ -109,23 +122,61 @@ export default function AgreementPage() {
       });
   }, [sessionId]);
 
-  // Poll for other party's approval (real mode)
-  const startPolling = useCallback(() => {
-    if (pollRef.current) return;
-    pollRef.current = setInterval(async () => {
+  // SSE: listen for agreement updates (approval/rejection by other party)
+  useEffect(() => {
+    if (!sessionId) return;
+    return on('agreement_update', async (data) => {
+      if (data.sessionId !== sessionId) return;
       try {
         const updated = await getAgreement(sessionId);
-        if (updated.seekerApproved && updated.employerApproved) {
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-          setAgreement(updated);
+        setAgreement(updated);
+        if (updated.rejected) {
+          setFlowState('rejected');
+        } else if (updated.seekerApproved && updated.employerApproved) {
           setTxHash(updated.onChainTxHash ?? null);
           setFlowState('completed');
         }
-      } catch {
-        // Keep polling
-      }
-    }, 3000);
-  }, [sessionId]);
+      } catch { /* ignore */ }
+    });
+  }, [sessionId, on]);
+
+  // SSE: listen for new interview messages
+  useEffect(() => {
+    if (!sessionId || flowState !== 'completed') return;
+    return on('message', async (data) => {
+      if (data.sessionId !== sessionId) return;
+      // Reload messages to get the full message object (avoid duplicates by id)
+      try {
+        const msgs = await getInterviewMessages(sessionId);
+        setMessages(msgs);
+      } catch { /* ignore */ }
+    });
+  }, [sessionId, flowState, on]);
+
+  // Load messages when completed
+  useEffect(() => {
+    if (flowState !== 'completed' || !sessionId) return;
+    getInterviewMessages(sessionId).then(setMessages).catch(() => {});
+  }, [flowState, sessionId]);
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || sending) return;
+    setSending(true);
+    try {
+      const msg = await sendInterviewMessage(sessionId, newMessage.trim());
+      setMessages((prev) => [...prev, msg]);
+      setNewMessage('');
+    } catch {
+      // silent fail
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleApprove = async () => {
     if (flowState === 'approving') return;
@@ -156,9 +207,8 @@ export default function AgreementPage() {
             return;
           }
         } catch {
-          // Not yet — start polling
+          // Not yet — SSE will notify when the other party acts
         }
-        startPolling();
       }
     } catch (err) {
       setFlowState('idle');
@@ -397,40 +447,81 @@ export default function AgreementPage() {
                 </div>
               )}
 
-              {/* Next Steps */}
+              {/* Interview Messages */}
               <div className="bg-card rounded-2xl border border-border/10 p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="material-symbols-outlined text-base text-[#00F0FF]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    rocket_launch
+                    chat
                   </span>
-                  <h3 className="text-base font-bold text-foreground">Next Steps</h3>
+                  <h3 className="text-base font-bold text-foreground">Interview Coordination</h3>
+                  {messages.length > 0 && (
+                    <span className="ml-auto text-sm text-muted-foreground">{messages.length} messages</span>
+                  )}
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/50">
-                    <span className="material-symbols-outlined text-base text-emerald-400 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Agreement finalized</p>
-                      <p className="text-xs text-muted-foreground">Terms recorded on NEAR blockchain</p>
+
+                {/* Message Thread */}
+                <div className="space-y-3 max-h-80 overflow-y-auto mb-4">
+                  {messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <span className="material-symbols-outlined text-3xl text-muted-foreground/30 mb-2">forum</span>
+                      <p className="text-sm text-muted-foreground">No messages yet.</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        {user?.role === 'EMPLOYER'
+                          ? 'Send an interview invite to the candidate.'
+                          : 'The employer will reach out to schedule an interview.'}
+                      </p>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/50">
-                    <span className="material-symbols-outlined text-base text-[#00F0FF] mt-0.5">calendar_month</span>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Schedule interview</p>
-                      <p className="text-xs text-muted-foreground">Both parties can now coordinate an interview time</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/50">
-                    <span className="material-symbols-outlined text-base text-muted-foreground/40 mt-0.5">description</span>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground/60">Onboarding</p>
-                      <p className="text-xs text-muted-foreground">Complete documentation and start onboarding process</p>
-                    </div>
-                  </div>
+                  )}
+                  {messages.map((msg) => {
+                    const isMe = msg.senderId === user?.id;
+                    return (
+                      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                          isMe
+                            ? 'bg-primary/10 border border-primary/10 rounded-br-md'
+                            : 'bg-accent/50 border border-border/10 rounded-bl-md'
+                        }`}>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="material-symbols-outlined text-xs text-muted-foreground">
+                              {msg.sender?.role === 'EMPLOYER' ? 'corporate_fare' : 'person'}
+                            </span>
+                            <span className="text-xs font-semibold text-muted-foreground">
+                              {msg.sender?.nearAccountId || (isMe ? 'You' : 'Other')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-foreground/90 whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-[10px] text-muted-foreground/50 mt-1">
+                            {new Date(msg.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
                 </div>
+
+                {/* Send Message Form */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
+                    placeholder={user?.role === 'EMPLOYER' ? 'Send interview invite...' : 'Reply...'}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-accent/50 border border-border/10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 transition-colors"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim() || sending}
+                    className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined text-base">send</span>
+                  </button>
+                </div>
+
                 <button
                   onClick={() => router.push('/negotiations')}
-                  className="w-full flex items-center justify-center gap-2 mt-4 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 mt-4 px-5 py-3 rounded-xl bg-muted text-foreground text-sm font-bold hover:bg-muted/80 transition-all cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-base">arrow_back</span>
                   Back to Negotiations

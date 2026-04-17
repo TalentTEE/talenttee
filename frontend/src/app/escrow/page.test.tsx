@@ -17,11 +17,31 @@ vi.mock('@/lib/auth', () => ({
 const mockGetEscrowBalance = vi.fn();
 const mockGetEscrowPayments = vi.fn();
 const mockDepositToEscrow = vi.fn();
+const mockGetAgentPublicKey = vi.fn().mockResolvedValue('ed25519:agentkey');
 
 vi.mock('@/lib/api', () => ({
   getEscrowBalance: (...args: unknown[]) => mockGetEscrowBalance(...args),
   getEscrowPayments: (...args: unknown[]) => mockGetEscrowPayments(...args),
   depositToEscrow: (...args: unknown[]) => mockDepositToEscrow(...args),
+  getAgentPublicKey: (...args: unknown[]) => mockGetAgentPublicKey(...args),
+}));
+
+vi.mock('@/lib/wallet-selector', () => ({
+  useWallet: () => ({
+    selector: null,
+    modal: null,
+    signedAccountId: null,
+    signOut: vi.fn(),
+  }),
+}));
+
+vi.mock('@/lib/near', () => ({
+  getEscrowBalanceOnChain: vi.fn().mockResolvedValue('5000000000000000000000000'),
+  hasAgentKeyOnChain: vi.fn().mockResolvedValue(false),
+}));
+
+vi.mock('@near-js/transactions', () => ({
+  actionCreators: { functionCall: vi.fn() },
 }));
 
 import EscrowPage from './page';

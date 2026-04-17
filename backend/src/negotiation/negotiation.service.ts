@@ -1,6 +1,7 @@
 import { Injectable, Inject, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import bs58 from 'bs58';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
@@ -9,6 +10,7 @@ import { JobPosting } from '../entities/job-posting.entity.js';
 import { User } from '../entities/user.entity.js';
 import { MatchResult } from '../entities/match-result.entity.js';
 import { ResumeProfile } from '../entities/resume-profile.entity.js';
+import { InterviewMessage } from '../entities/interview-message.entity.js';
 import { NegotiationState, NegotiationActor, NegotiationDecision } from '../common/enums/index.js';
 import type { AgentResponse, NegotiationBoundary } from '../common/types/index.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
@@ -16,6 +18,7 @@ import type { NearAiClient } from '../common/interfaces/near-ai-client.interface
 import { MATCH_RESULT_QUERY } from '../common/interfaces/match-result-query.interface.js';
 import type { MatchResultQuery } from '../common/interfaces/match-result-query.interface.js';
 import { CryptoService } from '../crypto/crypto.service.js';
+import { SSE_EVENTS } from '../common/events/sse.events.js';
 import { getActorForState, transition, isTerminal } from './negotiation-engine.js';
 import { buildSeekerPrompt } from './prompts/seeker-agent.en.prompt.js';
 import { buildEmployerPrompt } from './prompts/employer-agent.en.prompt.js';
@@ -38,18 +41,71 @@ export class NegotiationService {
     private readonly matchResultRepo: Repository<MatchResult>,
     @InjectRepository(ResumeProfile)
     private readonly resumeProfileRepo: Repository<ResumeProfile>,
+    @InjectRepository(InterviewMessage)
+    private readonly messageRepo: Repository<InterviewMessage>,
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
     @Inject(MATCH_RESULT_QUERY)
     private readonly matchQuery: MatchResultQuery,
     private readonly cryptoService: CryptoService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async listSessions(userId: string): Promise<NegotiationSession[]> {
-    return this.sessionRepo.find({
+  async listSessions(userId: string) {
+    const sessions = await this.sessionRepo.find({
       where: [{ seekerId: userId }, { employerId: userId }],
       relations: ['job', 'seeker', 'employer'],
       order: { updatedAt: 'DESC' },
+    });
+
+    if (sessions.length === 0) return [];
+
+    const sessionIds = sessions.map((s) => s.id);
+
+    // Batch: total message count per session
+    const totalCounts: { sessionId: string; cnt: string }[] = await this.messageRepo
+      .createQueryBuilder('m')
+      .select('m.session_id', 'sessionId')
+      .addSelect('COUNT(*)', 'cnt')
+      .where('m.session_id IN (:...ids)', { ids: sessionIds })
+      .groupBy('m.session_id')
+      .getRawMany();
+    const totalMap = new Map(totalCounts.map((r) => [r.sessionId, Number(r.cnt)]));
+
+    // Batch: unread count per session (messages from other party, after lastReadAt)
+    // Build per-session conditions
+    const unreadConditions: string[] = [];
+    const params: Record<string, unknown> = { userId };
+    sessions.forEach((s, i) => {
+      const lastRead = s.seekerId === userId ? s.seekerLastReadAt : s.employerLastReadAt;
+      if (lastRead) {
+        unreadConditions.push(`(m.session_id = :sid${i} AND m.sender_id != :userId AND m.created_at > :lr${i})`);
+        params[`sid${i}`] = s.id;
+        params[`lr${i}`] = lastRead;
+      }
+    });
+
+    let unreadMap = new Map<string, number>();
+    if (unreadConditions.length > 0) {
+      const unreadCounts: { sessionId: string; cnt: string }[] = await this.messageRepo
+        .createQueryBuilder('m')
+        .select('m.session_id', 'sessionId')
+        .addSelect('COUNT(*)', 'cnt')
+        .where(unreadConditions.join(' OR '), params)
+        .groupBy('m.session_id')
+        .getRawMany();
+      unreadMap = new Map(unreadCounts.map((r) => [r.sessionId, Number(r.cnt)]));
+    }
+
+    return sessions.map((s) => {
+      const messageCount = totalMap.get(s.id) ?? 0;
+      const isSeeker = s.seekerId === userId;
+      const lastRead = isSeeker ? s.seekerLastReadAt : s.employerLastReadAt;
+      // No lastRead → all messages from other party are unread
+      const unreadCount = lastRead
+        ? (unreadMap.get(s.id) ?? 0)
+        : messageCount; // conservative: count all as unread if never opened
+      return { ...s, messageCount, unreadCount };
     });
   }
 
@@ -237,6 +293,16 @@ export class NegotiationService {
     }
 
     this.logger.log(`Session ${session.id} finished: ${session.state}`);
+
+    // Notify both parties that negotiation is complete
+    if (session.state === NegotiationState.AGREED || session.state === NegotiationState.FAILED) {
+      for (const uid of [session.seekerId, session.employerId]) {
+        this.eventEmitter.emit(SSE_EVENTS.NEGOTIATION_COMPLETE, {
+          recipientUserId: uid,
+          sessionId: session.id,
+        });
+      }
+    }
   }
 
   async getDecryptedRounds(sessionId: string): Promise<any[]> {

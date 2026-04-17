@@ -52,6 +52,10 @@ function fakeJwt(exp = Math.floor(Date.now() / 1000) + 86400) {
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_USE_DUMMY', 'true');
+    mockGetDummyUser.mockClear();
+    mockRequestChallenge.mockClear();
+    mockVerifyNearAuth.mockClear();
+    mockSignMessage.mockClear();
   });
 
   it('starts with isLoading true then transitions to false', async () => {

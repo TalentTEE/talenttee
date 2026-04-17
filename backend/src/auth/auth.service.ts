@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -23,12 +23,13 @@ const nep413Schema = {
 } as const;
 
 function buildNep413Payload(message: string, nonce: Uint8Array, recipient: string) {
-  // Match wallet-selector's Payload class: only set callbackUrl if present
-  return { tag: NEP413_TAG, message, nonce, recipient };
+  // Match wallet-selector's Payload class: callbackUrl must be explicitly null for Option::None
+  return { tag: NEP413_TAG, message, nonce, recipient, callbackUrl: null };
 }
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private challenges = new Map<string, { nonce: string; expiresAt: Date }>();
 
   constructor(
@@ -74,7 +75,8 @@ export class AuthService {
       const hashedPayload = createHash('sha256').update(Buffer.from(borshPayload)).digest();
 
       return nacl.sign.detached.verify(hashedPayload, sigBytes, keyBytes);
-    } catch {
+    } catch (err) {
+      this.logger.error(`NEP-413 verification error: ${err instanceof Error ? err.message : err}`);
       return false;
     }
   }

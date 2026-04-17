@@ -1,10 +1,13 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createHash } from 'crypto';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
+import { InterviewMessage } from '../entities/interview-message.entity.js';
 import { NegotiationState, NegotiationDecision } from '../common/enums/index.js';
+import { SSE_EVENTS } from '../common/events/sse.events.js';
 import { CryptoService } from '../crypto/crypto.service.js';
 
 @Injectable()
@@ -18,7 +21,10 @@ export class AgreementService {
     private readonly sessionRepo: Repository<NegotiationSession>,
     @InjectRepository(NegotiationRound)
     private readonly roundRepo: Repository<NegotiationRound>,
+    @InjectRepository(InterviewMessage)
+    private readonly messageRepo: Repository<InterviewMessage>,
     private readonly cryptoService: CryptoService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private parsePublicKey(key: string): Uint8Array {
@@ -56,6 +62,13 @@ export class AgreementService {
       await manager.save(session);
 
       if (!session.seekerApproved || !session.employerApproved) {
+        const otherUserId = isSeeker ? session.employerId : session.seekerId;
+        this.eventEmitter.emit(SSE_EVENTS.AGREEMENT_UPDATE, {
+          recipientUserId: otherUserId,
+          sessionId,
+          action: 'approved',
+          byRole: isSeeker ? 'seeker' : 'employer',
+        });
         return { status: 'waiting_for_other_party' };
       }
 
@@ -137,6 +150,13 @@ export class AgreementService {
 
     session.state = NegotiationState.FAILED;
     await this.sessionRepo.save(session);
+    const otherUserId = isSeeker ? session.employerId : session.seekerId;
+    this.eventEmitter.emit(SSE_EVENTS.AGREEMENT_UPDATE, {
+      recipientUserId: otherUserId,
+      sessionId,
+      action: 'rejected',
+      byRole: isSeeker ? 'seeker' : 'employer',
+    });
     this.logger.log(`Session ${sessionId} rejected by ${isSeeker ? 'seeker' : 'employer'} ${userId}`);
     return { status: 'rejected' };
   }
@@ -150,29 +170,107 @@ export class AgreementService {
   }
 
   async getAgreement(sessionId: string): Promise<any> {
-    const response = await fetch(this.nearNodeUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'dontcare',
-        method: 'query',
-        params: {
-          request_type: 'call_function',
-          finality: 'final',
-          account_id: this.agreementContractId,
-          method_name: 'get_agreement',
-          args_base64: Buffer.from(JSON.stringify({ session_id: sessionId })).toString('base64'),
-        },
-      }),
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId },
+      relations: ['job'],
     });
-    const data = await response.json();
-    if (data.error || !data.result?.result) return null;
-    try {
-      return JSON.parse(Buffer.from(data.result.result).toString('utf-8'));
-    } catch {
-      return null;
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.state !== NegotiationState.AGREED && session.state !== NegotiationState.FAILED) {
+      throw new NotFoundException('No agreement for this session');
     }
+
+    // Get the last accepted round for agreement summary
+    const lastRound = await this.roundRepo.findOne({
+      where: { sessionId, decision: NegotiationDecision.ACCEPT },
+      order: { round: 'DESC' },
+    });
+
+    let agreedSalary = 0;
+    let remotePolicy = 'N/A';
+    let startDate = 'TBD';
+    let probationMonths = 0;
+    let positionTitle = session.job?.title || 'N/A';
+    try {
+      if (lastRound?.encryptedData && session.sessionKeyNonce) {
+        // Load seeker to get public key
+        const fullSession = await this.sessionRepo.findOne({
+          where: { id: sessionId },
+          relations: ['seeker'],
+        });
+        if (fullSession?.seeker?.publicKey) {
+          const seekerPubKey = this.parsePublicKey(fullSession.seeker.publicKey);
+          const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, fullSession.sessionKeyNonce);
+          const decrypted = this.cryptoService.decrypt(sessionKey, lastRound.encryptedData);
+          const parsed = JSON.parse(decrypted);
+          agreedSalary = parsed?.proposal?.salary ?? parsed?.proposal?.baseSalary ?? 0;
+          remotePolicy = parsed?.proposal?.remotePolicy ?? 'N/A';
+          startDate = parsed?.proposal?.startDate ?? 'TBD';
+          probationMonths = parsed?.proposal?.probationMonths ?? 0;
+          positionTitle = parsed?.proposal?.title ?? positionTitle;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to decrypt for getAgreement ${sessionId}: ${err.message}`);
+    }
+
+    return {
+      sessionId: session.id,
+      agreementHash: session.agreementHash || `pending-${session.id.slice(0, 8)}`,
+      summary: {
+        positionTitle,
+        agreedSalary,
+        startDate,
+        negotiationRounds: session.currentRound || 0,
+        remotePolicy,
+        probationMonths,
+      },
+      seekerApproved: session.seekerApproved,
+      employerApproved: session.employerApproved,
+      onChainTxHash: session.onChainTxHash || null,
+      rejected: session.state === NegotiationState.FAILED,
+    };
+  }
+
+  async getMessages(sessionId: string, userId: string): Promise<InterviewMessage[]> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.seekerId !== userId && session.employerId !== userId) {
+      throw new ForbiddenException('Not a participant');
+    }
+    const messages = await this.messageRepo.find({
+      where: { sessionId },
+      relations: ['sender'],
+      order: { createdAt: 'ASC' },
+    });
+    // Mark as read
+    const now = new Date();
+    if (session.seekerId === userId) {
+      await this.sessionRepo.update(sessionId, { seekerLastReadAt: now });
+    } else {
+      await this.sessionRepo.update(sessionId, { employerLastReadAt: now });
+    }
+    return messages;
+  }
+
+  async sendMessage(sessionId: string, userId: string, content: string): Promise<InterviewMessage> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+    if (session.seekerId !== userId && session.employerId !== userId) {
+      throw new ForbiddenException('Not a participant');
+    }
+    if (!session.seekerApproved || !session.employerApproved) {
+      throw new ConflictException('Both parties must approve before messaging');
+    }
+    const message = this.messageRepo.create({ sessionId, senderId: userId, content });
+    const saved = await this.messageRepo.save(message);
+    const recipientUserId = session.seekerId === userId ? session.employerId : session.seekerId;
+    this.eventEmitter.emit(SSE_EVENTS.NEW_MESSAGE, {
+      recipientUserId,
+      sessionId,
+      senderId: userId,
+      preview: content.slice(0, 100),
+    });
+    return saved;
   }
 
   async verifyAgreement(sessionId: string): Promise<boolean> {

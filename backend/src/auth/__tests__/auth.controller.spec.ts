@@ -88,21 +88,18 @@ describe('AuthController', () => {
       expect(result).toEqual({ jwt: 'jwt-employer', user: newUser });
     });
 
-    it('signup intent + valid role SEEKER + existing user → returns existing user unchanged (idempotent)', async () => {
+    it('signup intent + different role + existing user → throws BadRequestException', async () => {
       const existingUser = { id: 'uuid-3', nearAccountId: 'carol.testnet', role: UserRole.EMPLOYER };
       mockAuthService.validateChallenge.mockReturnValue(true);
       mockAuthService.verifyNearSignature.mockReturnValue(true);
       mockAuthService.findUser.mockResolvedValue(existingUser);
-      mockAuthService.generateJwt.mockReturnValue('jwt-existing');
 
-      const result = await controller.verify({
+      await expect(controller.verify({
         nearAccountId: 'carol.testnet', publicKey: 'ed25519:key',
         signature: 'valid-sig', nonce: 'nonce2', role: 'SEEKER', intent: 'signup',
-      });
+      })).rejects.toThrow('This account is already registered as EMPLOYER');
 
-      // Must NOT overwrite the role — createUser must NOT be called
       expect(mockAuthService.createUser).not.toHaveBeenCalled();
-      expect(result).toEqual({ jwt: 'jwt-existing', user: existingUser });
     });
 
     it('signup intent + missing role → throws BadRequestException', async () => {
