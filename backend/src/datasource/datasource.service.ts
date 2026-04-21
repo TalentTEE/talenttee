@@ -104,6 +104,17 @@ export class DatasourceService {
     return this.dsRepo.save(conn);
   }
 
+  async updatePdfData(userId: string, data: Record<string, any>): Promise<void> {
+    const conn = await this.dsRepo.findOne({
+      where: { userId, provider: DataSourceProvider.PDF },
+    });
+    if (!conn) throw new NotFoundException('PDF datasource not connected');
+    const { rawText, ...rest } = conn.analysisCache ?? {};
+    conn.analysisCache = { rawText, ...rest, ...data };
+    conn.analysisCachedAt = new Date();
+    await this.dsRepo.save(conn);
+  }
+
   async getStatus(userId: string): Promise<DataSourceConnection[]> {
     return this.dsRepo.find({ where: { userId } });
   }

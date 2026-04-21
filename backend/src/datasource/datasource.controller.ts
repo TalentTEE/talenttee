@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Get, Delete, Param, Body, Query, Req, Res,
+  Controller, Post, Get, Delete, Patch, Param, Body, Query, Req, Res,
   UseGuards, UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -107,5 +107,13 @@ export class DatasourceController {
       status: 'CONNECTED',
       parsed: parseResult.structured,
     };
+  }
+
+  @Patch('pdf')
+  @UseGuards(JwtGuard)
+  async updatePdf(@Req() req, @Body() body: Record<string, any>) {
+    const userId = req.user.id;
+    await this.datasourceService.updatePdfData(userId, body);
+    return { message: 'PDF data updated' };
   }
 }

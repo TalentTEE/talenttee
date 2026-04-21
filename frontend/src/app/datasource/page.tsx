@@ -8,7 +8,7 @@ import { ResumeProfile } from '@/lib/types';
 import {
   getDatasourceStatus, getDatasourceData, connectDatasourceMock, disconnectDatasource,
   getResume, generateResume, getResumeStatus, USE_DUMMY,
-  getPreferences, updatePreferences,
+  getPreferences, updatePreferences, updatePdfData,
 } from '@/lib/api';
 import { formatCurrency, formatSalary } from '@/lib/format';
 import { GitHubConnectDialog } from '@/components/datasource/github-connect-dialog';
@@ -474,7 +474,15 @@ export default function DatasourcePage() {
                           <span className="text-xs text-muted-foreground">Loading data...</span>
                         </div>
                       ) : dsData[provider.id] ? (
-                        <DatasourceDetailView provider={provider.id} data={dsData[provider.id]} />
+                        <DatasourceDetailView
+                          provider={provider.id}
+                          data={dsData[provider.id]}
+                          onSave={provider.id === 'PDF' ? async (updated) => {
+                            await updatePdfData(updated);
+                            setDsData((d) => ({ ...d, PDF: updated }));
+                            addToast('PDF data updated.', 'success');
+                          } : undefined}
+                        />
                       ) : null
                     )}
                   </>

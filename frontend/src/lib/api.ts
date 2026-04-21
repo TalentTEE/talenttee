@@ -246,6 +246,21 @@ export async function getDatasourceData(provider: string): Promise<DatasourceDet
           ],
         },
       },
+      PDF: {
+        skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Docker'],
+        softSkills: ['Leadership', 'Communication', 'Problem Solving'],
+        experience: [
+          { role: 'Senior Frontend Developer', company: 'TechStart Inc.', period: '2023-Present', highlights: ['Led React migration from class to hooks', 'Reduced bundle size by 35%'] },
+          { role: 'Full-stack Developer', company: 'DataFlow Corp.', period: '2021-2023', highlights: ['Built REST API serving 10K req/s', 'Designed PostgreSQL schema for analytics'] },
+        ],
+        education: [
+          { degree: 'B.S. Computer Science', institution: 'Korea University', year: '2021' },
+        ],
+        certifications: ['AWS Solutions Architect Associate', 'SQLD'],
+        summary: 'Full-stack developer with 4+ years of experience in React, Node.js, and cloud infrastructure. Passionate about performance optimization and clean architecture.',
+        strengths: ['Strong React/TypeScript skills', 'API design experience', 'Team leadership'],
+        improvement_areas: ['Limited mobile development experience'],
+      },
     };
     return fixtures[provider] ?? fixtures.GITHUB;
   }
@@ -304,6 +319,11 @@ export async function uploadPdfResume(file: File): Promise<PdfUploadResult> {
     throw new Error(body.message || `Upload failed: ${res.status}`);
   }
   return res.json();
+}
+
+export async function updatePdfData(data: Record<string, any>): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch('/datasource/pdf', { method: 'PATCH', body: JSON.stringify(data) });
 }
 
 // === Resume ===

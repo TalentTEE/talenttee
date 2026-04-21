@@ -281,7 +281,19 @@ export interface Gov24Data {
   };
 }
 
-export type DatasourceDetail = GitHubData | SlackData | DiscordData | Gov24Data;
+export interface PdfData {
+  rawText?: string;
+  skills: string[];
+  softSkills: string[];
+  experience: { role: string; company: string; period: string; highlights: string[] }[];
+  education: { degree: string; institution: string; year: string }[];
+  certifications: string[];
+  summary: string;
+  strengths: string[];
+  improvement_areas: string[];
+}
+
+export type DatasourceDetail = GitHubData | SlackData | DiscordData | Gov24Data | PdfData;
 
 export interface ChatMessage {
   role: 'user' | 'agent';
