@@ -191,17 +191,26 @@ export class AgreementService {
     let probationMonths = 0;
     let positionTitle = session.job?.title || 'N/A';
     try {
-      if (lastRound?.encryptedData && session.sessionKeyNonce) {
-        // Load seeker to get public key
-        const fullSession = await this.sessionRepo.findOne({
-          where: { id: sessionId },
-          relations: ['seeker'],
-        });
-        if (fullSession?.seeker?.publicKey) {
-          const seekerPubKey = this.parsePublicKey(fullSession.seeker.publicKey);
-          const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, fullSession.sessionKeyNonce);
-          const decrypted = this.cryptoService.decrypt(sessionKey, lastRound.encryptedData);
-          const parsed = JSON.parse(decrypted);
+      if (lastRound?.encryptedData) {
+        let parsed: any = null;
+        if (session.sessionKeyNonce) {
+          // Encrypted rounds — decrypt with ECDH session key
+          const fullSession = await this.sessionRepo.findOne({
+            where: { id: sessionId },
+            relations: ['seeker'],
+          });
+          if (fullSession?.seeker?.publicKey) {
+            const seekerPubKey = this.parsePublicKey(fullSession.seeker.publicKey);
+            const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, fullSession.sessionKeyNonce);
+            const decrypted = this.cryptoService.decrypt(sessionKey, lastRound.encryptedData);
+            parsed = JSON.parse(decrypted);
+          }
+        } else {
+          // Unencrypted seed data — parse raw buffer as JSON
+          const raw = lastRound.encryptedData.toString('utf8');
+          parsed = JSON.parse(raw);
+        }
+        if (parsed) {
           agreedSalary = parsed?.proposal?.salary ?? parsed?.proposal?.baseSalary ?? 0;
           remotePolicy = parsed?.proposal?.remotePolicy ?? 'N/A';
           startDate = parsed?.proposal?.startDate ?? 'TBD';

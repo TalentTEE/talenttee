@@ -312,12 +312,41 @@ export class NegotiationService {
       relations: ['seeker'],
     });
     if (!session) throw new NotFoundException('Session not found');
-    if (!session.seeker?.publicKey) throw new NotFoundException('Seeker public key not found');
+
+    const rounds = await this.getRounds(sessionId);
+
+    // If no session key nonce or seeker public key, try parsing raw data (unencrypted seed data)
+    if (!session.sessionKeyNonce || !session.seeker?.publicKey) {
+      return rounds.map(round => {
+        try {
+          const raw = round.encryptedData.toString('utf8');
+          const data = JSON.parse(raw);
+          return {
+            id: round.id,
+            sessionId: round.sessionId,
+            round: round.round,
+            actor: round.actor,
+            proposal: data.proposal,
+            reasoning: data.reasoning,
+            decision: round.decision,
+          };
+        } catch {
+          return {
+            id: round.id,
+            sessionId: round.sessionId,
+            round: round.round,
+            actor: round.actor,
+            proposal: null,
+            reasoning: 'Data unavailable',
+            decision: round.decision,
+          };
+        }
+      });
+    }
 
     const seekerPubKey = this.parsePublicKey(session.seeker.publicKey);
     const sessionKey = this.cryptoService.deriveServerSessionKey(seekerPubKey, session.sessionKeyNonce);
 
-    const rounds = await this.getRounds(sessionId);
     return rounds.map(round => {
       try {
         const decrypted = this.cryptoService.decrypt(sessionKey, round.encryptedData);
