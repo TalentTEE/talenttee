@@ -231,6 +231,7 @@ export class NegotiationService {
             weaknesses: seekerProfile.weaknesses,
             softSkills: seekerProfile.softSkills,
             preferences: seekerProfile.preferences,
+            salaryFloor: seeker.salaryFloor,
             negotiationHistory: historyStr,
             currentOffer: lastOffer,
             userIntervention: intervention,

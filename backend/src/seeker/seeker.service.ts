@@ -33,4 +33,28 @@ export class SeekerService {
 
     return { jobSeeking: user.jobSeeking };
   }
+
+  async getPreferences(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    return {
+      salaryFloor: user.salaryFloor,
+      salaryCeiling: user.salaryCeiling,
+      autoNegLimit: user.autoNegLimit ?? 5,
+    };
+  }
+
+  async updatePreferences(userId: string, prefs: { salaryFloor?: number; salaryCeiling?: number; autoNegLimit?: number }) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (prefs.salaryFloor !== undefined) user.salaryFloor = prefs.salaryFloor;
+    if (prefs.salaryCeiling !== undefined) user.salaryCeiling = prefs.salaryCeiling;
+    if (prefs.autoNegLimit !== undefined) user.autoNegLimit = Math.max(1, Math.min(20, prefs.autoNegLimit));
+    await this.userRepo.save(user);
+    return {
+      salaryFloor: user.salaryFloor,
+      salaryCeiling: user.salaryCeiling,
+      autoNegLimit: user.autoNegLimit,
+    };
+  }
 }

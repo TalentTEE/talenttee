@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { getSeekerMatches, getEmployerMatches, accessProfile, getJobs, retrySeekerNegotiate } from '@/lib/api';
+import { getSeekerMatches, getEmployerMatches, accessProfile, getJobs, retrySeekerNegotiate, getPreferences, updatePreferences } from '@/lib/api';
 import { MatchResultDisplay, ProfileReport } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 
@@ -222,28 +222,50 @@ export default function MatchingPage() {
 
   const isEmployer = user?.role === 'EMPLOYER';
 
-  // Load salary boundary & auto-negotiate limit from localStorage
+  // Load preferences from backend (fallback to localStorage)
   useEffect(() => {
     if (!user) return;
-    const key = isEmployer ? 'tt_salary_ceiling' : 'tt_salary_floor';
-    const saved = localStorage.getItem(key);
-    setSalaryBoundary(saved ? Number(saved) : (isEmployer ? 100000 : 60000));
-    if (!isEmployer) {
-      const limit = localStorage.getItem('tt_auto_neg_limit');
-      setAutoNegLimit(limit ? Number(limit) : 5);
-    }
+    getPreferences()
+      .then((prefs) => {
+        const boundary = isEmployer
+          ? (prefs.salaryCeiling ?? 100000)
+          : (prefs.salaryFloor ?? 60000);
+        setSalaryBoundary(boundary);
+        if (!isEmployer) setAutoNegLimit(prefs.autoNegLimit ?? 5);
+      })
+      .catch(() => {
+        // Fallback to localStorage
+        const key = isEmployer ? 'tt_salary_ceiling' : 'tt_salary_floor';
+        const saved = localStorage.getItem(key);
+        setSalaryBoundary(saved ? Number(saved) : (isEmployer ? 100000 : 60000));
+        if (!isEmployer) {
+          const limit = localStorage.getItem('tt_auto_neg_limit');
+          setAutoNegLimit(limit ? Number(limit) : 5);
+        }
+      });
   }, [user, isEmployer]);
+
+  // Debounced save to backend
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncPreferences = useCallback((prefs: { salaryFloor?: number; salaryCeiling?: number; autoNegLimit?: number }) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      updatePreferences(prefs).catch(() => {});
+    }, 500);
+  }, []);
 
   const handleBoundaryChange = (value: number) => {
     setSalaryBoundary(value);
     const key = isEmployer ? 'tt_salary_ceiling' : 'tt_salary_floor';
     localStorage.setItem(key, String(value));
+    syncPreferences(isEmployer ? { salaryCeiling: value } : { salaryFloor: value });
   };
 
   const handleLimitChange = (delta: number) => {
     const next = Math.max(1, Math.min(20, autoNegLimit + delta));
     setAutoNegLimit(next);
     localStorage.setItem('tt_auto_neg_limit', String(next));
+    syncPreferences({ autoNegLimit: next });
   };
 
   useEffect(() => {

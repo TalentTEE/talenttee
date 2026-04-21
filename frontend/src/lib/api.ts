@@ -105,6 +105,20 @@ export async function updateJobSeekingStatus(active: boolean): Promise<void> {
   });
 }
 
+// === Preferences ===
+export async function getPreferences(): Promise<{ salaryFloor: number | null; salaryCeiling: number | null; autoNegLimit: number }> {
+  if (USE_DUMMY) return { salaryFloor: 60000, salaryCeiling: 100000, autoNegLimit: 5 };
+  return apiFetch('/seeker/preferences');
+}
+
+export async function updatePreferences(prefs: { salaryFloor?: number; salaryCeiling?: number; autoNegLimit?: number }): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch('/seeker/preferences', {
+    method: 'PUT',
+    body: JSON.stringify(prefs),
+  });
+}
+
 // === Datasource ===
 export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
   if (USE_DUMMY) return getDummyDatasources();

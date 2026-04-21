@@ -20,6 +20,16 @@ export class SeekerController {
     return this.seekerService.getJobSeekingStatus(req.user.id);
   }
 
+  @Get('preferences')
+  async getPreferences(@Req() req) {
+    return this.seekerService.getPreferences(req.user.id);
+  }
+
+  @Put('preferences')
+  async updatePreferences(@Req() req, @Body() body: { salaryFloor?: number; salaryCeiling?: number; autoNegLimit?: number }) {
+    return this.seekerService.updatePreferences(req.user.id, body);
+  }
+
   private ensureSeeker(req: any) {
     if (req.user.role !== 'SEEKER') {
       throw new ForbiddenException('Seeker only');
