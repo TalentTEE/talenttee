@@ -12,7 +12,8 @@
     "**/.bg-shell/**": true,
     "**/archive/**": true,
     "**/coverage/**": true,
-    "**/build/**": true
+    "**/build/**": true,
+    "**/.cargo/**": true
   },
   "search.exclude": {
     "**/.next/**": true,
@@ -20,14 +21,9 @@
     "**/dist/**": true,
     "**/target/**": true,
     "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
     "**/.planning/**": true,
-    "**/.superpowers/**": true,
-    "**/.artifacts/**": true,
-    "**/.bg-shell/**": true,
     "**/archive/**": true,
-    "**/coverage/**": true,
-    "**/build/**": true
+    "**/coverage/**": true
   },
   "files.exclude": {
     "**/.next": true,
@@ -38,18 +34,15 @@
     "**/.bg-shell": true,
     "**/archive": true
   },
-  "typescript.tsserver.maxTsServerMemory": 4096,
-  "typescript.tsserver.watchOptions": {
-    "watchFile": "useFsEvents",
-    "watchDirectory": "useFsEvents",
-    "fallbackPolling": "dynamicPriority"
-  },
+  "typescript.tsserver.maxTsServerMemory": 1536,
   "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "git.autorefresh": false,
   "git.autofetch": false,
   "git.decorations.enabled": true,
-  "git.untrackedChanges": "separate",
   "git.scanRepositories": [],
   "git.repositoryScanMaxDepth": 1,
-  "scm.diffDecorations": "gutter"
+  "scm.diffDecorations": "none",
+  "rust-analyzer.enable": false,
+  "extensions.autoUpdate": false
 }
