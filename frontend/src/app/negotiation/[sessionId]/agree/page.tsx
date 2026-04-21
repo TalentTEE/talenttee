@@ -621,8 +621,8 @@ export default function AgreementPage() {
             )}
             {rounds.map((round, idx) => {
               const isSeeker = round.actor === 'SEEKER_AGENT';
-              const prevSalary = idx > 0 ? rounds[idx - 1].proposal.salary : null;
-              const salaryDelta = prevSalary !== null ? round.proposal.salary - prevSalary : null;
+              const prevSalary = idx > 0 ? rounds[idx - 1].proposal?.salary ?? null : null;
+              const salaryDelta = prevSalary !== null && round.proposal?.salary != null ? round.proposal.salary - prevSalary : null;
 
               return (
                 <div key={round.id} className="space-y-1.5">
@@ -641,6 +641,7 @@ export default function AgreementPage() {
                       <ReasoningBubble reasoning={round.reasoning} isSeeker={isSeeker} />
 
                       {/* Compact Proposal */}
+                      {round.proposal && (
                       <div className="flex flex-wrap gap-1.5 px-1">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-background/50 border border-border/5 text-xs font-bold text-foreground">
                           {formatSalary(round.proposal.salary)}
@@ -659,6 +660,7 @@ export default function AgreementPage() {
                           </span>
                         )}
                       </div>
+                      )}
 
                       {/* Decision Badge */}
                       <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'} px-1`}>
