@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getSeekerMatches, getEmployerMatches, accessProfile, getJobs, retrySeekerNegotiate } from '@/lib/api';
 import { MatchResultDisplay, ProfileReport } from '@/lib/types';
+import { formatSalary } from '@/lib/format';
 
 function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
   const radius = (size - 8) / 2;
@@ -216,8 +217,34 @@ export default function MatchingPage() {
   const [loading, setLoading] = useState(true);
   const [profileReport, setProfileReport] = useState<ProfileReport | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [salaryBoundary, setSalaryBoundary] = useState<number>(0);
+  const [autoNegLimit, setAutoNegLimit] = useState<number>(5);
 
   const isEmployer = user?.role === 'EMPLOYER';
+
+  // Load salary boundary & auto-negotiate limit from localStorage
+  useEffect(() => {
+    if (!user) return;
+    const key = isEmployer ? 'tt_salary_ceiling' : 'tt_salary_floor';
+    const saved = localStorage.getItem(key);
+    setSalaryBoundary(saved ? Number(saved) : (isEmployer ? 100000 : 60000));
+    if (!isEmployer) {
+      const limit = localStorage.getItem('tt_auto_neg_limit');
+      setAutoNegLimit(limit ? Number(limit) : 5);
+    }
+  }, [user, isEmployer]);
+
+  const handleBoundaryChange = (value: number) => {
+    setSalaryBoundary(value);
+    const key = isEmployer ? 'tt_salary_ceiling' : 'tt_salary_floor';
+    localStorage.setItem(key, String(value));
+  };
+
+  const handleLimitChange = (delta: number) => {
+    const next = Math.max(1, Math.min(20, autoNegLimit + delta));
+    setAutoNegLimit(next);
+    localStorage.setItem('tt_auto_neg_limit', String(next));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -278,6 +305,81 @@ export default function MatchingPage() {
             ? 'AI-ranked candidates for your job posting'
             : 'AI-ranked job opportunities matching your profile'}
         </p>
+      </div>
+
+      {/* Salary Boundary Panel */}
+      <div className="bg-card rounded-2xl border border-primary/10 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>tune</span>
+          <h2 className="text-base font-bold text-foreground">
+            {isEmployer ? 'Your Salary Ceiling' : 'Your Salary Floor'}
+          </h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          {isEmployer
+            ? 'Maximum payable salary — AI will never propose above this amount.'
+            : 'Minimum acceptable salary — AI will automatically reject offers below this.'}
+        </p>
+
+        <div className="flex items-center gap-4">
+          <input
+            type="range"
+            min={30000}
+            max={300000}
+            step={5000}
+            value={salaryBoundary}
+            onChange={(e) => handleBoundaryChange(Number(e.target.value))}
+            className="flex-1 accent-[hsl(var(--primary))] h-2 rounded-full cursor-pointer"
+          />
+          <span className="text-lg font-bold text-primary min-w-[80px] text-right">
+            {formatSalary(salaryBoundary)}
+          </span>
+        </div>
+
+        {/* Boundary notice */}
+        <div className="mt-4 flex items-start gap-2 rounded-xl bg-primary/5 border border-primary/10 px-3 py-2.5">
+          <span className="material-symbols-outlined text-sm text-primary mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+          <p className="text-sm text-muted-foreground">
+            {isEmployer
+              ? 'AI strictly respects your ceiling and will never offer above this amount during negotiation.'
+              : 'AI strictly respects your floor and will never accept an offer below this amount.'}
+          </p>
+        </div>
+
+        {/* Auto-Negotiate Limit (Seeker only) */}
+        {!isEmployer && (
+          <div className="mt-4 pt-4 border-t border-border/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Auto-Negotiate Limit</p>
+                <p className="text-xs text-muted-foreground">Max companies to negotiate automatically</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleLimitChange(-1)}
+                  disabled={autoNegLimit <= 1}
+                  className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground font-bold hover:bg-accent transition-colors disabled:opacity-30"
+                >
+                  &minus;
+                </button>
+                <span className="w-10 text-center text-base font-bold text-foreground">{autoNegLimit}</span>
+                <button
+                  onClick={() => handleLimitChange(1)}
+                  disabled={autoNegLimit >= 20}
+                  className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground font-bold hover:bg-accent transition-colors disabled:opacity-30"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            {matches.length >= autoNegLimit && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-400">
+                <span className="material-symbols-outlined text-xs">warning</span>
+                Limit reached — additional matches require manual approval.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Results Count */}

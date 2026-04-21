@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getNegotiationSession, getNegotiationRounds, getMatchContext } from '@/lib/api';
+import { getNegotiationSession, getNegotiationRounds, getMatchContext, sendIntervention } from '@/lib/api';
 import { NegotiationSession, NegotiationRound, MatchContext, isStructuredReasoning } from '@/lib/types';
 import { ThinkingAnimation } from '@/components/negotiation/ThinkingAnimation';
 import { StrategyInsight } from '@/components/negotiation/StrategyInsight';
@@ -48,6 +48,10 @@ export default function NegotiationMonitorPage() {
   const [session, setSession] = useState<NegotiationSession | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
   const [matchContext, setMatchContext] = useState<MatchContext | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [showIntervention, setShowIntervention] = useState(false);
+  const [interventionMsg, setInterventionMsg] = useState('');
+  const [interventionSent, setInterventionSent] = useState(false);
 
   const isTerminal = session?.state === 'AGREED' || session?.state === 'FAILED' || session?.state === 'MAX_ROUNDS';
 
@@ -308,6 +312,89 @@ export default function NegotiationMonitorPage() {
           </div>
         )}
       </div>
+
+      {/* Pause / Manual Intervention Controls */}
+      {!isTerminal && rounds.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/10 p-5 space-y-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPaused(!paused)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-base font-bold transition-all duration-300 cursor-pointer ${
+                paused
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">
+                {paused ? 'play_arrow' : 'pause'}
+              </span>
+              {paused ? 'Resume Negotiation' : 'Pause Negotiation'}
+            </button>
+            <button
+              onClick={() => setShowIntervention(!showIntervention)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-base font-bold transition-all duration-300 cursor-pointer ${
+                showIntervention
+                  ? 'bg-primary/10 text-primary border border-primary/20'
+                  : 'bg-muted text-foreground hover:bg-accent'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">edit_note</span>
+              Manual Override
+            </button>
+          </div>
+
+          {paused && (
+            <div className="flex items-center gap-2 rounded-xl bg-amber-500/5 border border-amber-500/10 px-3 py-2.5">
+              <span className="material-symbols-outlined text-sm text-amber-400">pause_circle</span>
+              <p className="text-sm text-amber-400">Negotiation paused. AI agents are on hold until you resume.</p>
+            </div>
+          )}
+
+          {showIntervention && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Add a direction for your AI agent to follow in the next round:
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={interventionMsg}
+                  onChange={(e) => setInterventionMsg(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && interventionMsg.trim()) {
+                      sendIntervention(sessionId, interventionMsg.trim());
+                      setInterventionSent(true);
+                      setInterventionMsg('');
+                      setTimeout(() => setInterventionSent(false), 3000);
+                    }
+                  }}
+                  placeholder="e.g. Push harder on remote work policy..."
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-accent/50 border border-border/10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 transition-colors"
+                />
+                <button
+                  onClick={() => {
+                    if (!interventionMsg.trim()) return;
+                    sendIntervention(sessionId, interventionMsg.trim());
+                    setInterventionSent(true);
+                    setInterventionMsg('');
+                    setTimeout(() => setInterventionSent(false), 3000);
+                  }}
+                  disabled={!interventionMsg.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-base">send</span>
+                </button>
+              </div>
+              {interventionSent && (
+                <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+                  <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  Direction sent — your AI agent will apply this in the next round.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Terminal State Banner — Agreement */}
       {isTerminal && session?.state === 'AGREED' && (

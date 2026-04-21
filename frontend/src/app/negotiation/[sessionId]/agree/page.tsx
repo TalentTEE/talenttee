@@ -251,6 +251,26 @@ export default function AgreementPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ── Left Column: Agreement Details ── */}
         <div className="space-y-6">
+          {/* AI Proposal Disclaimer */}
+          <div className="bg-amber-500/5 rounded-2xl border border-amber-500/15 p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="material-symbols-outlined text-base text-amber-400">info</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    AI Proposal
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  This is an AI-generated proposal, not a binding contract.
+                  The final decision rests with both parties.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Success Banner */}
           <div className="bg-primary/5 rounded-2xl border border-primary/20 p-6 text-center">
             <div className="w-14 h-14 rounded-full bg-primary/10 mx-auto mb-3 flex items-center justify-center">
@@ -354,21 +374,30 @@ export default function AgreementPage() {
 
           {/* ── Action Buttons (idle) ── */}
           {flowState === 'idle' && (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-2">
               <button
                 onClick={handleApprove}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all duration-300 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all duration-300 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">check_circle</span>
-                Approve & Record On-Chain
+                Accept Proposal & Record On-Chain
               </button>
-              <button
-                onClick={handleReject}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-base">cancel</span>
-                Reject
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => router.push(`/negotiation/${sessionId}`)}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-amber-500/10 hover:text-amber-400 transition-all duration-300 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">refresh</span>
+                  Request Renegotiation
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">cancel</span>
+                  Reject
+                </button>
+              </div>
             </div>
           )}
 
