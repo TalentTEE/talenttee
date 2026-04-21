@@ -1,0 +1,12 @@
+# Search/index ignore (서비스 런타임 영향 없음)
+node_modules/
+.next/
+dist/
+target/
+coverage/
+
+.artifacts/
+.bg-shell/
+.planning/
+.superpowers/
+archive/

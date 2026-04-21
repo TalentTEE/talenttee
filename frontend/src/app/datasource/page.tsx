@@ -513,7 +513,7 @@ export default function DatasourcePage() {
                       <span className="text-sm text-muted-foreground/60">{exp.period}</span>
                     </div>
                     <ul className="space-y-1">
-                      {exp.highlights.map((highlight, hIdx) => (
+                      {exp.highlights?.map((highlight, hIdx) => (
                         <li key={hIdx} className="flex items-start gap-2 text-base text-muted-foreground">
                           <span className="text-[#FF2DF1]/40 mt-1 text-sm">&#9679;</span>
                           {highlight}

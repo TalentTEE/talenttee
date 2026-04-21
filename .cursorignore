@@ -1,0 +1,16 @@
+# Large generated / cache directories (editor indexing 제외)
+**/node_modules/**
+**/.next/**
+**/dist/**
+**/target/**
+**/coverage/**
+
+# Local tooling artifacts
+**/.artifacts/**
+**/.bg-shell/**
+**/.planning/**
+**/.superpowers/**
+**/archive/**
+
+# Git internals
+**/.git/**

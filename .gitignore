@@ -1,9 +1,27 @@
+# OS / local tooling artifacts
+.DS_Store
+.claude/
+.bg-shell/
+.artifacts/
+
+# Environment files
 .env
-.claude
-node_modules/x
+.env.*
+
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
 dist/
+target/
+
+# Local planning artifacts
 .planning/
 .superpowers/
-target/
-package-lock.json
-node_modules
+
+# Local archive/scratch outputs
+archive/
+
+# Compiler dependency artifacts (e.g. Rust/C toolchains)
+*.d

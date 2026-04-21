@@ -3,9 +3,14 @@
     "**/.next/**": true,
     "**/node_modules/**": true,
     "**/dist/**": true,
+    "**/target/**": true,
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/.planning/**": true,
+    "**/.superpowers/**": true,
+    "**/.artifacts/**": true,
+    "**/.bg-shell/**": true,
+    "**/archive/**": true,
     "**/coverage/**": true,
     "**/build/**": true
   },
@@ -13,16 +18,25 @@
     "**/.next/**": true,
     "**/node_modules/**": true,
     "**/dist/**": true,
+    "**/target/**": true,
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/.planning/**": true,
+    "**/.superpowers/**": true,
+    "**/.artifacts/**": true,
+    "**/.bg-shell/**": true,
+    "**/archive/**": true,
     "**/coverage/**": true,
     "**/build/**": true
   },
   "files.exclude": {
     "**/.next": true,
     "**/dist": true,
-    "**/node_modules": true
+    "**/target": true,
+    "**/node_modules": true,
+    "**/.artifacts": true,
+    "**/.bg-shell": true,
+    "**/archive": true
   },
   "typescript.tsserver.maxTsServerMemory": 4096,
   "typescript.tsserver.watchOptions": {
