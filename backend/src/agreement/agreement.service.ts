@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createHash } from 'crypto';
+import bs58 from 'bs58';
 import { NegotiationSession } from '../entities/negotiation-session.entity.js';
 import { NegotiationRound } from '../entities/negotiation-round.entity.js';
 import { InterviewMessage } from '../entities/interview-message.entity.js';
@@ -29,9 +30,9 @@ export class AgreementService {
 
   private parsePublicKey(key: string): Uint8Array {
     if (key.startsWith('ed25519:')) {
-      return Buffer.from(key.slice(8), 'base64');
+      return bs58.decode(key.slice(8));
     }
-    return Buffer.from(key, 'base64');
+    return Buffer.from(key, 'hex');
   }
 
   async approve(sessionId: string, userId: string): Promise<{ status: string; txParams?: any }> {

@@ -40,6 +40,7 @@ export default function NegotiationsPage() {
     );
   }
 
+  const inProgress = sessions.filter((s) => !['AGREED', 'FAILED', 'MAX_ROUNDS'].includes(s.state));
   const agreed = sessions.filter((s) => s.state === 'AGREED');
   const failed = sessions.filter((s) => s.state === 'FAILED' || s.state === 'MAX_ROUNDS');
 
@@ -53,6 +54,22 @@ export default function NegotiationsPage() {
           AI negotiation results — review and decide.
         </p>
       </div>
+
+      {/* In Progress */}
+      {inProgress.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border/10 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-lg text-[#00F0FF] animate-pulse">autorenew</span>
+            <h2 className="font-[var(--font-manrope)] text-base font-bold text-foreground">In Progress</h2>
+            <span className="px-2 py-0.5 rounded-full bg-[#00F0FF]/10 text-[#00F0FF] text-sm font-bold">{inProgress.length}</span>
+          </div>
+          <div className="space-y-3">
+            {inProgress.map((s) => (
+              <InProgressRow key={s.id} session={s} match={matchByJobId.get(s.jobId)} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Agreed — needs your decision */}
       {agreed.length > 0 && (
@@ -158,6 +175,42 @@ function AgreedRow({ session: s, match, userRole }: { session: NegotiationSessio
           </Link>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ── In Progress Row ── */
+
+function InProgressRow({ session: s, match }: { session: NegotiationSession; match?: MatchResultDisplay }) {
+  const stateLabel: Record<string, string> = {
+    INITIATED: 'Starting negotiation...',
+    EMPLOYER_OFFER: 'Employer agent making offer...',
+    SEEKER_COUNTER: 'Seeker agent countering...',
+    EMPLOYER_COUNTER: 'Employer agent countering...',
+  };
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-accent/50 border border-border/5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-[#00F0FF]/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-lg text-[#00F0FF] animate-spin">progress_activity</span>
+        </div>
+        <div>
+          <p className="text-base font-semibold text-foreground">
+            {match ? `${match.jobTitle} - ${match.companyName}` : `Session ${s.id.slice(0, 8)}...`}
+          </p>
+          <p className="text-sm text-[#00F0FF]">
+            {stateLabel[s.state] || `Round ${s.currentRound}/${s.maxRounds}`}
+          </p>
+        </div>
+      </div>
+      <Link
+        href={`/negotiation/${s.id}`}
+        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-muted text-foreground hover:bg-accent transition-all"
+      >
+        <span className="material-symbols-outlined text-base">visibility</span>
+        Monitor
+      </Link>
     </div>
   );
 }
