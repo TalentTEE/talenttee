@@ -11,7 +11,7 @@ export interface User {
 export interface DataSourceConnection {
   id: string;
   userId: string;
-  provider: 'GITHUB' | 'SLACK' | 'DISCORD' | 'GOV24';
+  provider: 'GITHUB' | 'SLACK' | 'DISCORD' | 'GOV24' | 'PDF';
   status: 'CONNECTED' | 'MOCK' | 'DISCONNECTED';
   lastSyncedAt: string | null;
 }

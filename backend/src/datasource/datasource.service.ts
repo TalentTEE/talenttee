@@ -78,6 +78,32 @@ export class DatasourceService {
     return this.dsRepo.save(conn);
   }
 
+  async connectPdf(
+    userId: string,
+    parseResult: { rawText: string; structured: Record<string, any> | null },
+  ): Promise<DataSourceConnection> {
+    const existing = await this.dsRepo.findOne({
+      where: { userId, provider: DataSourceProvider.PDF },
+    });
+    if (existing) {
+      existing.status = DataSourceStatus.CONNECTED;
+      existing.lastSyncedAt = new Date();
+      existing.analysisCache = { rawText: parseResult.rawText, ...parseResult.structured };
+      existing.analysisCachedAt = new Date();
+      return this.dsRepo.save(existing);
+    }
+
+    const conn = this.dsRepo.create({
+      userId,
+      provider: DataSourceProvider.PDF,
+      status: DataSourceStatus.CONNECTED,
+      lastSyncedAt: new Date(),
+      analysisCache: { rawText: parseResult.rawText, ...parseResult.structured },
+      analysisCachedAt: new Date(),
+    });
+    return this.dsRepo.save(conn);
+  }
+
   async getStatus(userId: string): Promise<DataSourceConnection[]> {
     return this.dsRepo.find({ where: { userId } });
   }
@@ -111,9 +137,12 @@ export class DatasourceService {
     const conn = await this.getConnectionByProvider(userId, provider);
     if (!conn) throw new NotFoundException(`${provider} is not connected`);
 
-    // 1. Get raw data (live GitHub or fixture)
+    // 1. Get raw data (live GitHub, PDF cache, or fixture)
     let rawData: Record<string, any>;
-    if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
+    if (provider === DataSourceProvider.PDF) {
+      // PDF data is stored in analysisCache at upload time
+      return conn.analysisCache ?? {};
+    } else if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
       try {
         rawData = await this.fetchGithubData(conn.accessToken);
       } catch {
@@ -249,16 +278,19 @@ export class DatasourceService {
     slack: Record<string, any> | null;
     discord: Record<string, any> | null;
     gov24: Record<string, any> | null;
+    pdf: Record<string, any> | null;
   }> {
     const connections = await this.getStatus(userId);
-    const result: Record<string, any> = { github: null, slack: null, discord: null, gov24: null };
+    const result: Record<string, any> = { github: null, slack: null, discord: null, gov24: null, pdf: null };
 
     for (const conn of connections) {
       const key = conn.provider.toLowerCase();
       try {
         result[key] = await this.getProviderData(userId, conn.provider);
       } catch {
-        result[key] = this.loadFixture(conn.provider);
+        if (conn.provider !== DataSourceProvider.PDF) {
+          result[key] = this.loadFixture(conn.provider);
+        }
       }
     }
 

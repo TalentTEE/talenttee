@@ -8,6 +8,7 @@ export enum DataSourceProvider {
   SLACK = 'SLACK',
   DISCORD = 'DISCORD',
   GOV24 = 'GOV24',
+  PDF = 'PDF',
 }
 
 export enum DataSourceStatus {

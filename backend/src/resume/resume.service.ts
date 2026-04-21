@@ -166,6 +166,7 @@ export class ResumeService {
         slack: { ...data.slack, classified: classifiedData },
         discord: data.discord,
         gov24: data.gov24,
+        pdf: data.pdf,
       };
 
       const resumeResult = await this.aiClient.chat({

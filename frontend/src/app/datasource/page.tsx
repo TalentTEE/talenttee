@@ -15,6 +15,7 @@ import { GitHubConnectDialog } from '@/components/datasource/github-connect-dial
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
 import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
 import { Gov24ConnectDialog } from '@/components/datasource/gov24-connect-dialog';
+import { PdfUploadDialog } from '@/components/datasource/pdf-upload-dialog';
 import { DatasourceDetailView } from '@/components/datasource/datasource-detail-view';
 import { useToast } from '@/components/ui/toast-provider';
 import { AINudge } from '@/components/ui/AINudge';
@@ -26,6 +27,7 @@ const PROVIDERS: { id: DataSourceConnection['provider']; label: string; icon: st
   { id: 'SLACK', label: 'Slack', icon: 'chat', brandIcon: SlackIcon },
   { id: 'DISCORD', label: 'Discord', icon: 'forum', brandIcon: DiscordIcon },
   { id: 'GOV24', label: 'Gov24', icon: 'assured_workload' },
+  { id: 'PDF', label: 'PDF Resume', icon: 'description' },
 ];
 
 const STEPS = [
@@ -741,6 +743,11 @@ export default function DatasourcePage() {
         open={dialogOpen === 'GOV24'}
         onOpenChange={(val) => !val && setDialogOpen(null)}
         onVerified={async () => { await handleDialogConnect('GOV24'); }}
+      />
+      <PdfUploadDialog
+        open={dialogOpen === 'PDF'}
+        onOpenChange={(val) => !val && setDialogOpen(null)}
+        onUploaded={async () => { await fetchConnections(); }}
       />
     </div>
   );

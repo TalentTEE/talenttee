@@ -1,14 +1,20 @@
-import { Controller, Post, Get, Delete, Param, Body, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller, Post, Get, Delete, Param, Body, Query, Req, Res,
+  UseGuards, UseInterceptors, UploadedFile, BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { JwtGuard } from '../auth/jwt.guard.js';
 import { DatasourceService } from './datasource.service.js';
+import { PdfParserService } from './pdf-parser.service.js';
 import { DataSourceProvider } from '../common/enums/index.js';
 
 @Controller('datasource')
 export class DatasourceController {
   constructor(
     private readonly datasourceService: DatasourceService,
+    private readonly pdfParser: PdfParserService,
     private readonly config: ConfigService,
   ) {}
 
@@ -73,5 +79,33 @@ export class DatasourceController {
     const userId = req.user.id;
     const data = await this.datasourceService.collectAllData(userId);
     return { message: 'Sync complete', connectedSources: Object.keys(data).filter((k) => data[k] !== null) };
+  }
+
+  @Post('pdf-upload')
+  @UseGuards(JwtGuard)
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    fileFilter: (_req, file, cb) => {
+      if (file.mimetype !== 'application/pdf') {
+        cb(new BadRequestException('Only PDF files are allowed'), false);
+      } else {
+        cb(null, true);
+      }
+    },
+  }))
+  async uploadPdf(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No PDF file provided');
+    const userId = req.user.id;
+
+    const parseResult = await this.pdfParser.parseBuffer(file.buffer);
+
+    // Save as PDF datasource connection
+    await this.datasourceService.connectPdf(userId, parseResult);
+
+    return {
+      provider: 'PDF',
+      status: 'CONNECTED',
+      parsed: parseResult.structured,
+    };
   }
 }

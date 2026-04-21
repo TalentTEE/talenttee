@@ -252,6 +252,60 @@ export async function getDatasourceData(provider: string): Promise<DatasourceDet
   return apiFetch(`/datasource/me/${provider.toLowerCase()}/data`);
 }
 
+export interface PdfUploadResult {
+  provider: 'PDF';
+  status: 'CONNECTED';
+  parsed: {
+    skills: string[];
+    softSkills: string[];
+    experience: { role: string; company: string; period: string; highlights: string[] }[];
+    education: { degree: string; institution: string; year: string }[];
+    certifications: string[];
+    summary: string;
+    strengths: string[];
+    improvement_areas: string[];
+  } | null;
+}
+
+export async function uploadPdfResume(file: File): Promise<PdfUploadResult> {
+  if (USE_DUMMY) {
+    // Simulate parsing delay
+    await new Promise((r) => setTimeout(r, 2000));
+    const conn: DataSourceConnection = {
+      id: `ds-pdf-${Date.now()}`, userId: 'dummy-user',
+      provider: 'PDF', status: 'CONNECTED', lastSyncedAt: new Date().toISOString(),
+    };
+    addDummyDatasource(conn);
+    return {
+      provider: 'PDF', status: 'CONNECTED',
+      parsed: {
+        skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'PostgreSQL'],
+        softSkills: ['Leadership', 'Communication'],
+        experience: [{ role: 'Senior Developer', company: 'Tech Corp', period: '2022-Present', highlights: ['Led team of 5', 'Improved performance by 40%'] }],
+        education: [{ degree: 'B.S. Computer Science', institution: 'Seoul National University', year: '2020' }],
+        certifications: ['AWS Solutions Architect'],
+        summary: 'Experienced full-stack developer with 4+ years in web development.',
+        strengths: ['Strong React/TypeScript skills', 'Team leadership experience'],
+        improvement_areas: ['Limited cloud-native experience'],
+      },
+    };
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
+  const res = await fetch(`${API_URL}/datasource/pdf-upload`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || `Upload failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 // === Resume ===
 export async function getResume(): Promise<ResumeProfile> {
   if (USE_DUMMY) return { ...DUMMY_RESUME, userId: 'dummy-user' };

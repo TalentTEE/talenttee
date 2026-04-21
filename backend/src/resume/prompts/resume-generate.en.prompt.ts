@@ -6,6 +6,7 @@ Extract soft skills from all available sources:
 - Slack: communication style, initiative, leadership signals
 - GitHub: work patterns, code review habits, collaboration quality
 - Gov24: certifications that imply domain knowledge or professionalism
+- PDF: uploaded resume — treat as the primary source for experience, education, and skills when available. Merge with other sources, preferring PDF data for factual details (job titles, dates, degrees).
 
 Output format (JSON only, no other text):
 {
