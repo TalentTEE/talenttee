@@ -17,6 +17,7 @@ import { MatchModule } from './match/match.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { SeekerModule } from './seeker/seeker.module.js';
 import { SseModule } from './sse/sse.module.js';
+import { RelayModule } from './relay/relay.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -39,6 +40,7 @@ import { AppService } from './app.service.js';
     ProfileModule,
     SeekerModule,
     SseModule,
+    RelayModule,
   ],
   controllers: [AppController],
   providers: [AppService],

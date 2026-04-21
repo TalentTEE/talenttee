@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { useWeb3Auth } from './web3auth';
 import { useWallet } from './wallet-selector';
+import type { ActionDescriptor } from './api';
 
 /* ── Types ── */
 
@@ -142,6 +143,70 @@ async function signNep413Locally(
   return { signature, publicKey };
 }
 
+/* ── Convert wallet-selector Action objects to JSON ActionDescriptors ── */
+
+function convertActionsToDescriptors(actions: unknown[]): ActionDescriptor[] {
+  return actions.map((action: any) => {
+    // wallet-selector actions from @near-js/transactions have a .type + .params shape,
+    // or can be raw near-api-js Action class instances with named fields.
+    const type = action.type ?? action.enum;
+
+    if (type === 'FunctionCall' || action.functionCall) {
+      const fc = action.params ?? action.functionCall;
+      // args may be Uint8Array (Borsh) or object (JSON)
+      let args: Record<string, unknown>;
+      if (fc.args instanceof Uint8Array) {
+        try { args = JSON.parse(new TextDecoder().decode(fc.args)); }
+        catch { args = {}; }
+      } else {
+        args = fc.args ?? {};
+      }
+      return {
+        type: 'FunctionCall' as const,
+        methodName: fc.methodName,
+        args,
+        gas: String(fc.gas ?? '30000000000000'),
+        deposit: String(fc.deposit ?? '0'),
+      };
+    }
+
+    if (type === 'Transfer' || action.transfer) {
+      const t = action.params ?? action.transfer;
+      return {
+        type: 'Transfer' as const,
+        amount: String(t.deposit ?? t.amount ?? '0'),
+      };
+    }
+
+    if (type === 'AddKey' || action.addKey) {
+      const ak = action.params ?? action.addKey;
+      const pubKey = typeof ak.publicKey === 'string'
+        ? ak.publicKey
+        : ak.publicKey?.toString?.() ?? '';
+      const accessKey = ak.accessKey;
+      const perm = accessKey?.permission;
+      if (perm?.functionCall) {
+        return {
+          type: 'AddKey' as const,
+          publicKey: pubKey,
+          permission: {
+            receiverId: perm.functionCall.receiverId,
+            methodNames: perm.functionCall.methodNames ?? [],
+            allowance: String(perm.functionCall.allowance ?? '0'),
+          },
+        };
+      }
+      return {
+        type: 'AddKey' as const,
+        publicKey: pubKey,
+        permission: 'FullAccess' as const,
+      };
+    }
+
+    throw new Error(`Unsupported action type for relay: ${type ?? 'unknown'}`);
+  });
+}
+
 /* ── Provider ── */
 
 export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
@@ -207,61 +272,29 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
     actions: unknown[];
   }) => {
     if (web3auth.isConnected && web3auth.ed25519SecretKey && web3auth.accountId) {
-      // Web3Auth path: use near-api-js directly with the derived key
-      const { Account, KeyPairSigner } = await import('near-api-js');
-      // @ts-ignore — Vercel TS resolution may miss JsonRpcProvider
-      const { JsonRpcProvider } = await import('near-api-js');
+      // Web3Auth path: use relay (meta-transaction) — user signs, server pays gas.
+      const { relayPrepare, relaySubmit } = await import('./api');
+      const descriptors = convertActionsToDescriptors(params.actions);
 
-      const rpcUrl = process.env.NEXT_PUBLIC_NEAR_RPC_URL || 'https://rpc.testnet.near.org';
-      const provider = new JsonRpcProvider({ url: rpcUrl });
+      // 1. Ask backend to build DelegateAction
+      const { requestId, encodedDelegateAction } = await relayPrepare(
+        params.receiverId,
+        descriptors,
+      );
 
-      // Build "ed25519:<base58>" secret key string from raw bytes
-      const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-      function b58encode(bytes: Uint8Array): string {
-        const digits = [0];
-        for (const byte of bytes) {
-          let carry = byte;
-          for (let j = 0; j < digits.length; j++) {
-            carry += digits[j] << 8;
-            digits[j] = carry % 58;
-            carry = (carry / 58) | 0;
-          }
-          while (carry > 0) {
-            digits.push(carry % 58);
-            carry = (carry / 58) | 0;
-          }
-        }
-        let str = '';
-        for (const b of bytes) {
-          if (b === 0) str += BASE58_ALPHABET[0];
-          else break;
-        }
-        for (let i = digits.length - 1; i >= 0; i--) {
-          str += BASE58_ALPHABET[digits[i]];
-        }
-        return str;
-      }
+      // 2. SHA-256 hash + ed25519 sign
+      const [{ sha256 }, { ed25519 }] = await Promise.all([
+        import('@noble/hashes/sha2.js'),
+        import('@noble/curves/ed25519.js'),
+      ]);
+      const bytes = Uint8Array.from(atob(encodedDelegateAction), c => c.charCodeAt(0));
+      const hash = sha256(bytes);
+      const seed = web3auth.ed25519SecretKey.slice(0, 32);
+      const signature = ed25519.sign(hash, seed);
+      const sigBase64 = btoa(String.fromCharCode(...signature));
 
-      const keyString = `ed25519:${b58encode(web3auth.ed25519SecretKey)}`;
-      type KeyPairString = `ed25519:${string}`;
-      const signer = KeyPairSigner.fromSecretKey(keyString as KeyPairString);
-      const account = new Account(web3auth.accountId, provider, signer);
-
-      // Convert actions from wallet-selector format to near-api-js callFunction calls.
-      // For now, handle the two action types used by escrow page:
-      // 1. functionCall (deposit)
-      // 2. addKey (agent key)
-      //
-      // The wallet-selector actions use actionCreators from @near-js/transactions.
-      // We need to inspect the action objects and translate them to near-api-js Account methods.
-      //
-      // However, for simplicity and since escrow page creates specific action types,
-      // we call signAndSendTransaction on the Account object with the raw actions.
-      // near-api-js Account.signAndSendTransaction expects similar structure.
-      return account.signAndSendTransaction({
-        receiverId: params.receiverId,
-        actions: params.actions as Parameters<typeof account.signAndSendTransaction>[0]['actions'],
-      });
+      // 3. Submit signed delegate to relayer
+      return relaySubmit(requestId, sigBase64);
     }
 
     if (walletSelector.selector) {

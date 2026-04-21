@@ -8,10 +8,12 @@ import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { JwtGuard } from './jwt.guard.js';
 import { User } from '../entities/user.entity.js';
+import { RelayModule } from '../relay/relay.module.js';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    RelayModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

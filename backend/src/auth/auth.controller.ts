@@ -3,12 +3,16 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { UserRole } from '../common/enums/index.js';
+import { RelayService } from '../relay/relay.service.js';
 
 @Controller('auth/near')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly relayService: RelayService,
+  ) { }
 
   /** Dev-only login bypass — no wallet signature required. Disabled in production. */
   @Post('dev-login')
@@ -92,6 +96,14 @@ export class AuthController {
 
       const user = await this.authService.createUser(body.nearAccountId, roleValue, body.publicKey);
       const jwt = this.authService.generateJwt(user);
+
+      // Fund implicit accounts (Web3Auth) so they can pay gas via meta-tx relay.
+      if (/^[0-9a-f]{64}$/.test(body.nearAccountId)) {
+        this.relayService.fundImplicitAccount(body.nearAccountId)
+          .then(() => this.logger.log(`Funded implicit account: ${body.nearAccountId}`))
+          .catch(err => this.logger.warn(`Fund failed for ${body.nearAccountId}: ${err.message}`));
+      }
+
       return { jwt, user };
     }
 

@@ -498,6 +498,26 @@ export async function getAgentPublicKey(): Promise<string> {
   return data.publicKey;
 }
 
+// === Relay (Meta-Transaction) ===
+export type ActionDescriptor =
+  | { type: 'FunctionCall'; methodName: string; args: Record<string, unknown>; gas: string; deposit: string }
+  | { type: 'Transfer'; amount: string }
+  | { type: 'AddKey'; publicKey: string; permission: 'FullAccess' | { receiverId: string; methodNames: string[]; allowance: string } };
+
+export async function relayPrepare(receiverId: string, actions: ActionDescriptor[]) {
+  return apiFetch<{ requestId: string; encodedDelegateAction: string }>('/relay/prepare', {
+    method: 'POST',
+    body: JSON.stringify({ receiverId, actions }),
+  });
+}
+
+export async function relaySubmit(requestId: string, signature: string) {
+  return apiFetch<{ txHash: string }>('/relay/submit', {
+    method: 'POST',
+    body: JSON.stringify({ requestId, signature }),
+  });
+}
+
 // === Encrypted Negotiation History ===
 export async function getEncryptedHistory(sessionId: string): Promise<EncryptedNegotiationRound[]> {
   return apiFetch(`/negotiation/sessions/${sessionId}/rounds`);
