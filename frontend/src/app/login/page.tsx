@@ -2,18 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useWallet } from '@/lib/wallet-selector';
+import { useUnifiedWallet } from '@/lib/wallet-adapter';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const { loginByAccount, login } = useAuth();
-  const { modal, signedAccountId } = useWallet();
+  const {
+    accountId: walletAccountId,
+    connectWeb3Auth,
+    showWalletSelector,
+    loginMethod,
+  } = useUnifiedWallet();
   const useDummy = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
   const router = useRouter();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [walletReady, setWalletReady] = useState(false);
 
   const doLogin = useCallback(async (accountId: string) => {
@@ -33,23 +39,44 @@ export default function LoginPage() {
     }
   }, [loginByAccount, router]);
 
-  // When wallet connects after modal, mark ready so user can click to proceed.
-  // Don't auto-login from useEffect — wallet.signMessage() needs a direct user
-  // gesture or the browser blocks the popup.
+  // When wallet-selector connects, mark ready for the "Continue as" button
   useEffect(() => {
-    if (signedAccountId) {
+    if (walletAccountId && loginMethod === 'wallet-selector') {
       setWalletReady(true);
     }
-  }, [signedAccountId]);
+  }, [walletAccountId, loginMethod]);
+
+  /** Social login: connect Web3Auth → derive NEAR key → sign nonce → get JWT → redirect */
+  const handleSocialLogin = async (provider: 'google' | 'kakao' | 'email_passwordless') => {
+    setIsLoggingIn(true);
+    setError(null);
+    try {
+      const result = await connectWeb3Auth(provider);
+      if (!result) {
+        setIsLoggingIn(false);
+        return;
+      }
+      // Web3Auth connected — now sign the nonce and get JWT
+      await loginByAccount(result.accountId);
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const user = JSON.parse(stored);
+        router.push(user.role === 'SEEKER' ? '/dashboard/seeker' : '/dashboard/employer');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const handleConnectWallet = async () => {
-    if (!modal) return;
     // Wallet already connected — login directly from click handler
-    if (signedAccountId) {
-      doLogin(signedAccountId);
+    if (walletAccountId && loginMethod === 'wallet-selector') {
+      doLogin(walletAccountId);
       return;
     }
-    modal.show();
+    showWalletSelector();
   };
 
   return (
@@ -68,41 +95,95 @@ export default function LoginPage() {
       {/* Header */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-accent mb-5 ring-1 ring-border/20">
-          <span className="material-symbols-outlined text-primary text-4xl">account_balance_wallet</span>
+          <span className="material-symbols-outlined text-primary text-4xl">lock_open</span>
         </div>
         <h1 className="font-[var(--font-manrope)] text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
           Welcome back
         </h1>
         <p className="text-muted-foreground text-lg">
-          Connect your wallet to continue.
+          Sign in to continue.
         </p>
       </div>
 
-      {/* Login - Connect Wallet */}
+      {/* Social Login Buttons */}
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-border/10 bg-card p-8">
+        <div className="rounded-2xl border border-border/10 bg-card p-8 space-y-3">
+          {/* Google */}
           <button
-            onClick={handleConnectWallet}
-            disabled={isLoggingIn || !modal}
-            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            onClick={() => handleSocialLogin('google')}
+            disabled={isLoggingIn}
+            className="w-full py-3.5 rounded-xl bg-white text-[#1f1f1f] text-base font-bold tracking-wide hover:bg-gray-50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-gray-200"
           >
-            {isLoggingIn ? (
-              <>
-                <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                Logging in...
-              </>
-            ) : walletReady && signedAccountId ? (
-              <>
-                <span className="material-symbols-outlined text-base">login</span>
-                Continue as {signedAccountId.split('.')[0]}
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-base">account_balance_wallet</span>
-                Connect Wallet
-              </>
-            )}
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+              <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            {isLoggingIn ? 'Signing in...' : 'Continue with Google'}
           </button>
+
+          {/* Kakao */}
+          <button
+            onClick={() => handleSocialLogin('kakao')}
+            disabled={isLoggingIn}
+            className="w-full py-3.5 rounded-xl bg-[#FEE500] text-[#191919] text-base font-bold tracking-wide hover:bg-[#FDD800] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 0C4.029 0 0 3.13 0 6.99c0 2.485 1.644 4.671 4.121 5.912l-1.05 3.852c-.093.34.295.613.588.414L7.77 14.35c.4.055.81.084 1.23.084 4.971 0 9-3.13 9-6.99S13.971 0 9 0" fill="#191919"/>
+            </svg>
+            {isLoggingIn ? 'Signing in...' : 'Continue with Kakao'}
+          </button>
+
+          {/* Email */}
+          <button
+            onClick={() => handleSocialLogin('email_passwordless')}
+            disabled={isLoggingIn}
+            className="w-full py-3.5 rounded-xl bg-accent text-foreground text-base font-bold tracking-wide hover:bg-accent/80 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border/10"
+          >
+            <span className="material-symbols-outlined text-lg">mail</span>
+            {isLoggingIn ? 'Signing in...' : 'Continue with Email'}
+          </button>
+        </div>
+
+        {/* Advanced: NEAR Wallet */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">
+              {showAdvanced ? 'expand_less' : 'expand_more'}
+            </span>
+            Advanced: Connect NEAR Wallet
+          </button>
+
+          {showAdvanced && (
+            <div className="mt-2 rounded-2xl border border-border/10 bg-card p-6">
+              <button
+                onClick={handleConnectWallet}
+                disabled={isLoggingIn}
+                className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                    Logging in...
+                  </>
+                ) : walletReady && walletAccountId ? (
+                  <>
+                    <span className="material-symbols-outlined text-base">login</span>
+                    Continue as {walletAccountId.split('.')[0]}
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-base">account_balance_wallet</span>
+                    Connect Wallet
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {error && (

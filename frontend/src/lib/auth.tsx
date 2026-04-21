@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { User, UserRole } from './types';
 import { getDummyUser, requestChallenge, verifyNearAuth, devLogin as devLoginApi } from './api';
-import { useWallet } from './wallet-selector';
+import { useUnifiedWallet } from './wallet-adapter';
 
 const ACCOUNTS_KEY = 'registeredAccounts';
 
@@ -53,7 +53,7 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { selector } = useWallet();
+  const { signMessage } = useUnifiedWallet();
 
   // Pre-fetch challenge nonce so wallet.signMessage() can fire immediately
   // from user gesture without an async HTTP call breaking the popup chain.
@@ -129,24 +129,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { nonce } = await requestChallenge();
     nonceRef.current = null;
 
-    // Use Wallet Selector signMessage (NEP-413)
-    if (!selector) throw new Error('Wallet not initialized');
-    const wallet = await selector.wallet();
-    if (!wallet.signMessage) {
-      throw new Error('This wallet does not support message signing (NEP-413). Please use a compatible wallet.');
-    }
-
+    // Sign NEP-413 message via unified adapter (Web3Auth or Wallet Selector)
     const nonceBuffer = Buffer.from(nonce, 'hex');
-    const signed = await wallet.signMessage({
+    const signed = await signMessage({
       message: nonce,
       recipient: 'talent-tee',
       nonce: nonceBuffer,
     });
     if (!signed) throw new Error('Signing cancelled');
 
-    const signature = typeof signed.signature === 'string'
-      ? signed.signature
-      : Buffer.from(signed.signature).toString('base64');
+    const signature = signed.signature;
     const publicKey = signed.publicKey;
 
     // Only include role when the caller provided one (signup path).

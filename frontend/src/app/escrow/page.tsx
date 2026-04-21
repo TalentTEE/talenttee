@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useWallet } from '@/lib/wallet-selector';
+import { useUnifiedWallet } from '@/lib/wallet-adapter';
 import { getEscrowBalance, getEscrowPayments, getAgentPublicKey } from '@/lib/api';
 import { getEscrowBalanceOnChain, hasAgentKeyOnChain } from '@/lib/near';
 import { EscrowAccount, EscrowPayment } from '@/lib/types';
@@ -21,7 +21,7 @@ const ESCROW_CONTRACT_ID =
 
 export default function EscrowPage() {
   const { user } = useAuth();
-  const { selector } = useWallet();
+  const { signAndSendTransaction } = useUnifiedWallet();
 
 
   const [escrow, setEscrow] = useState<EscrowAccount | null>(null);
@@ -99,13 +99,10 @@ export default function EscrowPage() {
       if (USE_DUMMY) {
         setEscrow(prev => prev ? { ...prev, balance: prev.balance + amount } : prev);
         setTxStatus(`Deposit of ${amount} NEAR initiated (mock).`);
-      } else if (!selector) {
-        setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
-        const wallet = await selector.wallet();
         const yoctoAmount = parseNearAmount(depositAmount);
 
-        await wallet.signAndSendTransaction({
+        await signAndSendTransaction({
           receiverId: ESCROW_CONTRACT_ID,
           actions: [
             actionCreators.functionCall(
@@ -142,13 +139,10 @@ export default function EscrowPage() {
       if (USE_DUMMY) {
         setTxStatus('Agent key configured (mock).');
         setEscrow(prev => prev ? { ...prev, agentKeySet: true } : prev);
-      } else if (!selector) {
-        setTxStatus('Wallet not connected. Please connect your wallet first.');
       } else {
-        const wallet = await selector.wallet();
         const allowance = parseNearAmount('5');
 
-        await wallet.signAndSendTransaction({
+        await signAndSendTransaction({
           receiverId: user.nearAccountId,
           actions: [
             actionCreators.addKey(

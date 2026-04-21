@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { useWallet } from '@/lib/wallet-selector';
+import { useUnifiedWallet } from '@/lib/wallet-adapter';
 import { useRouter } from 'next/navigation';
 import { useAgentStatusContext } from '@/hooks/AgentStatusProvider';
 import { AgentStatusIndicator } from './AgentStatusIndicator';
@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export function Header({ onMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
-  const { signOut } = useWallet();
+  const { signOut } = useUnifiedWallet();
   const router = useRouter();
   const agentStatus = useAgentStatusContext();
 

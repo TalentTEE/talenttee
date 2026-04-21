@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { useWallet } from '@/lib/wallet-selector';
+import { useUnifiedWallet } from '@/lib/wallet-adapter';
 import { useRouter } from 'next/navigation';
 
 const features = [
@@ -55,7 +55,7 @@ const steps = [
 
 export default function LandingPage() {
   const { user, logout } = useAuth();
-  const { signOut } = useWallet();
+  const { signOut } = useUnifiedWallet();
   const router = useRouter();
 
   const handleLogout = async () => {
