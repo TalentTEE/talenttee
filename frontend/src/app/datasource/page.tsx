@@ -8,8 +8,9 @@ import { ResumeProfile } from '@/lib/types';
 import {
   getDatasourceStatus, getDatasourceData, connectDatasourceMock, disconnectDatasource,
   getResume, generateResume, getResumeStatus, USE_DUMMY,
+  getPreferences, updatePreferences,
 } from '@/lib/api';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatSalary } from '@/lib/format';
 import { GitHubConnectDialog } from '@/components/datasource/github-connect-dialog';
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
 import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
@@ -52,6 +53,48 @@ export default function DatasourcePage() {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [dsData, setDsData] = useState<Record<string, DatasourceDetail>>({});
   const [loadingDetail, setLoadingDetail] = useState<Record<string, boolean>>({});
+
+  // ── Negotiation preferences state ──
+  const [salaryFloor, setSalaryFloor] = useState<number>(60000);
+  const [autoNegLimit, setAutoNegLimit] = useState<number>(5);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  const prefsSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncPreferences = useCallback((prefs: { salaryFloor?: number; autoNegLimit?: number }) => {
+    if (prefsSaveTimer.current) clearTimeout(prefsSaveTimer.current);
+    prefsSaveTimer.current = setTimeout(() => {
+      updatePreferences(prefs).catch(() => {});
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    getPreferences()
+      .then((prefs) => {
+        setSalaryFloor(prefs.salaryFloor ?? 60000);
+        setAutoNegLimit(prefs.autoNegLimit ?? 5);
+      })
+      .catch(() => {
+        const saved = localStorage.getItem('tt_salary_floor');
+        setSalaryFloor(saved ? Number(saved) : 60000);
+        const limit = localStorage.getItem('tt_auto_neg_limit');
+        setAutoNegLimit(limit ? Number(limit) : 5);
+      })
+      .finally(() => setPrefsLoaded(true));
+  }, [user]);
+
+  const handleFloorChange = (value: number) => {
+    setSalaryFloor(value);
+    localStorage.setItem('tt_salary_floor', String(value));
+    syncPreferences({ salaryFloor: value });
+  };
+
+  const handleLimitChange = (delta: number) => {
+    const next = Math.max(1, Math.min(20, autoNegLimit + delta));
+    setAutoNegLimit(next);
+    localStorage.setItem('tt_auto_neg_limit', String(next));
+    syncPreferences({ autoNegLimit: next });
+  };
 
   // ── Analysis state ──
   const [resume, setResume] = useState<ResumeProfile | null>(null);
@@ -460,7 +503,7 @@ export default function DatasourcePage() {
             <p className="text-base text-muted-foreground leading-relaxed">{resume.summary}</p>
           </div>
 
-          {/* Market Value */}
+          {/* Market Value + Negotiation Preferences */}
           <div className="rounded-2xl border border-border/10 bg-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-lg text-[#39FF14]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
@@ -474,6 +517,70 @@ export default function DatasourcePage() {
             </div>
             {resume.marketValueReasoning && (
               <p className="text-base text-muted-foreground leading-relaxed">{resume.marketValueReasoning}</p>
+            )}
+
+            {/* Salary Floor */}
+            {prefsLoaded && (
+              <div className="mt-5 pt-5 border-t border-border/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="material-symbols-outlined text-base text-[#39FF14]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+                  <p className="text-sm font-semibold text-foreground">Your Salary Floor</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  AI will never accept an offer below this amount.
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={30000}
+                    max={300000}
+                    step={5000}
+                    value={salaryFloor}
+                    onChange={(e) => handleFloorChange(Number(e.target.value))}
+                    className="flex-1 accent-[#39FF14] h-2 rounded-full cursor-pointer"
+                  />
+                  <div className="flex items-center bg-muted rounded-lg px-2 py-1.5 focus-within:ring-1 focus-within:ring-[#39FF14]/50">
+                    <span className="text-sm text-muted-foreground mr-1">$</span>
+                    <input
+                      type="number"
+                      min={30000}
+                      max={300000}
+                      step={5000}
+                      value={salaryFloor}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (!isNaN(v)) handleFloorChange(Math.max(30000, Math.min(300000, v)));
+                      }}
+                      className="w-20 bg-transparent text-sm font-bold text-foreground border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Auto-Negotiate Limit */}
+                <div className="mt-4 pt-4 border-t border-border/10 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Auto-Negotiate Limit</p>
+                    <p className="text-xs text-muted-foreground">Max companies to negotiate automatically</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleLimitChange(-1)}
+                      disabled={autoNegLimit <= 1}
+                      className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground font-bold hover:bg-accent transition-colors disabled:opacity-30"
+                    >
+                      &minus;
+                    </button>
+                    <span className="w-10 text-center text-base font-bold text-foreground">{autoNegLimit}</span>
+                    <button
+                      onClick={() => handleLimitChange(1)}
+                      disabled={autoNegLimit >= 20}
+                      className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground font-bold hover:bg-accent transition-colors disabled:opacity-30"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 

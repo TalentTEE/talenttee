@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getJobs, closeJob } from '@/lib/api';
+import { getJobs, closeJob, getPreferences, updatePreferences } from '@/lib/api';
 import { JobPosting } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import { SkeletonGrid } from '@/components/ui/skeleton-card';
@@ -14,6 +14,17 @@ export default function JobPostingsPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [salaryCeiling, setSalaryCeiling] = useState<number>(100000);
+  const [editingCeiling, setEditingCeiling] = useState(false);
+  const [ceilingLoaded, setCeilingLoaded] = useState(false);
+
+  const ceilingSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncCeiling = useCallback((value: number) => {
+    if (ceilingSaveTimer.current) clearTimeout(ceilingSaveTimer.current);
+    ceilingSaveTimer.current = setTimeout(() => {
+      updatePreferences({ salaryCeiling: value }).catch(() => {});
+    }, 500);
+  }, []);
 
   useEffect(() => {
     if (user && user.role !== 'EMPLOYER') router.replace('/dashboard/seeker');
@@ -25,6 +36,23 @@ export default function JobPostingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    getPreferences()
+      .then((prefs) => setSalaryCeiling(prefs.salaryCeiling ?? 100000))
+      .catch(() => {
+        const saved = localStorage.getItem('tt_salary_ceiling');
+        setSalaryCeiling(saved ? Number(saved) : 100000);
+      })
+      .finally(() => setCeilingLoaded(true));
+  }, [user]);
+
+  const handleCeilingChange = (value: number) => {
+    setSalaryCeiling(value);
+    localStorage.setItem('tt_salary_ceiling', String(value));
+    syncCeiling(value);
+  };
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -45,6 +73,62 @@ export default function JobPostingsPage() {
           Create Job
         </Link>
       </div>
+
+      {/* Salary Ceiling Panel */}
+      {ceilingLoaded && (
+        <div className="rounded-2xl border border-[#FFE600]/10 bg-card p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-base text-[#FFE600]" style={{ fontVariationSettings: "'FILL' 1" }}>tune</span>
+              <span className="text-sm font-bold text-foreground">Salary Ceiling</span>
+              <span className="text-lg font-bold text-[#FFE600]">{formatSalary(salaryCeiling)}</span>
+            </div>
+            <button
+              onClick={() => setEditingCeiling(!editingCeiling)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm">{editingCeiling ? 'check' : 'edit'}</span>
+              {editingCeiling ? 'Done' : 'Edit'}
+            </button>
+          </div>
+          {editingCeiling && (
+            <div className="mt-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min={30000}
+                  max={300000}
+                  step={5000}
+                  value={salaryCeiling}
+                  onChange={(e) => handleCeilingChange(Number(e.target.value))}
+                  className="flex-1 accent-[#FFE600] h-2 rounded-full cursor-pointer"
+                />
+                <div className="flex items-center bg-muted rounded-lg px-2 py-1.5 focus-within:ring-1 focus-within:ring-[#FFE600]/50">
+                  <span className="text-sm text-muted-foreground mr-1">$</span>
+                  <input
+                    type="number"
+                    min={30000}
+                    max={300000}
+                    step={5000}
+                    value={salaryCeiling}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      if (!isNaN(v)) handleCeilingChange(Math.max(30000, Math.min(300000, v)));
+                    }}
+                    className="w-20 bg-transparent text-sm font-bold text-foreground border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+              </div>
+              <div className="mt-2 flex items-start gap-2 rounded-xl bg-[#FFE600]/5 border border-[#FFE600]/10 px-3 py-2">
+                <span className="material-symbols-outlined text-sm text-[#FFE600] mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+                <p className="text-xs text-muted-foreground">
+                  AI will never propose above this amount during negotiation.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <SkeletonGrid count={3} lines={2} />
