@@ -108,7 +108,7 @@ describe('AgreementPage', () => {
     render(<AgreementPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Approve & Record On-Chain')).toBeInTheDocument();
+      expect(screen.getByText('Accept Proposal & Record On-Chain')).toBeInTheDocument();
       expect(screen.getByText('Reject')).toBeInTheDocument();
     });
   });
@@ -123,10 +123,10 @@ describe('AgreementPage', () => {
     render(<AgreementPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Approve & Record On-Chain')).toBeInTheDocument();
+      expect(screen.getByText('Accept Proposal & Record On-Chain')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Approve & Record On-Chain'));
+    await user.click(screen.getByText('Accept Proposal & Record On-Chain'));
 
     await waitFor(() => {
       expect(mockApproveAgreement).toHaveBeenCalledWith('session-2');
@@ -154,7 +154,7 @@ describe('AgreementPage', () => {
     render(<AgreementPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('On-Chain Transaction')).toBeInTheDocument();
+      expect(screen.getByText('On-Chain Verification')).toBeInTheDocument();
       expect(screen.getByText('0xabc123def456')).toBeInTheDocument();
     });
   });

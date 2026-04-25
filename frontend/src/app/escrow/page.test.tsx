@@ -26,12 +26,16 @@ vi.mock('@/lib/api', () => ({
   getAgentPublicKey: (...args: unknown[]) => mockGetAgentPublicKey(...args),
 }));
 
-vi.mock('@/lib/wallet-selector', () => ({
-  useWallet: () => ({
-    selector: null,
-    modal: null,
-    signedAccountId: null,
+vi.mock('@/lib/wallet-adapter', () => ({
+  useUnifiedWallet: () => ({
+    signMessage: vi.fn(),
+    signAndSendTransaction: vi.fn(),
     signOut: vi.fn(),
+    accountId: null,
+    publicKey: null,
+    loginMethod: null,
+    connectWeb3Auth: vi.fn(),
+    showWalletSelector: vi.fn(),
   }),
 }));
 
@@ -48,8 +52,8 @@ import EscrowPage from './page';
 
 const MOCK_ESCROW = { employerId: 'user-2', balance: 5.0, agentKeySet: true };
 const MOCK_PAYMENTS = [
-  { id: 'pay-1', seekerId: 'user-1', amount: 0.5, timestamp: '2026-04-11T14:30:00Z', txHash: '0x111...' },
-  { id: 'pay-2', seekerId: 'user-3', amount: 0.5, timestamp: '2026-04-11T15:00:00Z', txHash: '0x222...' },
+  { id: 'pay-1', seekerId: 'user-1', amount: 0.5, timestamp: '2026-04-11T14:30:00Z', txHash: 'BvkGKmBhbyLJKKEYx5LnPZwR35W83RxC2sPXodPfYYGU' },
+  { id: 'pay-2', seekerId: 'user-3', amount: 0.5, timestamp: '2026-04-11T15:00:00Z', txHash: 'CwlHLnCiczmLLFZy6MoPaxS46X94StD3tQPYpeQgZZHV' },
 ];
 
 describe('EscrowPage', () => {
@@ -107,8 +111,9 @@ describe('EscrowPage', () => {
     render(<EscrowPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('0x111...')).toBeInTheDocument();
-      expect(screen.getByText('0x222...')).toBeInTheDocument();
+      // Page truncates tx hashes; use title attribute which has the full hash
+      expect(screen.getByTitle('BvkGKmBhbyLJKKEYx5LnPZwR35W83RxC2sPXodPfYYGU')).toBeInTheDocument();
+      expect(screen.getByTitle('CwlHLnCiczmLLFZy6MoPaxS46X94StD3tQPYpeQgZZHV')).toBeInTheDocument();
     });
   });
 

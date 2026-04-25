@@ -3,15 +3,18 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from './auth';
 
-// Mock wallet-selector
+// Mock wallet-adapter (auth.tsx uses useUnifiedWallet)
 const mockSignMessage = vi.fn();
-const mockWalletFn = vi.fn().mockResolvedValue({ signMessage: mockSignMessage });
-vi.mock('./wallet-selector', () => ({
-  useWallet: () => ({
-    selector: { wallet: mockWalletFn },
-    modal: null,
-    signedAccountId: null,
+vi.mock('./wallet-adapter', () => ({
+  useUnifiedWallet: () => ({
+    signMessage: mockSignMessage,
+    signAndSendTransaction: vi.fn(),
     signOut: vi.fn(),
+    accountId: null,
+    publicKey: null,
+    loginMethod: null,
+    connectWeb3Auth: vi.fn(),
+    showWalletSelector: vi.fn(),
   }),
 }));
 
@@ -36,7 +39,7 @@ function AuthConsumer() {
       <span data-testid="user">{user ? JSON.stringify(user) : 'null'}</span>
       <button data-testid="login-seeker" onClick={() => login('SEEKER')}>Login Seeker</button>
       <button data-testid="login-near" onClick={() => loginWithNear('test.testnet', 'SEEKER')}>Login NEAR</button>
-      <button data-testid="login-by-account" onClick={() => loginByAccount('alice.testnet')}>Login By Account</button>
+      <button data-testid="login-by-account" onClick={() => loginByAccount('alice.testnet').catch(() => {})}>Login By Account</button>
       <button data-testid="logout" onClick={logout}>Logout</button>
     </div>
   );
