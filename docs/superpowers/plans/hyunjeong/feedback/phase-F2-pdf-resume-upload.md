@@ -64,7 +64,7 @@ GitHub이 없는 사용자도 PDF 이력서 업로드로 AI resume 생성 + 매�
 
 ## Success Criteria
 
-- [ ] PDF 업로드 → AI가 skills/experience 자동 추출
-- [ ] 추출 결과를 사용자가 확인/수정 가능
-- [ ] 벡터 임베딩 생성 → 매칭에 반영
-- [ ] GitHub 미연동 사용자도 프로필 완성률 100% 달성 가능
+- [x] PDF 업로드 → AI가 skills/experience 자동 추출
+- [x] 추출 결과를 사용자가 확인/수정 가능
+- [x] 벡터 임베딩 생성 → 매칭에 반영
+- [x] GitHub 미연동 사용자도 프로필 완성률 100% 달성 가능
