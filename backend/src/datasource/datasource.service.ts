@@ -108,8 +108,7 @@ export class DatasourceService {
     });
     if (!conn) throw new NotFoundException('GitHub is not connected');
     conn.selectedRepos = repos;
-    // Invalidate analysis cache so next fetch uses new selection
-    conn.analysisCache = null as any;
+    // Mark cache as stale (keep old data for instant fallback)
     conn.analysisCachedAt = null as any;
     await this.dsRepo.save(conn);
   }
@@ -229,7 +228,19 @@ export class DatasourceService {
       return { ...rawWithoutAnalysis, analysis: conn.analysisCache };
     }
 
-    // 3. Run AI analysis
+    // 3. Stale cache exists → return immediately, re-analyze in background
+    if (conn.analysisCache) {
+      this.analyzeProviderData(provider, rawWithoutAnalysis)
+        .then(async (analysis) => {
+          conn.analysisCache = analysis;
+          conn.analysisCachedAt = new Date();
+          await this.dsRepo.save(conn);
+        })
+        .catch((err) => console.error(`Background AI analysis failed for ${provider}:`, err));
+      return { ...rawWithoutAnalysis, analysis: conn.analysisCache };
+    }
+
+    // 4. No cache at all → must wait for first analysis
     try {
       const analysis = await this.analyzeProviderData(provider, rawWithoutAnalysis);
       conn.analysisCache = analysis;
@@ -238,8 +249,7 @@ export class DatasourceService {
       return { ...rawWithoutAnalysis, analysis };
     } catch (err) {
       console.error(`AI analysis failed for ${provider}:`, err);
-      // Fall back to fixture analysis or cached (even if stale)
-      const fallback = conn.analysisCache ?? this.loadFixture(provider).analysis;
+      const fallback = this.loadFixture(provider).analysis;
       return { ...rawWithoutAnalysis, analysis: fallback };
     }
   }
