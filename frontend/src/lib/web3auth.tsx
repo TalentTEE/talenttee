@@ -223,14 +223,19 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
     const sdk = sdkRef.current;
     if (!instance || !sdk) return null;
 
-    // IMPORTANT: In @web3auth/modal v10.15+, connect() takes no params.
-    // To force social auth (and avoid injected wallet providers like MetaMask),
-    // we must use connectTo(AUTH, { authConnection }).
-    // Note: v10.15 renamed loginProvider → authConnection.
-    const provider = await instance.connectTo(
-      sdk.WALLET_CONNECTORS.AUTH,
-      loginHint ? { authConnection: loginHint } : undefined,
-    );
+    // If a stale session persists, reuse existing provider or logout first
+    let provider: unknown;
+    if (instance.connected && instance.provider) {
+      // Already connected — reuse the existing provider
+      provider = instance.provider;
+    } else {
+      // Clear any half-connected state before attempting fresh login
+      if (instance.connected) {
+        try { await instance.logout(); } catch { /* ignore */ }
+      }
+      const loginParams = loginHint ? { authConnection: loginHint } : undefined;
+      provider = await instance.connectTo(sdk.WALLET_CONNECTORS.AUTH, loginParams);
+    }
 
     if (!provider) return null;
 
