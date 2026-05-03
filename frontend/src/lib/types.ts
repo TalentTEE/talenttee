@@ -187,6 +187,7 @@ export interface NegotiationRound {
   proposal: NegotiationProposal;
   reasoning: string | NegotiationReasoning;
   decision: 'COUNTER' | 'ACCEPT' | 'REJECT';
+  timestamp?: string;
 }
 
 export interface AgreementRecord {
@@ -237,6 +238,16 @@ export interface EncryptedNegotiationRound {
   encryptedData: string;
   decision: 'COUNTER' | 'ACCEPT' | 'REJECT';
   timestamp: string;
+}
+
+export interface GitHubRepo {
+  name: string;
+  fullName: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  isPrivate: boolean;
+  topics: string[];
 }
 
 /* ── Datasource Detail Types ── */

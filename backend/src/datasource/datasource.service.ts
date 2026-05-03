@@ -57,6 +57,60 @@ export class DatasourceService {
     return this.dsRepo.save(conn);
   }
 
+  async getGithubRepos(userId: string): Promise<{
+    repos: { name: string; fullName: string; description: string | null; language: string | null; stars: number; isPrivate: boolean; topics: string[] }[];
+    selectedRepos: string[] | null;
+  }> {
+    const conn = await this.dsRepo.findOne({
+      where: { userId, provider: DataSourceProvider.GITHUB },
+    });
+    if (!conn || !conn.accessToken) {
+      throw new NotFoundException('GitHub is not connected');
+    }
+
+    const headers = {
+      Authorization: `Bearer ${conn.accessToken}`,
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'TalentTEE',
+    };
+
+    // Paginate through all repos (GitHub API max 100 per page)
+    let allRawRepos: any[] = [];
+    let page = 1;
+    while (true) {
+      const res = await fetch(
+        `https://api.github.com/user/repos?per_page=100&sort=pushed&type=all&page=${page}`,
+        { headers },
+      );
+      const pageRepos = await res.json();
+      if (!Array.isArray(pageRepos) || pageRepos.length === 0) break;
+      allRawRepos.push(...pageRepos);
+      if (pageRepos.length < 100) break;
+      page++;
+    }
+
+    const repos = allRawRepos.map((r: any) => ({
+      name: r.name as string,
+      fullName: r.full_name as string,
+      description: (r.description as string) || null,
+      language: (r.language as string) || null,
+      stars: (r.stargazers_count as number) || 0,
+      isPrivate: !!r.private,
+      topics: (r.topics as string[]) || [],
+    }));
+
+    return { repos, selectedRepos: conn.selectedRepos };
+  }
+
+  async updateSelectedRepos(userId: string, repos: string[]): Promise<void> {
+    const conn = await this.dsRepo.findOne({
+      where: { userId, provider: DataSourceProvider.GITHUB },
+    });
+    if (!conn) throw new NotFoundException('GitHub is not connected');
+    conn.selectedRepos = repos;
+    await this.dsRepo.save(conn);
+  }
+
   async connectGithub(userId: string, accessToken: string): Promise<DataSourceConnection> {
     const existing = await this.dsRepo.findOne({
       where: { userId, provider: DataSourceProvider.GITHUB },
@@ -154,7 +208,7 @@ export class DatasourceService {
       // PDF data is stored in analysisCache at upload time
       return conn.analysisCache ?? {};
     } else if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
-      rawData = await this.fetchGithubData(conn.accessToken);
+      rawData = await this.fetchGithubData(conn.accessToken, conn.selectedRepos);
     } else if (conn.status === DataSourceStatus.MOCK) {
       rawData = this.loadFixture(provider);
     } else {
@@ -187,7 +241,7 @@ export class DatasourceService {
     }
   }
 
-  private async fetchGithubData(accessToken: string): Promise<Record<string, any>> {
+  private async fetchGithubData(accessToken: string, selectedRepos?: string[] | null): Promise<Record<string, any>> {
     const headers = {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/vnd.github.v3+json',
@@ -200,7 +254,12 @@ export class DatasourceService {
     ]);
 
     const profile = await profileRes.json();
-    const repos = await reposRes.json();
+    let repos = await reposRes.json();
+
+    // Filter by selected repos if provided
+    if (selectedRepos && selectedRepos.length > 0 && Array.isArray(repos)) {
+      repos = repos.filter((r: any) => selectedRepos.includes(r.full_name));
+    }
 
     // Aggregate language bytes from repos
     const languages: Record<string, number> = {};

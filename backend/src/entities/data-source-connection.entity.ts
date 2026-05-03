@@ -33,4 +33,7 @@ export class DataSourceConnection {
 
   @Column({ name: 'analysis_cached_at', type: 'timestamptz', nullable: true })
   analysisCachedAt: Date;
+
+  @Column({ name: 'selected_repos', type: 'jsonb', nullable: true })
+  selectedRepos: string[] | null;
 }
