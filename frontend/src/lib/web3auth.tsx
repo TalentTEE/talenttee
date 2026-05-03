@@ -42,7 +42,8 @@ const Web3AuthContext = createContext<Web3AuthState>({
 
 type Web3AuthInstance = {
   init: () => Promise<void>;
-  connect: (params?: { loginProvider?: string }) => Promise<unknown>;
+  connect: () => Promise<unknown>;
+  connectTo: (walletName: string, loginParams?: { authConnection?: string }) => Promise<unknown>;
   getUserInfo: () => Promise<{ email?: string; name?: string; [k: string]: unknown }>;
   logout: () => Promise<void>;
   provider: { request: (args: { method: string }) => Promise<unknown> } | null;
@@ -55,21 +56,11 @@ type Web3AuthInstance = {
  */
 async function loadWeb3AuthSDK() {
   const [
-    { Web3Auth, getED25519Key, WEB3AUTH_NETWORK, CHAIN_NAMESPACES },
+    { Web3Auth, getED25519Key, CHAIN_NAMESPACES, WALLET_CONNECTORS },
   ] = await Promise.all([
     import('@web3auth/modal'),
   ]);
-  return { Web3Auth, getED25519Key, WEB3AUTH_NETWORK, CHAIN_NAMESPACES };
-}
-
-/* ── Helper: hex → Uint8Array ── */
-function hexToBytes(hex: string): Uint8Array {
-  const len = hex.length / 2;
-  const arr = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    arr[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-  }
-  return arr;
+  return { Web3Auth, getED25519Key, CHAIN_NAMESPACES, WALLET_CONNECTORS };
 }
 
 /* ── Helper: Uint8Array → hex ── */
@@ -119,15 +110,36 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
   const initPromiseRef = useRef<Promise<void> | null>(null);
 
   const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID || '';
-  const network = process.env.NEXT_PUBLIC_WEB3AUTH_NETWORK || 'sapphire_devnet';
+  const network = process.env.NEXT_PUBLIC_WEB3AUTH_NETWORK === 'sapphire_mainnet'
+    ? 'sapphire_mainnet'
+    : 'sapphire_devnet';
 
   /** Derive ed25519 keypair from the secp256k1 key Web3Auth provides */
   const deriveNearKeys = useCallback(async (
     provider: { request: (args: { method: string }) => Promise<unknown> },
     sdk: Awaited<ReturnType<typeof loadWeb3AuthSDK>>,
   ) => {
-    // Get raw secp256k1 private key as hex
-    const secp256k1Key = (await provider.request({ method: 'private_key' })) as string;
+    // Web3Auth v10/auth connector supports private key RPC methods,
+    // but injected external wallets (MetaMask, etc.) do not.
+    // Try both known methods, then fail with a clear message.
+    let secp256k1Key: string | null = null;
+    let lastErr: unknown;
+    for (const method of ['private_key', 'eth_private_key']) {
+      try {
+        const raw = await provider.request({ method });
+        if (typeof raw === 'string' && raw.length > 0) {
+          secp256k1Key = raw;
+          break;
+        }
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+
+    if (!secp256k1Key) {
+      const detail = lastErr instanceof Error ? lastErr.message : 'unknown error';
+      throw new Error(`Web3Auth key extraction failed (${detail}). Please use a social login provider (Google/Kakao/Email), not an injected wallet.`);
+    }
 
     // Convert to ed25519 using Web3Auth's built-in utility
     const ed25519Result = sdk.getED25519Key(secp256k1Key);
@@ -162,7 +174,6 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
       const sdk = await loadWeb3AuthSDK();
       sdkRef.current = sdk;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const instance = new sdk.Web3Auth({
         clientId,
         web3AuthNetwork: network,
@@ -174,7 +185,7 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
           ticker: 'NEAR',
           tickerName: 'NEAR',
         },
-      } as any) as unknown as Web3AuthInstance;
+      } as unknown as ConstructorParameters<typeof sdk.Web3Auth>[0]) as unknown as Web3AuthInstance;
 
       await instance.init();
       web3authRef.current = instance;
@@ -212,12 +223,18 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
     const sdk = sdkRef.current;
     if (!instance || !sdk) return null;
 
-    const connectParams = loginHint ? { loginProvider: loginHint } : {};
-    await instance.connect(connectParams);
+    // IMPORTANT: In @web3auth/modal v10.15+, connect() takes no params.
+    // To force social auth (and avoid injected wallet providers like MetaMask),
+    // we must use connectTo(AUTH, { authConnection }).
+    // Note: v10.15 renamed loginProvider → authConnection.
+    const provider = await instance.connectTo(
+      sdk.WALLET_CONNECTORS.AUTH,
+      loginHint ? { authConnection: loginHint } : undefined,
+    );
 
-    if (!instance.provider) return null;
+    if (!provider) return null;
 
-    const keys = await deriveNearKeys(instance.provider, sdk);
+    const keys = await deriveNearKeys(provider as { request: (args: { method: string }) => Promise<unknown> }, sdk);
     let info: { email?: string; name?: string } = {};
     try {
       info = await instance.getUserInfo();
