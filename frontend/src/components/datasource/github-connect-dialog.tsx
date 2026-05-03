@@ -29,6 +29,8 @@ const LANGUAGE_COLORS: Record<string, string> = {
   'C++': 'bg-pink-500',
 };
 
+const PAGE_SIZE = 20;
+
 export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy }: GitHubConnectDialogProps) {
   const [step, setStep] = useState<Step>('intro');
   const [errorMsg, setErrorMsg] = useState('');
@@ -39,6 +41,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [savingRepos, setSavingRepos] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   function reset() {
     setStep('intro');
@@ -46,6 +49,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
     setRepos([]);
     setSelectedRepoNames(new Set());
     setSearchQuery('');
+    setVisibleCount(PAGE_SIZE);
   }
 
   // Load repos when entering repos step
@@ -59,7 +63,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
         const data = await getGithubRepos();
         if (cancelled) return;
         setRepos(data.repos);
-        // Pre-select previously selected repos, or all repos if none selected
         if (data.selectedRepos && data.selectedRepos.length > 0) {
           setSelectedRepoNames(new Set(data.selectedRepos));
         } else {
@@ -68,7 +71,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
       } catch (err) {
         if (cancelled) return;
         console.error('Failed to load repos:', err);
-        // If loading fails, just proceed to done
         onConnected();
         setStep('done');
         setTimeout(() => {
@@ -99,7 +101,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
     return () => window.removeEventListener('message', handleMessage);
   }, [open, step]);
 
-  // Check if popup was closed without completing OAuth
   const checkPopupClosed = useCallback((popup: Window) => {
     const timer = setInterval(() => {
       if (popup.closed) {
@@ -153,7 +154,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
       }, 800);
     } catch (err) {
       console.error('Failed to save repos:', err);
-      // Still proceed even if save fails
       onConnected();
       setStep('done');
       setTimeout(() => {
@@ -187,6 +187,14 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
     );
   }, [repos, searchQuery]);
 
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery]);
+
+  const visibleRepos = filteredRepos.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredRepos.length;
+
   const allFilteredSelected = filteredRepos.length > 0 && filteredRepos.every((r) => selectedRepoNames.has(r.fullName));
 
   function toggleAll() {
@@ -208,7 +216,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
         if (!val) reset();
       }
     }}>
-      <DialogContent className="sm:!max-w-md overflow-hidden">
+      <DialogContent style={{ maxWidth: 448 }}>
         {step === 'intro' && (
           <>
             <DialogHeader>
@@ -254,8 +262,8 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
           <>
             <DialogHeader>
               <DialogTitle>Select Repositories</DialogTitle>
-              <DialogDescription>
-                Choose which repositories to include in your profile analysis. Only selected repos will be analyzed.
+              <DialogDescription className="text-sm">
+                Choose repos to include in your profile analysis.
               </DialogDescription>
             </DialogHeader>
 
@@ -286,14 +294,14 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                   >
                     {allFilteredSelected ? 'Deselect All' : 'Select All'}
                   </button>
-                  <span className="text-xs text-muted-foreground">
-                    {selectedRepoNames.size} of {repos.length} selected
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {selectedRepoNames.size}/{repos.length} selected
                   </span>
                 </div>
 
                 {/* Repo list */}
-                <div className="max-h-[350px] overflow-y-auto space-y-1 pr-1 -mr-1">
-                  {filteredRepos.map((repo) => (
+                <div className="max-h-[350px] overflow-y-auto space-y-1">
+                  {visibleRepos.map((repo) => (
                     <label
                       key={repo.fullName}
                       className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-foreground/5 transition-colors cursor-pointer"
@@ -302,9 +310,9 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                         type="checkbox"
                         checked={selectedRepoNames.has(repo.fullName)}
                         onChange={() => toggleRepo(repo.fullName)}
-                        className="mt-0.5 h-4 w-4 rounded border-border/30 accent-foreground cursor-pointer"
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-border/30 accent-foreground cursor-pointer"
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-foreground truncate">{repo.name}</span>
                           {repo.isPrivate && (
@@ -314,18 +322,18 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                           )}
                         </div>
                         {repo.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5 truncate">{repo.description}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{repo.description}</p>
                         )}
                         <div className="flex items-center gap-3 mt-1">
                           {repo.language && (
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <span className={`h-2.5 w-2.5 rounded-full ${LANGUAGE_COLORS[repo.language] || 'bg-gray-400'}`} />
+                              <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${LANGUAGE_COLORS[repo.language] || 'bg-gray-400'}`} />
                               {repo.language}
                             </span>
                           )}
                           {repo.stars > 0 && (
                             <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                              <span className="material-symbols-outlined text-xs" style={{ fontSize: '14px' }}>star</span>
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>star</span>
                               {repo.stars}
                             </span>
                           )}
@@ -333,6 +341,17 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                       </div>
                     </label>
                   ))}
+
+                  {/* Show More button */}
+                  {hasMore && (
+                    <button
+                      onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                      className="w-full py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    >
+                      Show More ({filteredRepos.length - visibleCount} remaining)
+                    </button>
+                  )}
+
                   {filteredRepos.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-6">No repositories match your search.</p>
                   )}
@@ -342,7 +361,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                 <button
                   onClick={handleSaveRepos}
                   disabled={selectedRepoNames.size === 0 || savingRepos}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {savingRepos ? (
                     <>
@@ -350,9 +369,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                       Saving...
                     </>
                   ) : (
-                    <>
-                      Continue with {selectedRepoNames.size} {selectedRepoNames.size === 1 ? 'repo' : 'repos'}
-                    </>
+                    <>Continue with {selectedRepoNames.size} repos</>
                   )}
                 </button>
               </div>

@@ -108,6 +108,9 @@ export class DatasourceService {
     });
     if (!conn) throw new NotFoundException('GitHub is not connected');
     conn.selectedRepos = repos;
+    // Invalidate analysis cache so next fetch uses new selection
+    conn.analysisCache = null as any;
+    conn.analysisCachedAt = null as any;
     await this.dsRepo.save(conn);
   }
 
