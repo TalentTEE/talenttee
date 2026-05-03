@@ -259,7 +259,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
       <GitHubConnectDialog
         open={dialogOpen === 'GITHUB'}
         onOpenChange={(val) => !val && setDialogOpen(null)}
-        onConnect={async () => { await handleDialogConnect('GITHUB'); }}
+        onConnected={() => { onConnect?.(); }}
         useDummy={USE_DUMMY}
       />
       <SlackConnectDialog

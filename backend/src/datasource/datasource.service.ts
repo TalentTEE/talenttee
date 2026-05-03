@@ -154,11 +154,9 @@ export class DatasourceService {
       // PDF data is stored in analysisCache at upload time
       return conn.analysisCache ?? {};
     } else if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
-      try {
-        rawData = await this.fetchGithubData(conn.accessToken);
-      } catch {
-        rawData = this.loadFixture(provider);
-      }
+      rawData = await this.fetchGithubData(conn.accessToken);
+    } else if (conn.status === DataSourceStatus.MOCK) {
+      rawData = this.loadFixture(provider);
     } else {
       rawData = this.loadFixture(provider);
     }
@@ -298,9 +296,13 @@ export class DatasourceService {
       const key = conn.provider.toLowerCase();
       try {
         result[key] = await this.getProviderData(userId, conn.provider);
-      } catch {
-        if (conn.provider !== DataSourceProvider.PDF) {
+      } catch (err) {
+        // Only fall back to fixture for MOCK connections; CONNECTED failures propagate as null
+        if (conn.status === DataSourceStatus.MOCK && conn.provider !== DataSourceProvider.PDF) {
           result[key] = this.loadFixture(conn.provider);
+        } else {
+          console.error(`Failed to fetch ${conn.provider} data for user ${userId}:`, err);
+          result[key] = null;
         }
       }
     }

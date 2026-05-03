@@ -176,7 +176,10 @@ export default function DatasourcePage() {
   };
 
   const handleDialogConnect = useCallback(async (provider: string) => {
-    await connectDatasourceMock(provider);
+    // GitHub uses real OAuth flow — connectDatasourceMock is only for non-GitHub providers
+    if (provider !== 'GITHUB') {
+      await connectDatasourceMock(provider);
+    }
     await fetchConnections();
   }, [fetchConnections]);
 
@@ -734,7 +737,7 @@ export default function DatasourcePage() {
       <GitHubConnectDialog
         open={dialogOpen === 'GITHUB'}
         onOpenChange={(val) => !val && setDialogOpen(null)}
-        onConnect={async () => { await handleDialogConnect('GITHUB'); }}
+        onConnected={() => { fetchConnections(); }}
         useDummy={USE_DUMMY}
       />
       <SlackConnectDialog

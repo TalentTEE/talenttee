@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getGithubOAuthUrl } from '@/lib/api';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -8,78 +9,99 @@ import {
 interface GitHubConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect: (selectedRepos: string[]) => Promise<void>;
+  onConnected: () => void;
   useDummy: boolean;
 }
 
-interface RepoItem {
-  id: string;
-  name: string;
-  lang: string;
-  stars: number;
-  desc: string;
-}
+type Step = 'intro' | 'waiting' | 'done' | 'error';
 
-const DUMMY_REPOS: RepoItem[] = [
-  { id: 'defi-swap', name: 'defi-swap-protocol', lang: 'Rust', stars: 34, desc: 'Decentralized token swap on NEAR Protocol' },
-  { id: 'ai-resume', name: 'ai-resume-builder', lang: 'TypeScript', stars: 89, desc: 'AI-powered resume generation tool' },
-  { id: 'react-dash', name: 'react-dashboard-kit', lang: 'TypeScript', stars: 156, desc: 'Enterprise dashboard component library' },
-  { id: 'near-sdk', name: 'near-sdk-examples', lang: 'Rust', stars: 23, desc: 'NEAR smart contract examples' },
-  { id: 'blog-next', name: 'blog-nextjs', lang: 'TypeScript', stars: 12, desc: 'Personal blog built with Next.js' },
-  { id: 'py-ml', name: 'ml-pipeline', lang: 'Python', stars: 45, desc: 'Machine learning data pipeline' },
-];
+export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy }: GitHubConnectDialogProps) {
+  const [step, setStep] = useState<Step>('intro');
+  const [errorMsg, setErrorMsg] = useState('');
 
-const LANG_COLORS: Record<string, string> = {
-  TypeScript: '#3178c6',
-  Rust: '#dea584',
-  Python: '#3572A5',
-  JavaScript: '#f1e05a',
-};
-
-type Step = 'login' | 'loading' | 'select' | 'connecting' | 'done';
-
-export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }: GitHubConnectDialogProps) {
-  const [step, setStep] = useState<Step>('login');
-  const [selected, setSelected] = useState<string[]>([]);
-  const [pending, setPending] = useState(false);
   function reset() {
-    setStep('login');
-    setSelected(['defi-swap', 'ai-resume', 'react-dash']);
-    setPending(false);
+    setStep('intro');
+    setErrorMsg('');
   }
+
+  // Listen for OAuth popup callback
+  useEffect(() => {
+    if (!open || step !== 'waiting') return;
+
+    function handleMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'github-oauth-connected') {
+        setStep('done');
+        onConnected();
+        setTimeout(() => {
+          onOpenChange(false);
+          reset();
+        }, 800);
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [open, step, onConnected, onOpenChange]);
+
+  // Check if popup was closed without completing OAuth
+  const checkPopupClosed = useCallback((popup: Window) => {
+    const timer = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(timer);
+        // Only show error if we're still in waiting state
+        setStep((current) => {
+          if (current === 'waiting') return 'intro';
+          return current;
+        });
+      }
+    }, 500);
+    return timer;
+  }, []);
 
   function handleLogin() {
-    setStep('loading');
-    setTimeout(() => setStep('select'), 1500);
-  }
+    if (useDummy) {
+      // In dummy mode, just mark as connected immediately
+      setStep('done');
+      onConnected();
+      setTimeout(() => {
+        onOpenChange(false);
+        reset();
+      }, 800);
+      return;
+    }
 
-  function toggleRepo(id: string) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
+    const url = getGithubOAuthUrl();
+    const width = 600;
+    const height = 700;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+
+    const popup = window.open(
+      url,
+      'github-oauth',
+      `width=${width},height=${height},left=${left},top=${top},popup=yes`,
     );
-  }
 
-  async function handleConnect() {
-    setPending(true);
-    setStep('connecting');
-    const repoNames = DUMMY_REPOS.filter((r) => selected.includes(r.id)).map((r) => r.name);
-    await onConnect(repoNames);
-    setStep('done');
-    setTimeout(() => {
-      onOpenChange(false);
-      reset();
-    }, 800);
+    if (!popup) {
+      setErrorMsg('Popup was blocked. Please allow popups for this site.');
+      setStep('error');
+      return;
+    }
+
+    setStep('waiting');
+    checkPopupClosed(popup);
   }
 
   return (
     <Dialog open={open} onOpenChange={(val) => {
-      if (step !== 'connecting' && !pending) {
+      if (step !== 'waiting') {
         onOpenChange(val);
         if (!val) reset();
       }
     }}>
       <DialogContent className="sm:max-w-md">
-        {step === 'login' && (
+        {step === 'intro' && (
           <>
             <DialogHeader>
               <div className="flex items-center gap-3">
@@ -101,7 +123,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
               </div>
               <button
                 onClick={handleLogin}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-all"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-all cursor-pointer"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                   <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.607.069-.607 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
@@ -112,66 +134,11 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
           </>
         )}
 
-        {step === 'loading' && (
+        {step === 'waiting' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-foreground">progress_activity</span>
-            <p className="text-sm text-muted-foreground">
-              {useDummy ? 'Connecting to GitHub...' : 'Complete sign-in in the popup window...'}
-            </p>
-          </div>
-        )}
-
-        {step === 'select' && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Select Repositories</DialogTitle>
-              <DialogDescription>
-                Choose repositories to include in AI analysis
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2 py-2 max-h-[320px] overflow-y-auto">
-              {DUMMY_REPOS.map((repo) => (
-                <label
-                  key={repo.id}
-                  className="flex items-start gap-3 rounded-xl border border-border/10 bg-[#060610] px-4 py-3 cursor-pointer hover:border-border/20 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(repo.id)}
-                    onChange={() => toggleRepo(repo.id)}
-                    className="mt-1 accent-primary"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground truncate">{repo.name}</span>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[repo.lang] ?? '#8b8b8b' }} />
-                        {repo.lang}
-                      </span>
-                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground ml-auto">
-                        <span className="material-symbols-outlined text-xs">star</span>
-                        {repo.stars}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">{repo.desc}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-            <button
-              onClick={handleConnect}
-              disabled={selected.length === 0}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Connect {selected.length} repositories
-            </button>
-          </>
-        )}
-
-        {step === 'connecting' && (
-          <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-2xl animate-spin text-primary">progress_activity</span>
-            <p className="text-sm text-muted-foreground">Analyzing repositories...</p>
+            <p className="text-sm text-muted-foreground">Complete sign-in in the popup window...</p>
+            <p className="text-xs text-muted-foreground/60">The dialog will close automatically when done.</p>
           </div>
         )}
 
@@ -180,6 +147,23 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnect, useDummy }:
             <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <p className="text-sm font-medium text-foreground">GitHub Connected</p>
           </div>
+        )}
+
+        {step === 'error' && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Connection Failed</DialogTitle>
+              <DialogDescription>{errorMsg}</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <button
+                onClick={() => setStep('intro')}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-all cursor-pointer"
+              >
+                Try Again
+              </button>
+            </div>
+          </>
         )}
       </DialogContent>
     </Dialog>
