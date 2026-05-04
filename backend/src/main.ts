@@ -9,6 +9,7 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:4000',
+      'https://talenttee-sepia.vercel.app',
       process.env.FRONTEND_URL,
     ].filter(Boolean) as string[];
     app.enableCors({

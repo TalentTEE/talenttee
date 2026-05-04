@@ -3,6 +3,7 @@ import { AuthController } from '../auth.controller.js';
 import { AuthService } from '../auth.service.js';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserRole } from '../../common/enums/index.js';
+import { RelayService } from '../../relay/relay.service.js';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -17,10 +18,17 @@ describe('AuthController', () => {
     generateJwt: jest.fn(),
   };
 
+  const mockRelayService = {
+    fundImplicitAccount: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: RelayService, useValue: mockRelayService },
+      ],
     }).compile();
     controller = module.get<AuthController>(AuthController);
   });
