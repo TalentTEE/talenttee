@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react';
 import { useWeb3Auth } from './web3auth';
@@ -212,6 +213,11 @@ function convertActionsToDescriptors(actions: unknown[]): ActionDescriptor[] {
 export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
   const web3auth = useWeb3Auth();
   const walletSelector = useWallet();
+  const immediateWeb3AuthRef = useRef<{
+    accountId: string;
+    publicKey: string;
+    secretKey: Uint8Array;
+  } | null>(null);
 
   // Determine active login method
   const loginMethod: 'web3auth' | 'wallet-selector' | null =
@@ -233,13 +239,15 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
     recipient: string;
     nonce: Buffer;
   }) => {
-    if (web3auth.isConnected && web3auth.ed25519SecretKey) {
+    const web3authSecretKey = web3auth.ed25519SecretKey ?? immediateWeb3AuthRef.current?.secretKey;
+
+    if ((web3auth.isConnected || immediateWeb3AuthRef.current) && web3authSecretKey) {
       // Web3Auth path: sign locally
       return signNep413Locally(
         params.message,
         params.recipient,
         new Uint8Array(params.nonce),
-        web3auth.ed25519SecretKey,
+        web3authSecretKey,
       );
     }
 
@@ -313,6 +321,7 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
   const connectWeb3Auth = useCallback(async (loginHint?: 'google' | 'kakao' | 'email_passwordless') => {
     const result = await web3auth.connect(loginHint);
     if (!result) return null;
+    immediateWeb3AuthRef.current = result;
     return { accountId: result.accountId, publicKey: result.publicKey };
   }, [web3auth]);
 
@@ -323,6 +332,7 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
 
   /* ── signOut ── */
   const signOut = useCallback(async () => {
+    immediateWeb3AuthRef.current = null;
     if (web3auth.isConnected) {
       await web3auth.disconnect();
     }
