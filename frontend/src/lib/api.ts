@@ -126,9 +126,13 @@ export async function getDatasourceStatus(): Promise<DataSourceConnection[]> {
   return apiFetch('/datasource/status');
 }
 
-export function getGithubOAuthUrl(): string {
+export function getGithubOAuthUrl(options?: { manageAccess?: boolean }): string {
   const token = typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
-  return `${API_URL}/datasource/connect/github${token ? `?token=${token}` : ''}`;
+  const params = new URLSearchParams();
+  if (token) params.set('token', token);
+  if (options?.manageAccess) params.set('manage_access', '1');
+  const query = params.toString();
+  return `${API_URL}/datasource/connect/github${query ? `?${query}` : ''}`;
 }
 
 export async function connectDatasourceMock(provider: string): Promise<DataSourceConnection> {

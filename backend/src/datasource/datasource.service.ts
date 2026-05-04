@@ -81,6 +81,104 @@ export class DatasourceService {
     return data.token;
   }
 
+  async getGithubInstallationIdFromOAuth(code: string, redirectUri: string): Promise<number | null> {
+    const clientId = this.config.get<string>('GITHUB_CLIENT_ID')
+      || this.config.get<string>('GITHUB_APP_CLIENT_ID');
+    const clientSecret = this.config.get<string>('GITHUB_CLIENT_SECRET')
+      || this.config.get<string>('GITHUB_APP_CLIENT_SECRET');
+    const appId = Number(this.config.get<string>('GITHUB_APP_ID'));
+
+    if (!clientId || !clientSecret || !appId || Number.isNaN(appId)) {
+      throw new Error('Missing GitHub OAuth config: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and GITHUB_APP_ID are required');
+    }
+
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'TalentTEE',
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      const body = await tokenRes.text();
+      throw new Error(`Failed to exchange GitHub OAuth code: ${tokenRes.status} ${body}`);
+    }
+
+    const tokenData = await tokenRes.json() as { access_token?: string; error?: string; error_description?: string };
+    if (!tokenData.access_token) {
+      throw new Error(tokenData.error_description || tokenData.error || 'GitHub OAuth access token missing in response');
+    }
+
+    const installationsRes = await fetch('https://api.github.com/user/installations', {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'TalentTEE',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    if (installationsRes.ok) {
+      const payload = await installationsRes.json() as { installations?: Array<{ id?: number; app_id?: number }> };
+      const installation = (payload.installations || [])
+        .find((item) => Number(item.app_id) === appId && item.id);
+
+      if (installation?.id) return Number(installation.id);
+    }
+
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'TalentTEE',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    if (!userRes.ok) {
+      const body = await userRes.text();
+      throw new Error(`Failed to read GitHub OAuth user: ${userRes.status} ${body}`);
+    }
+
+    const user = await userRes.json() as { id?: number };
+    if (!user.id) return null;
+
+    const appInstallationsRes = await fetch('https://api.github.com/app/installations?per_page=100', {
+      headers: {
+        Authorization: `Bearer ${this.createGithubAppJwt()}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'TalentTEE',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    if (!appInstallationsRes.ok) {
+      const body = await appInstallationsRes.text();
+      throw new Error(`Failed to list GitHub App installations: ${appInstallationsRes.status} ${body}`);
+    }
+
+    const appInstallations = await appInstallationsRes.json() as Array<{
+      id?: number;
+      app_id?: number;
+      account?: { id?: number };
+    }>;
+    const accountInstallation = appInstallations.find((item) => (
+      Number(item.app_id) === appId
+      && Number(item.account?.id) === Number(user.id)
+      && item.id
+    ));
+
+    return accountInstallation?.id ? Number(accountInstallation.id) : null;
+  }
+
   async connectGithubApp(userId: string, installationId: number): Promise<DataSourceConnection> {
     const jwt = this.createGithubAppJwt();
     const installationRes = await fetch(`https://api.github.com/app/installations/${installationId}`, {

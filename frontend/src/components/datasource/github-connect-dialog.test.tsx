@@ -18,7 +18,11 @@ vi.mock('@/lib/api', () => ({
 describe('GitHubConnectDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetGithubOAuthUrl.mockReturnValue('https://api.example.com/datasource/connect/github?token=jwt');
+    mockGetGithubOAuthUrl.mockImplementation((options?: { manageAccess?: boolean }) => (
+      options?.manageAccess
+        ? 'https://api.example.com/datasource/connect/github?token=jwt&manage_access=1'
+        : 'https://api.example.com/datasource/connect/github?token=jwt'
+    ));
     mockGetGithubRepos.mockResolvedValue({
       selectedRepos: ['talent-dev/core'],
       repos: [
@@ -46,7 +50,7 @@ describe('GitHubConnectDialog', () => {
     vi.spyOn(window, 'open').mockReturnValue({ closed: false } as Window);
   });
 
-  it('shows repository selection after GitHub App installation callback and saves selected repos', async () => {
+  it('shows repository selection after GitHub authorization callback and saves selected repos', async () => {
     const user = userEvent.setup();
     const onConnected = vi.fn();
     const onOpenChange = vi.fn();
@@ -61,7 +65,7 @@ describe('GitHubConnectDialog', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: /install github app/i }));
+    await user.click(screen.getByRole('button', { name: /connect github/i }));
     window.dispatchEvent(new MessageEvent('message', {
       origin: window.location.origin,
       data: { type: 'github-oauth-connected' },
@@ -92,7 +96,7 @@ describe('GitHubConnectDialog', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: /install github app/i }));
+    await user.click(screen.getByRole('button', { name: /connect github/i }));
 
     expect(await screen.findByText(/select repositories/i)).toBeInTheDocument();
     expect(window.open).not.toHaveBeenCalled();
@@ -166,11 +170,12 @@ describe('GitHubConnectDialog', () => {
     await user.click(screen.getByRole('button', { name: /manage github app access/i }));
 
     expect(window.open).toHaveBeenCalledWith(
-      'https://api.example.com/datasource/connect/github?token=jwt',
+      'https://api.example.com/datasource/connect/github?token=jwt&manage_access=1',
       'github-app-install',
       expect.stringContaining('popup=yes'),
     );
-    expect(screen.getByText(/complete github app installation/i)).toBeInTheDocument();
+    expect(mockGetGithubOAuthUrl).toHaveBeenCalledWith({ manageAccess: true });
+    expect(screen.getByText(/complete github authorization/i)).toBeInTheDocument();
 
     window.dispatchEvent(new MessageEvent('message', {
       origin: window.location.origin,
@@ -180,5 +185,40 @@ describe('GitHubConnectDialog', () => {
     await waitFor(() => {
       expect(mockGetGithubRepos).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('keeps repository selection inside the modal and reveals more repos on demand', async () => {
+    const user = userEvent.setup();
+    mockGetGithubRepos.mockResolvedValueOnce({
+      selectedRepos: [],
+      repos: Array.from({ length: 10 }, (_, index) => ({
+        name: `repo-${index + 1}`,
+        fullName: `talent-dev/repo-${index + 1}`,
+        description: null,
+        language: null,
+        stars: 0,
+        isPrivate: false,
+        topics: [],
+      })),
+    });
+
+    render(
+      <GitHubConnectDialog
+        open
+        mode="manage"
+        onOpenChange={vi.fn()}
+        onConnected={vi.fn()}
+        useDummy={false}
+      />,
+    );
+
+    expect(await screen.findByText('repo-8')).toBeInTheDocument();
+    expect(screen.queryByText('repo-9')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveClass('overflow-hidden');
+
+    await user.click(screen.getByRole('button', { name: /show 2 more repositories/i }));
+
+    expect(screen.getByText('repo-9')).toBeInTheDocument();
+    expect(screen.getByText('repo-10')).toBeInTheDocument();
   });
 });

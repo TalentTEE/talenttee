@@ -20,24 +20,56 @@ export class DatasourceController {
 
   @Get('connect/github')
   @UseGuards(JwtGuard)
-  async connectGithub(@Req() req, @Res() res: Response) {
+  async connectGithub(
+    @Req() req,
+    @Res() res: Response,
+    @Query('manage_access') manageAccess?: string,
+  ) {
     const userId = req.user.id;
+    const clientId = this.config.get('GITHUB_CLIENT_ID') || this.config.get('GITHUB_APP_CLIENT_ID');
+
+    if (manageAccess === '1' || manageAccess === 'true') {
+      return res.redirect(this.githubInstallUrl(userId));
+    }
+
+    if (clientId) {
+      const githubOAuthUrl = new URL('https://github.com/login/oauth/authorize');
+      githubOAuthUrl.searchParams.set('client_id', clientId);
+      githubOAuthUrl.searchParams.set('redirect_uri', this.githubCallbackUrl());
+      githubOAuthUrl.searchParams.set('state', userId);
+      return res.redirect(githubOAuthUrl.toString());
+    }
+
+    return res.redirect(this.githubInstallUrl(userId));
+  }
+
+  private githubInstallUrl(userId: string): string {
     const appSlug = this.config.get('GITHUB_APP_SLUG');
 
     if (!appSlug) {
       throw new BadRequestException('GITHUB_APP_SLUG is not configured');
     }
 
-    const githubInstallUrl =
-      `https://github.com/apps/${appSlug}/installations/new` +
-      `?state=${encodeURIComponent(userId)}`;
+    return `https://github.com/apps/${appSlug}/installations/new?state=${encodeURIComponent(userId)}`;
+  }
 
-    return res.redirect(githubInstallUrl);
+  private githubCallbackUrl(): string {
+    const configured = this.config.get('GITHUB_CALLBACK_URL');
+    if (configured) return configured;
+
+    const backendUrl = this.config.get('BACKEND_URL') || this.config.get('PUBLIC_BACKEND_URL');
+    if (backendUrl) return `${backendUrl.replace(/\/$/, '')}/datasource/callback/github`;
+
+    const railwayDomain = this.config.get('RAILWAY_PUBLIC_DOMAIN');
+    if (railwayDomain) return `https://${railwayDomain}/datasource/callback/github`;
+
+    return 'http://localhost:3000/datasource/callback/github';
   }
 
   @Get('callback/github')
   async callbackGithub(
     @Query('installation_id') installationIdRaw: string,
+    @Query('code') code: string,
     @Query('state') state: string,
     @Res() res: Response,
   ) {
@@ -45,9 +77,29 @@ export class DatasourceController {
       throw new BadRequestException('Missing state');
     }
 
+    if (code) {
+      let existingInstallationId: number | null;
+      try {
+        existingInstallationId = await this.datasourceService.getGithubInstallationIdFromOAuth(
+          code,
+          this.githubCallbackUrl(),
+        );
+      } catch {
+        return res.redirect(this.githubInstallUrl(state));
+      }
+
+      if (existingInstallationId) {
+        await this.datasourceService.connectGithubApp(state, existingInstallationId);
+        const frontendUrl = this.config.get('FRONTEND_URL', 'http://localhost:3000');
+        return res.redirect(`${frontendUrl}/datasource?github=connected`);
+      }
+
+      return res.redirect(this.githubInstallUrl(state));
+    }
+
     const installationId = Number(installationIdRaw);
     if (!installationId || Number.isNaN(installationId)) {
-      throw new BadRequestException('Missing or invalid installation_id');
+      throw new BadRequestException('Missing GitHub OAuth code or valid installation_id');
     }
 
     await this.datasourceService.connectGithubApp(state, installationId);

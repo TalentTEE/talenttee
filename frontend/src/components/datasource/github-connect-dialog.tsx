@@ -16,6 +16,7 @@ interface GitHubConnectDialogProps {
 }
 
 type Step = 'intro' | 'waiting' | 'repos' | 'done' | 'error';
+const REPO_PAGE_SIZE = 8;
 
 const LANGUAGE_COLORS: Record<string, string> = {
   TypeScript: 'bg-blue-500',
@@ -37,6 +38,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [selectedRepoNames, setSelectedRepoNames] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleRepoCount, setVisibleRepoCount] = useState(REPO_PAGE_SIZE);
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [savingRepos, setSavingRepos] = useState(false);
 
@@ -46,6 +48,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
     setRepos([]);
     setSelectedRepoNames(new Set());
     setSearchQuery('');
+    setVisibleRepoCount(REPO_PAGE_SIZE);
   }
 
   useEffect(() => {
@@ -64,6 +67,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
         const data = await getGithubRepos();
         if (cancelled) return;
         setRepos(data.repos);
+        setVisibleRepoCount(REPO_PAGE_SIZE);
         setSelectedRepoNames(new Set(
           data.selectedRepos && data.selectedRepos.length > 0
             ? data.selectedRepos
@@ -110,13 +114,13 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
     return timer;
   }, [initialStep]);
 
-  async function handleLogin(options?: { forceInstall?: boolean }) {
+  async function handleLogin(options?: { manageAccess?: boolean }) {
     if (useDummy) {
       setStep('repos');
       return;
     }
 
-    if (!options?.forceInstall) {
+    if (!options?.manageAccess) {
       try {
         await getGithubRepos();
         setStep('repos');
@@ -126,7 +130,9 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
       }
     }
 
-    const url = getGithubOAuthUrl();
+    const url = options?.manageAccess
+      ? getGithubOAuthUrl({ manageAccess: true })
+      : getGithubOAuthUrl();
     const width = 600;
     const height = 700;
     const left = window.screenX + (window.innerWidth - width) / 2;
@@ -189,6 +195,8 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
   }, [repos, searchQuery]);
 
   const allFilteredSelected = filteredRepos.length > 0 && filteredRepos.every((repo) => selectedRepoNames.has(repo.fullName));
+  const visibleRepos = filteredRepos.slice(0, visibleRepoCount);
+  const hiddenRepoCount = Math.max(0, filteredRepos.length - visibleRepos.length);
 
   function toggleAll() {
     setSelectedRepoNames((prev) => {
@@ -209,7 +217,13 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
         if (!val) reset();
       }
     }}>
-      <DialogContent style={{ maxWidth: step === 'repos' ? 560 : 448 }}>
+      <DialogContent
+        className="min-w-0 overflow-hidden"
+        style={{
+          width: step === 'repos' ? 'min(560px, calc(100vw - 2rem))' : undefined,
+          maxWidth: step === 'repos' ? 'min(560px, calc(100vw - 2rem))' : 448,
+        }}
+      >
         {step === 'intro' && (
           <>
             <DialogHeader>
@@ -222,7 +236,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                 <DialogTitle>Connect GitHub</DialogTitle>
               </div>
               <DialogDescription>
-                Connect your GitHub account to analyze code contributions, tech stack, and project history
+                Authorize GitHub so TalentTEE can analyze selected repositories and project history.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
@@ -237,7 +251,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                 <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
                   <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.607.069-.607 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
                 </svg>
-                Install GitHub App
+                Connect GitHub
               </button>
             </div>
           </>
@@ -246,7 +260,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
         {step === 'waiting' && (
           <div className="flex flex-col items-center gap-3 py-10">
             <span className="material-symbols-outlined text-2xl animate-spin text-foreground">progress_activity</span>
-            <p className="text-sm text-muted-foreground">Complete GitHub App installation in the popup window...</p>
+            <p className="text-sm text-muted-foreground">Complete GitHub authorization in the popup window...</p>
             <p className="text-xs text-muted-foreground/60">The dialog will close automatically when done.</p>
           </div>
         )}
@@ -266,46 +280,49 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                 <p className="text-sm text-muted-foreground">Loading repositories...</p>
               </div>
             ) : (
-              <div className="space-y-3 py-2">
-                <div className="relative">
+              <div className="min-w-0 space-y-3 overflow-hidden py-2">
+                <div className="relative min-w-0 w-full">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">search</span>
                   <input
                     type="text"
                     placeholder="Filter repositories..."
                     value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      setVisibleRepoCount(REPO_PAGE_SIZE);
+                    }}
                     className="w-full pl-9 pr-3 py-2 rounded-lg border border-border/20 bg-[#060610] text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/30"
                   />
                 </div>
 
-                <div className="flex items-center justify-between px-1">
+                <div className="flex min-w-0 items-center justify-between gap-3 px-1">
                   <button
                     type="button"
                     onClick={toggleAll}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    className="min-h-10 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     {allFilteredSelected ? 'Deselect All' : 'Select All'}
                   </button>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                     {selectedRepoNames.size} of {repos.length} selected
                   </span>
                 </div>
 
-                <div className="rounded-xl border border-border/10 bg-[#060610] px-3 py-2.5 flex items-center justify-between gap-3">
-                  <p className="text-xs text-muted-foreground">
+                <div className="min-w-0 rounded-xl border border-border/10 bg-[#060610] px-3 py-2.5 flex items-center justify-between gap-3">
+                  <p className="min-w-0 text-xs text-muted-foreground">
                     Need repos that are not listed? Update GitHub App access.
                   </p>
                   <button
                     type="button"
-                    onClick={() => handleLogin({ forceInstall: true })}
-                    className="shrink-0 text-xs font-medium text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors cursor-pointer"
+                    onClick={() => handleLogin({ manageAccess: true })}
+                    className="min-h-10 shrink-0 text-xs font-medium text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors cursor-pointer"
                   >
                     Manage GitHub App access
                   </button>
                 </div>
 
-                <div className="max-h-[350px] overflow-y-auto space-y-1 pr-1 -mr-1">
-                  {filteredRepos.map((repo) => (
+                <div className="max-h-[350px] min-w-0 overflow-y-auto space-y-1 pr-1 -mr-1">
+                  {visibleRepos.map((repo) => (
                     <label
                       key={repo.fullName}
                       className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-foreground/5 transition-colors cursor-pointer"
@@ -350,6 +367,16 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                     <p className="text-center text-sm text-muted-foreground py-6">No repositories match your search.</p>
                   )}
                 </div>
+
+                {hiddenRepoCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleRepoCount((count) => count + REPO_PAGE_SIZE)}
+                    className="min-h-10 w-full rounded-lg border border-border/10 bg-foreground/[0.03] px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Show {Math.min(REPO_PAGE_SIZE, hiddenRepoCount)} more repositories
+                  </button>
+                )}
 
                 <button
                   type="button"

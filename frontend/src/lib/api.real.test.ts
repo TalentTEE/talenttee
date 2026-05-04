@@ -199,6 +199,14 @@ describe('API — Real mode', () => {
       expect(url).toContain('/datasource/connect/github');
     });
 
+    it('getGithubOAuthUrl → includes manage access flag when requested', () => {
+      localStorage.setItem('jwt', 'jwt');
+
+      const url = api.getGithubOAuthUrl({ manageAccess: true });
+
+      expect(url).toBe('http://localhost:3001/datasource/connect/github?token=jwt&manage_access=1');
+    });
+
     it('createJob → POST /jobs with jobData body', async () => {
       const jobData = { title: 'Dev' };
       mockFetch.mockReturnValue(jsonRes({ id: 'j-1', title: 'Dev' }));

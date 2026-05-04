@@ -8,6 +8,7 @@ import { NEAR_AI_CLIENT } from '../../common/interfaces/near-ai-client.interface
 
 describe('DatasourceService GitHub App repository selection', () => {
   let service: DatasourceService;
+  const configGet = jest.fn();
   const connection = {
     id: 'conn-1',
     userId: 'user-1',
@@ -34,12 +35,18 @@ describe('DatasourceService GitHub App repository selection', () => {
     repo.findOne.mockResolvedValue({ ...connection });
     repo.save.mockImplementation(async (value) => value);
     repo.find.mockResolvedValue([{ ...connection, status: DataSourceStatus.DISCONNECTED }]);
+    configGet.mockReset();
+    configGet.mockImplementation((key: string) => ({
+      GITHUB_APP_ID: '3593557',
+      GITHUB_CLIENT_ID: 'client-id',
+      GITHUB_CLIENT_SECRET: 'client-secret',
+    }[key]));
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DatasourceService,
         { provide: getRepositoryToken(DataSourceConnection), useValue: repo },
-        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: ConfigService, useValue: { get: configGet } },
         { provide: NEAR_AI_CLIENT, useValue: { chat: jest.fn() } },
       ],
     }).compile();
@@ -122,5 +129,90 @@ describe('DatasourceService GitHub App repository selection', () => {
 
     expect(result.github).toBeNull();
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('finds an existing TalentTEE GitHub App installation from GitHub OAuth', async () => {
+    jest.spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'github-user-token' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          installations: [
+            { id: 111, app_id: 999 },
+            { id: 12345, app_id: 3593557 },
+          ],
+        }),
+      } as Response);
+
+    const installationId = await service.getGithubInstallationIdFromOAuth(
+      'oauth-code',
+      'https://api.example.com/datasource/callback/github',
+    );
+
+    expect(installationId).toBe(12345);
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      'https://github.com/login/oauth/access_token',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      'https://api.github.com/user/installations',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer github-user-token' }),
+      }),
+    );
+  });
+
+  it('matches an existing GitHub App installation by OAuth user when user installations are unavailable', async () => {
+    jest.spyOn(service as any, 'createGithubAppJwt').mockReturnValue('app-jwt');
+    jest.spyOn(global, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'github-user-token' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        text: async () => 'Resource not accessible by integration',
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 139729358, login: 'Hyeonjeong-JANG' }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ([
+          {
+            id: 129369558,
+            app_id: 3593557,
+            account: { id: 139729358, login: 'Hyeonjeong-JANG' },
+          },
+        ]),
+      } as Response);
+
+    const installationId = await service.getGithubInstallationIdFromOAuth(
+      'oauth-code',
+      'http://localhost:4000/datasource/callback/github',
+    );
+
+    expect(installationId).toBe(129369558);
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      3,
+      'https://api.github.com/user',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer github-user-token' }),
+      }),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      4,
+      'https://api.github.com/app/installations?per_page=100',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer app-jwt' }),
+      }),
+    );
   });
 });
