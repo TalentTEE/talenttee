@@ -19,7 +19,7 @@ export class DataSourceConnection {
   @Column({ type: 'varchar', length: 20 })
   provider: DataSourceProvider;
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'varchar', length: 20, default: DataSourceStatus.CONNECTED })
   status: DataSourceStatus;
 
   @Column({ name: 'access_token', type: 'varchar', length: 512, nullable: true })
