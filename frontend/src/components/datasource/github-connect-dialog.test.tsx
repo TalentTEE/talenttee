@@ -78,4 +78,88 @@ describe('GitHubConnectDialog', () => {
       expect(onConnected).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('opens directly to repository selection in manage mode and saves removals', async () => {
+    const user = userEvent.setup();
+    const onConnected = vi.fn();
+    const onOpenChange = vi.fn();
+    mockGetGithubRepos.mockResolvedValueOnce({
+      selectedRepos: ['talent-dev/core', 'talent-dev/api'],
+      repos: [
+        {
+          name: 'core',
+          fullName: 'talent-dev/core',
+          description: 'Core app',
+          language: 'TypeScript',
+          stars: 7,
+          isPrivate: false,
+          topics: ['nextjs'],
+        },
+        {
+          name: 'api',
+          fullName: 'talent-dev/api',
+          description: 'Backend API',
+          language: 'TypeScript',
+          stars: 3,
+          isPrivate: true,
+          topics: [],
+        },
+      ],
+    });
+
+    render(
+      <GitHubConnectDialog
+        open
+        mode="manage"
+        onOpenChange={onOpenChange}
+        onConnected={onConnected}
+        useDummy={false}
+      />,
+    );
+
+    expect(await screen.findByText(/select repositories/i)).toBeInTheDocument();
+    expect(window.open).not.toHaveBeenCalled();
+
+    await user.click(screen.getByLabelText(/api/i));
+    await user.click(screen.getByRole('button', { name: /continue with 1 repo/i }));
+
+    await waitFor(() => {
+      expect(mockSaveSelectedRepos).toHaveBeenCalledWith(['talent-dev/core']);
+      expect(onConnected).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('lets users reopen GitHub App access settings from repository selection', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <GitHubConnectDialog
+        open
+        mode="manage"
+        onOpenChange={vi.fn()}
+        onConnected={vi.fn()}
+        useDummy={false}
+      />,
+    );
+
+    expect(await screen.findByText(/select repositories/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /manage github app access/i }));
+
+    expect(window.open).toHaveBeenCalledWith(
+      'https://api.example.com/datasource/connect/github?token=jwt',
+      'github-app-install',
+      expect.stringContaining('popup=yes'),
+    );
+    expect(screen.getByText(/complete github app installation/i)).toBeInTheDocument();
+
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: window.location.origin,
+      data: { type: 'github-oauth-connected' },
+    }));
+
+    await waitFor(() => {
+      expect(mockGetGithubRepos).toHaveBeenCalledTimes(2);
+    });
+  });
 });

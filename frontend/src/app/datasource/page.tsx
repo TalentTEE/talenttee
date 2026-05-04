@@ -445,17 +445,28 @@ export default function DatasourcePage() {
 
                 {isConnected ? (
                   <>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       {conn?.lastSyncedAt && (
                         <p className="text-xs text-muted-foreground">Last synced: {formatTime(conn.lastSyncedAt)}</p>
                       )}
-                      <button
-                        onClick={() => handleDisconnect(provider.id)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-sm">link_off</span>
-                        Disconnect
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        {provider.id === 'GITHUB' && (
+                          <button
+                            onClick={() => setDialogOpen('GITHUB_REPOS')}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-colors cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-sm">rule_settings</span>
+                            Manage repositories
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDisconnect(provider.id)}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">link_off</span>
+                          Disconnect
+                        </button>
+                      </div>
                     </div>
 
                     {/* Expand/collapse toggle */}
@@ -735,7 +746,8 @@ export default function DatasourcePage() {
 
       {/* Connect Dialogs */}
       <GitHubConnectDialog
-        open={dialogOpen === 'GITHUB'}
+        open={dialogOpen === 'GITHUB' || dialogOpen === 'GITHUB_REPOS'}
+        mode={dialogOpen === 'GITHUB_REPOS' ? 'manage' : 'connect'}
         onOpenChange={(val) => !val && setDialogOpen(null)}
         onConnected={() => { fetchConnections(); }}
         useDummy={USE_DUMMY}

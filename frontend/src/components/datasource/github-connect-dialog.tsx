@@ -12,6 +12,7 @@ interface GitHubConnectDialogProps {
   onOpenChange: (open: boolean) => void;
   onConnected: () => void;
   useDummy: boolean;
+  mode?: 'connect' | 'manage';
 }
 
 type Step = 'intro' | 'waiting' | 'repos' | 'done' | 'error';
@@ -29,7 +30,8 @@ const LANGUAGE_COLORS: Record<string, string> = {
   'C++': 'bg-pink-500',
 };
 
-export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy }: GitHubConnectDialogProps) {
+export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy, mode = 'connect' }: GitHubConnectDialogProps) {
+  const initialStep: Step = mode === 'manage' ? 'repos' : 'intro';
   const [step, setStep] = useState<Step>('intro');
   const [errorMsg, setErrorMsg] = useState('');
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
@@ -39,12 +41,18 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
   const [savingRepos, setSavingRepos] = useState(false);
 
   function reset() {
-    setStep('intro');
+    setStep(initialStep);
     setErrorMsg('');
     setRepos([]);
     setSelectedRepoNames(new Set());
     setSearchQuery('');
   }
+
+  useEffect(() => {
+    if (!open) return;
+    reset();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode]);
 
   useEffect(() => {
     if (step !== 'repos') return;
@@ -94,13 +102,13 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
       if (popup.closed) {
         clearInterval(timer);
         setStep((current) => {
-          if (current === 'waiting') return 'intro';
+          if (current === 'waiting') return initialStep;
           return current;
         });
       }
     }, 500);
     return timer;
-  }, []);
+  }, [initialStep]);
 
   function handleLogin() {
     if (useDummy) {
@@ -271,6 +279,19 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
                   <span className="text-xs text-muted-foreground">
                     {selectedRepoNames.size} of {repos.length} selected
                   </span>
+                </div>
+
+                <div className="rounded-xl border border-border/10 bg-[#060610] px-3 py-2.5 flex items-center justify-between gap-3">
+                  <p className="text-xs text-muted-foreground">
+                    Need repos that are not listed? Update GitHub App access.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleLogin}
+                    className="shrink-0 text-xs font-medium text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors cursor-pointer"
+                  >
+                    Manage GitHub App access
+                  </button>
                 </div>
 
                 <div className="max-h-[350px] overflow-y-auto space-y-1 pr-1 -mr-1">
