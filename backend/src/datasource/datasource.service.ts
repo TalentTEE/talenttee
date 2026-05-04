@@ -26,6 +26,16 @@ interface RepoContributionStats {
   contributionRatio: number;
 }
 
+export interface GithubRepoSummary {
+  name: string;
+  fullName: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  isPrivate: boolean;
+  topics: string[];
+}
+
 @Injectable()
 export class DatasourceService {
   constructor(
@@ -118,6 +128,40 @@ export class DatasourceService {
     return this.dsRepo.save(conn);
   }
 
+  async getGithubRepos(userId: string): Promise<{
+    repos: GithubRepoSummary[];
+    selectedRepos: string[] | null;
+  }> {
+    const conn = await this.dsRepo.findOne({
+      where: { userId, provider: DataSourceProvider.GITHUB },
+    });
+    if (!conn || !conn.installationId) {
+      throw new NotFoundException('GitHub is not connected');
+    }
+
+    const installationToken = await this.getGithubInstallationToken(Number(conn.installationId));
+    const repos = await this.fetchGithubInstallationRepos(installationToken);
+
+    return {
+      repos: repos.map((repo) => this.toGithubRepoSummary(repo)),
+      selectedRepos: conn.selectedRepos,
+    };
+  }
+
+  async updateSelectedRepos(userId: string, repos: string[]): Promise<void> {
+    const conn = await this.dsRepo.findOne({
+      where: { userId, provider: DataSourceProvider.GITHUB },
+    });
+    if (!conn || !conn.installationId) {
+      throw new NotFoundException('GitHub is not connected');
+    }
+
+    conn.selectedRepos = repos;
+    conn.analysisCache = null as any;
+    conn.analysisCachedAt = null as any;
+    await this.dsRepo.save(conn);
+  }
+
   async connectPdf(
     userId: string,
     parseResult: { rawText: string; structured: Record<string, any> | null },
@@ -199,7 +243,7 @@ export class DatasourceService {
       && conn.installationId
     ) {
       const installationToken = await this.getGithubInstallationToken(Number(conn.installationId));
-      rawData = await this.fetchGithubData(installationToken, conn.githubLogin);
+      rawData = await this.fetchGithubData(installationToken, conn.githubLogin, conn.selectedRepos);
       conn.lastSyncedAt = new Date();
       await this.dsRepo.save(conn);
     } else if (conn.status === DataSourceStatus.MOCK) {
@@ -245,7 +289,7 @@ export class DatasourceService {
     }
   }
 
-  private async fetchGithubData(installationToken: string, githubLogin?: string | null): Promise<Record<string, any>> {
+  private async fetchGithubInstallationRepos(installationToken: string): Promise<any[]> {
     const headers = {
       Authorization: `Bearer ${installationToken}`,
       Accept: 'application/vnd.github+json',
@@ -274,6 +318,39 @@ export class DatasourceService {
       if (pageRepos.length < 100) break;
       page += 1;
     }
+
+    return allRepos;
+  }
+
+  private toGithubRepoSummary(repo: any): GithubRepoSummary {
+    return {
+      name: repo.name as string,
+      fullName: repo.full_name as string,
+      description: (repo.description as string) || null,
+      language: (repo.language as string) || null,
+      stars: (repo.stargazers_count as number) || 0,
+      isPrivate: !!repo.private,
+      topics: (repo.topics as string[]) || [],
+    };
+  }
+
+  private async fetchGithubData(
+    installationToken: string,
+    githubLogin?: string | null,
+    selectedRepos?: string[] | null,
+  ): Promise<Record<string, any>> {
+    let allRepos = await this.fetchGithubInstallationRepos(installationToken);
+    if (selectedRepos && selectedRepos.length > 0) {
+      const selected = new Set(selectedRepos);
+      allRepos = allRepos.filter((repo) => selected.has(repo.full_name));
+    }
+
+    const headers = {
+      Authorization: `Bearer ${installationToken}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'TalentTEE',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
 
     const languages: Record<string, number> = {};
     for (const repo of allRepos) {

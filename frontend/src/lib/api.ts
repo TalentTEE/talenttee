@@ -3,6 +3,7 @@ import {
   MatchResult, MatchResultDisplay, MatchContext, ProfileReport, NegotiationSession, NegotiationRound,
   EncryptedNegotiationRound,
   AgreementRecord, EscrowAccount, EscrowPayment, ChatMessage, JobChatResponse,
+  GitHubRepo,
 } from './types';
 import { DUMMY_ALICE, DUMMY_BOB } from './dummy/user';
 import { getDummyDatasources, addDummyDatasource, removeDummyDatasource } from './dummy/datasources';
@@ -265,6 +266,28 @@ export async function getDatasourceData(provider: string): Promise<DatasourceDet
     return fixtures[provider] ?? fixtures.GITHUB;
   }
   return apiFetch(`/datasource/me/${provider.toLowerCase()}/data`);
+}
+
+const DUMMY_GITHUB_REPOS: GitHubRepo[] = [
+  { name: 'defi-swap-protocol', fullName: 'demo-dev/defi-swap-protocol', description: 'Decentralized token swap on NEAR Protocol', language: 'Rust', stars: 34, isPrivate: false, topics: ['near', 'defi', 'blockchain'] },
+  { name: 'ai-resume-builder', fullName: 'demo-dev/ai-resume-builder', description: 'AI-powered resume generation tool', language: 'TypeScript', stars: 89, isPrivate: false, topics: ['ai', 'nestjs', 'openai'] },
+  { name: 'react-dashboard-kit', fullName: 'demo-dev/react-dashboard-kit', description: 'Enterprise dashboard component library', language: 'TypeScript', stars: 156, isPrivate: false, topics: ['react', 'nextjs', 'tailwindcss'] },
+  { name: 'private-notes-app', fullName: 'demo-dev/private-notes-app', description: 'Personal encrypted notes application', language: 'JavaScript', stars: 0, isPrivate: true, topics: ['encryption', 'pwa'] },
+  { name: 'smart-contract-tests', fullName: 'demo-dev/smart-contract-tests', description: 'Test suite for NEAR smart contracts', language: 'Rust', stars: 12, isPrivate: false, topics: ['near', 'testing'] },
+  { name: 'dotfiles', fullName: 'demo-dev/dotfiles', description: null, language: 'Shell', stars: 2, isPrivate: false, topics: [] },
+];
+
+export async function getGithubRepos(): Promise<{ repos: GitHubRepo[]; selectedRepos: string[] | null }> {
+  if (USE_DUMMY) return { repos: DUMMY_GITHUB_REPOS, selectedRepos: null };
+  return apiFetch('/datasource/me/github/repos');
+}
+
+export async function saveSelectedRepos(repos: string[]): Promise<void> {
+  if (USE_DUMMY) return;
+  await apiFetch('/datasource/github/selected-repos', {
+    method: 'PATCH',
+    body: JSON.stringify({ repos }),
+  });
 }
 
 export interface PdfUploadResult {

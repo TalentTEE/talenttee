@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { getGithubOAuthUrl } from '@/lib/api';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { getGithubOAuthUrl, getGithubRepos, saveSelectedRepos } from '@/lib/api';
+import type { GitHubRepo } from '@/lib/types';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -13,16 +14,65 @@ interface GitHubConnectDialogProps {
   useDummy: boolean;
 }
 
-type Step = 'intro' | 'waiting' | 'done' | 'error';
+type Step = 'intro' | 'waiting' | 'repos' | 'done' | 'error';
+
+const LANGUAGE_COLORS: Record<string, string> = {
+  TypeScript: 'bg-blue-500',
+  JavaScript: 'bg-yellow-400',
+  Rust: 'bg-orange-500',
+  Python: 'bg-green-500',
+  Shell: 'bg-emerald-600',
+  Go: 'bg-cyan-500',
+  Java: 'bg-red-500',
+  Ruby: 'bg-red-400',
+  C: 'bg-gray-500',
+  'C++': 'bg-pink-500',
+};
 
 export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy }: GitHubConnectDialogProps) {
   const [step, setStep] = useState<Step>('intro');
   const [errorMsg, setErrorMsg] = useState('');
+  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [selectedRepoNames, setSelectedRepoNames] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loadingRepos, setLoadingRepos] = useState(false);
+  const [savingRepos, setSavingRepos] = useState(false);
 
   function reset() {
     setStep('intro');
     setErrorMsg('');
+    setRepos([]);
+    setSelectedRepoNames(new Set());
+    setSearchQuery('');
   }
+
+  useEffect(() => {
+    if (step !== 'repos') return;
+    let cancelled = false;
+
+    async function loadRepos() {
+      setLoadingRepos(true);
+      try {
+        const data = await getGithubRepos();
+        if (cancelled) return;
+        setRepos(data.repos);
+        setSelectedRepoNames(new Set(
+          data.selectedRepos && data.selectedRepos.length > 0
+            ? data.selectedRepos
+            : data.repos.map((repo) => repo.fullName),
+        ));
+      } catch (err) {
+        if (cancelled) return;
+        setErrorMsg(err instanceof Error ? err.message : 'Failed to load GitHub repositories.');
+        setStep('error');
+      } finally {
+        if (!cancelled) setLoadingRepos(false);
+      }
+    }
+
+    loadRepos();
+    return () => { cancelled = true; };
+  }, [step]);
 
   // Listen for OAuth popup callback
   useEffect(() => {
@@ -31,12 +81,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
     function handleMessage(event: MessageEvent) {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === 'github-oauth-connected') {
-        onConnected();
-        setStep('done');
-        setTimeout(() => {
-          onOpenChange(false);
-          reset();
-        }, 800);
+        setStep('repos');
       }
     }
 
@@ -59,12 +104,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
 
   function handleLogin() {
     if (useDummy) {
-      onConnected();
-      setStep('done');
-      setTimeout(() => {
-        onOpenChange(false);
-        reset();
-      }, 800);
+      setStep('repos');
       return;
     }
 
@@ -90,6 +130,60 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
     checkPopupClosed(popup);
   }
 
+  async function handleSaveRepos() {
+    setSavingRepos(true);
+    try {
+      await saveSelectedRepos(Array.from(selectedRepoNames));
+      onConnected();
+      setStep('done');
+      setTimeout(() => {
+        onOpenChange(false);
+        reset();
+      }, 800);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to save selected repositories.');
+      setStep('error');
+    } finally {
+      setSavingRepos(false);
+    }
+  }
+
+  function toggleRepo(fullName: string) {
+    setSelectedRepoNames((prev) => {
+      const next = new Set(prev);
+      if (next.has(fullName)) next.delete(fullName);
+      else next.add(fullName);
+      return next;
+    });
+  }
+
+  const filteredRepos = useMemo(() => {
+    if (!searchQuery.trim()) return repos;
+    const q = searchQuery.toLowerCase();
+    return repos.filter(
+      (repo) =>
+        repo.name.toLowerCase().includes(q) ||
+        repo.fullName.toLowerCase().includes(q) ||
+        repo.description?.toLowerCase().includes(q) ||
+        repo.language?.toLowerCase().includes(q) ||
+        repo.topics.some((topic) => topic.toLowerCase().includes(q)),
+    );
+  }, [repos, searchQuery]);
+
+  const allFilteredSelected = filteredRepos.length > 0 && filteredRepos.every((repo) => selectedRepoNames.has(repo.fullName));
+
+  function toggleAll() {
+    setSelectedRepoNames((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        filteredRepos.forEach((repo) => next.delete(repo.fullName));
+      } else {
+        filteredRepos.forEach((repo) => next.add(repo.fullName));
+      }
+      return next;
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={(val) => {
       if (step !== 'waiting') {
@@ -97,7 +191,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
         if (!val) reset();
       }
     }}>
-      <DialogContent style={{ maxWidth: 448 }}>
+      <DialogContent style={{ maxWidth: step === 'repos' ? 560 : 448 }}>
         {step === 'intro' && (
           <>
             <DialogHeader>
@@ -137,6 +231,113 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy 
             <p className="text-sm text-muted-foreground">Complete GitHub App installation in the popup window...</p>
             <p className="text-xs text-muted-foreground/60">The dialog will close automatically when done.</p>
           </div>
+        )}
+
+        {step === 'repos' && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Select Repositories</DialogTitle>
+              <DialogDescription>
+                Choose repositories to include in your work analysis.
+              </DialogDescription>
+            </DialogHeader>
+
+            {loadingRepos ? (
+              <div className="flex flex-col items-center gap-3 py-10">
+                <span className="material-symbols-outlined text-2xl animate-spin text-foreground">progress_activity</span>
+                <p className="text-sm text-muted-foreground">Loading repositories...</p>
+              </div>
+            ) : (
+              <div className="space-y-3 py-2">
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">search</span>
+                  <input
+                    type="text"
+                    placeholder="Filter repositories..."
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-lg border border-border/20 bg-[#060610] text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/30"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between px-1">
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    {allFilteredSelected ? 'Deselect All' : 'Select All'}
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {selectedRepoNames.size} of {repos.length} selected
+                  </span>
+                </div>
+
+                <div className="max-h-[350px] overflow-y-auto space-y-1 pr-1 -mr-1">
+                  {filteredRepos.map((repo) => (
+                    <label
+                      key={repo.fullName}
+                      className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-foreground/5 transition-colors cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label={repo.name}
+                        checked={selectedRepoNames.has(repo.fullName)}
+                        onChange={() => toggleRepo(repo.fullName)}
+                        className="mt-0.5 h-4 w-4 rounded border-border/30 accent-foreground cursor-pointer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground truncate">{repo.name}</span>
+                          {repo.isPrivate && (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium border border-border/20 text-muted-foreground">
+                              Private
+                            </span>
+                          )}
+                        </div>
+                        {repo.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">{repo.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-1">
+                          {repo.language && (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <span className={`h-2.5 w-2.5 rounded-full ${LANGUAGE_COLORS[repo.language] || 'bg-gray-400'}`} />
+                              {repo.language}
+                            </span>
+                          )}
+                          {repo.stars > 0 && (
+                            <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                              <span className="material-symbols-outlined text-xs" style={{ fontSize: '14px' }}>star</span>
+                              {repo.stars}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                  {filteredRepos.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-6">No repositories match your search.</p>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveRepos}
+                  disabled={selectedRepoNames.size === 0 || savingRepos}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingRepos ? (
+                    <>
+                      <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>Continue with {selectedRepoNames.size} {selectedRepoNames.size === 1 ? 'repo' : 'repos'}</>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {step === 'done' && (

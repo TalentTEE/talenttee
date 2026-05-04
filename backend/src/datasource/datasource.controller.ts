@@ -56,6 +56,21 @@ export class DatasourceController {
     return res.redirect(`${frontendUrl}/datasource?github=connected`);
   }
 
+  @Get('me/github/repos')
+  @UseGuards(JwtGuard)
+  async getGithubRepos(@Req() req) {
+    const userId = req.user.id;
+    return this.datasourceService.getGithubRepos(userId);
+  }
+
+  @Patch('github/selected-repos')
+  @UseGuards(JwtGuard)
+  async updateSelectedRepos(@Req() req, @Body() body: { repos: string[] }) {
+    const userId = req.user.id;
+    await this.datasourceService.updateSelectedRepos(userId, body.repos);
+    return { message: 'Selected repos updated' };
+  }
+
   @Post('connect/mock')
   @UseGuards(JwtGuard)
   async connectMock(@Req() req, @Body() body: { provider: string }) {

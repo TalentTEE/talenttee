@@ -16,6 +16,16 @@ export interface DataSourceConnection {
   lastSyncedAt: string | null;
 }
 
+export interface GitHubRepo {
+  name: string;
+  fullName: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  isPrivate: boolean;
+  topics: string[];
+}
+
 export interface ResumeProfile {
   id: string;
   userId: string;

@@ -89,6 +89,7 @@ describe('API — Real mode', () => {
   describe('GET endpoint mapping', () => {
     const getCases: [string, () => Promise<unknown>, string][] = [
       ['getDatasourceStatus', () => api.getDatasourceStatus(), '/datasource/status'],
+      ['getGithubRepos', () => api.getGithubRepos(), '/datasource/me/github/repos'],
       // connectGithubOAuth moved to POST tests
       ['getResume', () => api.getResume(), '/resume/me'],
       ['getResumeStatus', () => api.getResumeStatus(), '/resume/me/status'],
@@ -161,6 +162,16 @@ describe('API — Real mode', () => {
       expect(url).toBe('http://localhost:3001/datasource/connect/mock');
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual({ provider: 'GITHUB' });
+    });
+
+    it('saveSelectedRepos → PATCH /datasource/github/selected-repos', async () => {
+      mockFetch.mockReturnValue(jsonRes({ message: 'Selected repos updated' }));
+      await api.saveSelectedRepos(['talent-dev/core', 'talent-dev/api']);
+
+      const [url, opts] = mockFetch.mock.calls[0];
+      expect(url).toBe('http://localhost:3001/datasource/github/selected-repos');
+      expect(opts.method).toBe('PATCH');
+      expect(JSON.parse(opts.body)).toEqual({ repos: ['talent-dev/core', 'talent-dev/api'] });
     });
 
     it('generateResume → POST /resume/generate', async () => {
