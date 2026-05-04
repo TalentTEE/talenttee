@@ -240,25 +240,33 @@ export interface EncryptedNegotiationRound {
   timestamp: string;
 }
 
-export interface GitHubRepo {
-  name: string;
-  fullName: string;
-  description: string | null;
-  language: string | null;
-  stars: number;
-  isPrivate: boolean;
-  topics: string[];
-}
-
 /* ── Datasource Detail Types ── */
 export interface SkillLevel { name: string; level: number; evidence: string; }
 export interface TraitLevel { trait: string; level: number; evidence: string; }
 
 export interface GitHubData {
-  profile: { login: string; name: string; bio: string; public_repos: number; followers: number; };
+  profile: { login: string; name: string | null; bio: string | null; public_repos: number; followers: number; };
   languages: Record<string, number>;
-  repositories: { name: string; description: string; language: string; stars: number; forks: number; topics: string[]; }[];
-  contributions: { total_commits_last_year: number; prs_merged: number; issues_closed: number; code_reviews: number; };
+  repositories: {
+    name: string;
+    description: string | null;
+    language: string | null;
+    stars: number;
+    forks: number;
+    topics: string[];
+    userCommits?: number;
+    totalCommits?: number;
+    additions?: number;
+    deletions?: number;
+    contributionRatio?: number;
+  }[];
+  contributions: {
+    total_commits_last_year: number;
+    prs_merged: number;
+    issues_closed: number;
+    code_reviews: number;
+    contribution_ratio?: number;
+  };
   analysis?: {
     skills: SkillLevel[];
     workPatterns: { trait: string; description: string; }[];

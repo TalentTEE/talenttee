@@ -44,21 +44,52 @@ function GitHubDetail({ data }: { data: GitHubData }) {
         </h4>
         <div className="space-y-1.5">
           {data.repositories.map((repo) => (
-            <div key={repo.name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/30">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">{repo.name}</span>
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[repo.language] ?? '#8b8b8b' }} />
-                    {repo.language}
-                  </span>
+            <div key={repo.name} className="px-3 py-2 rounded-lg bg-muted/30">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground truncate">{repo.name}</span>
+                    {repo.language && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[repo.language] ?? '#8b8b8b' }} />
+                        {repo.language}
+                      </span>
+                    )}
+                  </div>
+                  {repo.description && (
+                    <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{repo.description}</p>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground/70 truncate mt-0.5">{repo.description}</p>
+                <span className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 ml-3">
+                  <span className="material-symbols-outlined text-xs">star</span>
+                  {repo.stars}
+                </span>
               </div>
-              <span className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 ml-3">
-                <span className="material-symbols-outlined text-xs">star</span>
-                {repo.stars}
-              </span>
+
+              {(repo.userCommits !== undefined || repo.totalCommits !== undefined) && (
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                    <p className="text-[10px] text-muted-foreground">My commits</p>
+                    <p className="text-xs font-semibold text-foreground">{repo.userCommits ?? 0}</p>
+                  </div>
+                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                    <p className="text-[10px] text-muted-foreground">Total commits</p>
+                    <p className="text-xs font-semibold text-foreground">{repo.totalCommits ?? 0}</p>
+                  </div>
+                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                    <p className="text-[10px] text-muted-foreground">Additions</p>
+                    <p className="text-xs font-semibold text-foreground">{repo.additions ?? 0}</p>
+                  </div>
+                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                    <p className="text-[10px] text-muted-foreground">Deletions</p>
+                    <p className="text-xs font-semibold text-foreground">{repo.deletions ?? 0}</p>
+                  </div>
+                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                    <p className="text-[10px] text-muted-foreground">Contribution</p>
+                    <p className="text-xs font-semibold text-foreground">{((repo.contributionRatio ?? 0) * 100).toFixed(1)}%</p>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

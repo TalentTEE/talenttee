@@ -23,7 +23,13 @@ export class DataSourceConnection {
   status: DataSourceStatus;
 
   @Column({ name: 'access_token', type: 'varchar', length: 512, nullable: true })
-  accessToken: string;
+  accessToken: string | null;
+
+  @Column({ name: 'installation_id', type: 'bigint', nullable: true })
+  installationId: number | null;
+
+  @Column({ name: 'github_login', type: 'varchar', length: 100, nullable: true })
+  githubLogin: string | null;
 
   @Column({ name: 'last_synced_at', type: 'timestamptz', nullable: true })
   lastSyncedAt: Date;

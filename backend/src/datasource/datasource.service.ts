@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { createSign } from 'crypto';
 import { DataSourceConnection } from '../entities/data-source-connection.entity.js';
 import { DataSourceProvider, DataSourceStatus } from '../common/enums/index.js';
 import { NEAR_AI_CLIENT } from '../common/interfaces/near-ai-client.interface.js';
@@ -17,6 +18,14 @@ import {
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+interface RepoContributionStats {
+  userCommits: number;
+  totalCommits: number;
+  additions: number;
+  deletions: number;
+  contributionRatio: number;
+}
+
 @Injectable()
 export class DatasourceService {
   constructor(
@@ -26,23 +35,6 @@ export class DatasourceService {
     @Inject(NEAR_AI_CLIENT)
     private readonly aiClient: NearAiClient,
   ) {}
-
-  async exchangeGithubCode(code: string): Promise<string> {
-    const response = await fetch('https://github.com/login/oauth/access_token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: this.config.get('GITHUB_CLIENT_ID'),
-        client_secret: this.config.get('GITHUB_CLIENT_SECRET'),
-        code,
-      }),
-    });
-    const data = await response.json();
-    return data.access_token;
-  }
 
   async connectMock(userId: string, provider: DataSourceProvider): Promise<DataSourceConnection> {
     const existing = await this.dsRepo.findOne({ where: { userId, provider } });
@@ -57,70 +49,59 @@ export class DatasourceService {
     return this.dsRepo.save(conn);
   }
 
-  async getGithubRepos(userId: string): Promise<{
-    repos: { name: string; fullName: string; description: string | null; language: string | null; stars: number; isPrivate: boolean; topics: string[] }[];
-    selectedRepos: string[] | null;
-  }> {
-    const conn = await this.dsRepo.findOne({
-      where: { userId, provider: DataSourceProvider.GITHUB },
+  async getGithubInstallationToken(installationId: number): Promise<string> {
+    const jwt = this.createGithubAppJwt();
+    const response = await fetch(`https://api.github.com/app/installations/${installationId}/access_tokens`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'TalentTEE',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
     });
-    if (!conn || !conn.accessToken) {
-      throw new NotFoundException('GitHub is not connected');
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Failed to create GitHub installation token: ${response.status} ${body}`);
     }
 
-    const headers = {
-      Authorization: `Bearer ${conn.accessToken}`,
-      Accept: 'application/vnd.github.v3+json',
-      'User-Agent': 'TalentTEE',
-    };
+    const data = await response.json() as { token?: string };
+    if (!data.token) throw new Error('GitHub installation token missing in response');
+    return data.token;
+  }
 
-    // Paginate through all repos (GitHub API max 100 per page)
-    let allRawRepos: any[] = [];
-    let page = 1;
-    while (true) {
-      const res = await fetch(
-        `https://api.github.com/user/repos?per_page=100&sort=pushed&type=all&page=${page}`,
-        { headers },
-      );
-      const pageRepos = await res.json();
-      if (!Array.isArray(pageRepos) || pageRepos.length === 0) break;
-      allRawRepos.push(...pageRepos);
-      if (pageRepos.length < 100) break;
-      page++;
+  async connectGithubApp(userId: string, installationId: number): Promise<DataSourceConnection> {
+    const jwt = this.createGithubAppJwt();
+    const installationRes = await fetch(`https://api.github.com/app/installations/${installationId}`, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'TalentTEE',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    if (!installationRes.ok) {
+      const body = await installationRes.text();
+      throw new Error(`Failed to read GitHub installation: ${installationRes.status} ${body}`);
     }
 
-    const repos = allRawRepos.map((r: any) => ({
-      name: r.name as string,
-      fullName: r.full_name as string,
-      description: (r.description as string) || null,
-      language: (r.language as string) || null,
-      stars: (r.stargazers_count as number) || 0,
-      isPrivate: !!r.private,
-      topics: (r.topics as string[]) || [],
-    }));
+    const installation = await installationRes.json() as { account?: { login?: string } };
+    const githubLogin = installation.account?.login ?? null;
 
-    return { repos, selectedRepos: conn.selectedRepos };
-  }
-
-  async updateSelectedRepos(userId: string, repos: string[]): Promise<void> {
-    const conn = await this.dsRepo.findOne({
-      where: { userId, provider: DataSourceProvider.GITHUB },
-    });
-    if (!conn) throw new NotFoundException('GitHub is not connected');
-    conn.selectedRepos = repos;
-    // Mark cache as stale (keep old data for instant fallback)
-    conn.analysisCachedAt = null as any;
-    await this.dsRepo.save(conn);
-  }
-
-  async connectGithub(userId: string, accessToken: string): Promise<DataSourceConnection> {
     const existing = await this.dsRepo.findOne({
       where: { userId, provider: DataSourceProvider.GITHUB },
     });
+
     if (existing) {
-      existing.accessToken = accessToken;
+      existing.installationId = installationId;
+      existing.githubLogin = githubLogin;
       existing.status = DataSourceStatus.CONNECTED;
       existing.lastSyncedAt = new Date();
+      existing.accessToken = null;
+      existing.analysisCache = null as any;
+      existing.analysisCachedAt = null as any;
       return this.dsRepo.save(existing);
     }
 
@@ -128,7 +109,10 @@ export class DatasourceService {
       userId,
       provider: DataSourceProvider.GITHUB,
       status: DataSourceStatus.CONNECTED,
-      accessToken,
+      installationId,
+      githubLogin,
+      accessToken: null,
+      selectedRepos: null,
       lastSyncedAt: new Date(),
     });
     return this.dsRepo.save(conn);
@@ -209,8 +193,15 @@ export class DatasourceService {
     if (provider === DataSourceProvider.PDF) {
       // PDF data is stored in analysisCache at upload time
       return conn.analysisCache ?? {};
-    } else if (provider === DataSourceProvider.GITHUB && conn.status === DataSourceStatus.CONNECTED && conn.accessToken) {
-      rawData = await this.fetchGithubData(conn.accessToken, conn.selectedRepos);
+    } else if (
+      provider === DataSourceProvider.GITHUB
+      && conn.status === DataSourceStatus.CONNECTED
+      && conn.installationId
+    ) {
+      const installationToken = await this.getGithubInstallationToken(Number(conn.installationId));
+      rawData = await this.fetchGithubData(installationToken, conn.githubLogin);
+      conn.lastSyncedAt = new Date();
+      await this.dsRepo.save(conn);
     } else if (conn.status === DataSourceStatus.MOCK) {
       rawData = this.loadFixture(provider);
     } else {
@@ -220,9 +211,9 @@ export class DatasourceService {
     // 2. Check analysis cache
     const { analysis: _fixtureAnalysis, ...rawWithoutAnalysis } = rawData;
     const isCacheFresh =
-      conn.analysisCache &&
-      conn.analysisCachedAt &&
-      Date.now() - new Date(conn.analysisCachedAt).getTime() < CACHE_TTL_MS;
+      conn.analysisCache
+      && conn.analysisCachedAt
+      && Date.now() - new Date(conn.analysisCachedAt).getTime() < CACHE_TTL_MS;
 
     if (isCacheFresh) {
       return { ...rawWithoutAnalysis, analysis: conn.analysisCache };
@@ -254,69 +245,198 @@ export class DatasourceService {
     }
   }
 
-  private async fetchGithubData(accessToken: string, selectedRepos?: string[] | null): Promise<Record<string, any>> {
+  private async fetchGithubData(installationToken: string, githubLogin?: string | null): Promise<Record<string, any>> {
     const headers = {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${installationToken}`,
+      Accept: 'application/vnd.github+json',
       'User-Agent': 'TalentTEE',
+      'X-GitHub-Api-Version': '2022-11-28',
     };
 
-    const [profileRes, reposRes] = await Promise.all([
-      fetch('https://api.github.com/user', { headers }),
-      fetch('https://api.github.com/user/repos?per_page=100&sort=updated', { headers }),
-    ]);
+    const allRepos: any[] = [];
+    let page = 1;
+    while (true) {
+      const reposRes = await fetch(
+        `https://api.github.com/installation/repositories?per_page=100&page=${page}`,
+        { headers },
+      );
 
-    const profile = await profileRes.json();
-    let repos = await reposRes.json();
+      if (!reposRes.ok) {
+        const body = await reposRes.text();
+        throw new Error(`Failed to fetch installation repositories: ${reposRes.status} ${body}`);
+      }
 
-    // Filter by selected repos if provided
-    if (selectedRepos && selectedRepos.length > 0 && Array.isArray(repos)) {
-      repos = repos.filter((r: any) => selectedRepos.includes(r.full_name));
+      const payload = await reposRes.json() as { repositories?: any[] };
+      const pageRepos = Array.isArray(payload.repositories) ? payload.repositories : [];
+      if (pageRepos.length === 0) break;
+
+      allRepos.push(...pageRepos);
+      if (pageRepos.length < 100) break;
+      page += 1;
     }
 
-    // Aggregate language bytes from repos
     const languages: Record<string, number> = {};
-    for (const repo of repos) {
+    for (const repo of allRepos) {
       if (repo.language) {
         languages[repo.language] = (languages[repo.language] || 0) + (repo.size || 0);
       }
     }
 
-    // Get contribution events (last 90 days)
-    const eventsRes = await fetch(`https://api.github.com/users/${profile.login}/events?per_page=100`, { headers });
-    const events = await eventsRes.json();
-    const pushEvents = Array.isArray(events) ? events.filter((e: any) => e.type === 'PushEvent') : [];
-    const prEvents = Array.isArray(events) ? events.filter((e: any) => e.type === 'PullRequestEvent') : [];
+    const reposForDetail = [...allRepos]
+      .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+      .slice(0, 6);
 
-    // Top repos by stars
-    const topRepos = (Array.isArray(repos) ? repos : [])
-      .sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
-      .slice(0, 6)
-      .map((r: any) => ({
-        name: r.name,
-        description: r.description,
-        language: r.language,
-        stars: r.stargazers_count,
-        forks: r.forks_count,
-        topics: r.topics || [],
-      }));
+    const detailedRepos = await Promise.all(
+      reposForDetail.map(async (repo) => {
+        const ownerLogin = repo.owner?.login as string;
+        const repoName = repo.name as string;
+
+        const stats = githubLogin
+          ? await this.fetchRepoContributionStats(ownerLogin, repoName, githubLogin, headers)
+          : {
+            userCommits: 0,
+            totalCommits: 0,
+            additions: 0,
+            deletions: 0,
+            contributionRatio: 0,
+          };
+
+        return {
+          name: repoName,
+          description: repo.description,
+          language: repo.language,
+          stars: repo.stargazers_count,
+          forks: repo.forks_count,
+          topics: repo.topics || [],
+          userCommits: stats.userCommits,
+          totalCommits: stats.totalCommits,
+          additions: stats.additions,
+          deletions: stats.deletions,
+          contributionRatio: stats.contributionRatio,
+        };
+      }),
+    );
+
+    const aggregatedUserCommits = detailedRepos.reduce((sum, repo) => sum + (repo.userCommits || 0), 0);
+    const aggregatedTotalCommits = detailedRepos.reduce((sum, repo) => sum + (repo.totalCommits || 0), 0);
+
+    const profile = await this.fetchGithubProfile(githubLogin, headers, allRepos.length);
 
     return {
-      profile: {
-        login: profile.login,
-        name: profile.name,
-        bio: profile.bio,
-        public_repos: profile.public_repos,
-        followers: profile.followers,
-      },
+      profile,
       languages,
-      repositories: topRepos,
+      repositories: detailedRepos,
       contributions: {
-        total_commits_last_year: pushEvents.reduce((sum: number, e: any) => sum + (e.payload?.commits?.length || 0), 0),
-        prs_merged: prEvents.length,
+        total_commits_last_year: aggregatedUserCommits,
+        prs_merged: 0,
         issues_closed: 0,
         code_reviews: 0,
+        contribution_ratio: aggregatedTotalCommits > 0
+          ? aggregatedUserCommits / aggregatedTotalCommits
+          : 0,
       },
+    };
+  }
+
+  private async fetchGithubProfile(
+    githubLogin: string | null | undefined,
+    headers: Record<string, string>,
+    repoCount: number,
+  ) {
+    if (!githubLogin) {
+      return {
+        login: 'unknown',
+        name: null,
+        bio: null,
+        public_repos: repoCount,
+        followers: 0,
+      };
+    }
+
+    const profileRes = await fetch(`https://api.github.com/users/${githubLogin}`, { headers });
+    if (!profileRes.ok) {
+      return {
+        login: githubLogin,
+        name: githubLogin,
+        bio: null,
+        public_repos: repoCount,
+        followers: 0,
+      };
+    }
+
+    const profile = await profileRes.json() as {
+      login?: string;
+      name?: string | null;
+      bio?: string | null;
+      public_repos?: number;
+      followers?: number;
+    };
+
+    return {
+      login: profile.login || githubLogin,
+      name: profile.name || githubLogin,
+      bio: profile.bio || null,
+      public_repos: profile.public_repos ?? repoCount,
+      followers: profile.followers ?? 0,
+    };
+  }
+
+  private async fetchRepoContributionStats(
+    owner: string,
+    repo: string,
+    githubLogin: string,
+    headers: Record<string, string>,
+  ): Promise<RepoContributionStats> {
+    const url = `https://api.github.com/repos/${owner}/${repo}/stats/contributors`;
+    let contributors: any[] = [];
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const res = await fetch(url, { headers });
+
+      if (res.status === 202) {
+        await this.sleep(300 * (attempt + 1));
+        continue;
+      }
+
+      if (!res.ok) {
+        return {
+          userCommits: 0,
+          totalCommits: 0,
+          additions: 0,
+          deletions: 0,
+          contributionRatio: 0,
+        };
+      }
+
+      const payload = await res.json();
+      contributors = Array.isArray(payload) ? payload : [];
+      break;
+    }
+
+    if (contributors.length === 0) {
+      return {
+        userCommits: 0,
+        totalCommits: 0,
+        additions: 0,
+        deletions: 0,
+        contributionRatio: 0,
+      };
+    }
+
+    const totalCommits = contributors.reduce((sum, c) => sum + (c.total || 0), 0);
+    const user = contributors.find((c) => c.author?.login === githubLogin);
+
+    const userCommits = user?.total || 0;
+    const weeks = Array.isArray(user?.weeks) ? user.weeks : [];
+    const additions = weeks.reduce((sum: number, w: any) => sum + (w.a || 0), 0);
+    const deletions = weeks.reduce((sum: number, w: any) => sum + (w.d || 0), 0);
+
+    return {
+      userCommits,
+      totalCommits,
+      additions,
+      deletions,
+      contributionRatio: totalCommits > 0 ? userCommits / totalCommits : 0,
     };
   }
 
@@ -342,6 +462,47 @@ export class DatasourceService {
     return parsed;
   }
 
+  private createGithubAppJwt(): string {
+    const appId = this.config.get<string>('GITHUB_APP_ID');
+    const privateKeyBase64 = this.config.get<string>('GITHUB_APP_PRIVATE_KEY');
+
+    if (!appId || !privateKeyBase64) {
+      throw new Error('Missing GitHub App config: GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY are required');
+    }
+
+    const privateKeyPem = Buffer.from(privateKeyBase64, 'base64').toString('utf-8');
+    const now = Math.floor(Date.now() / 1000);
+
+    const header = { alg: 'RS256', typ: 'JWT' };
+    const payload = {
+      iat: now - 60,
+      exp: now + 9 * 60,
+      iss: appId,
+    };
+
+    const encodedHeader = this.base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = this.base64UrlEncode(JSON.stringify(payload));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+    const signer = createSign('RSA-SHA256');
+    signer.update(signingInput);
+    signer.end();
+
+    const signature = signer.sign(privateKeyPem, 'base64');
+    const encodedSignature = this.base64UrlEncode(Buffer.from(signature, 'base64'));
+
+    return `${signingInput}.${encodedSignature}`;
+  }
+
+  private base64UrlEncode(input: string | Buffer): string {
+    const raw = Buffer.isBuffer(input) ? input : Buffer.from(input);
+    return raw
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '');
+  }
+
   private safeJsonParse(content: string): any | null {
     try {
       const stripped = content
@@ -352,6 +513,10 @@ export class DatasourceService {
     } catch {
       return null;
     }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async collectAllData(userId: string): Promise<{
