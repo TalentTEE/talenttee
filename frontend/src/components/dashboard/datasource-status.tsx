@@ -25,7 +25,7 @@ function LevelBar({ label, level }: { label: string; level: number }) {
       <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">{level}</span>
       <div className="w-16 h-1 rounded-full bg-muted overflow-hidden shrink-0">
         <div
-          className="h-full rounded-full bg-[#00F0FF] transition-all duration-500"
+          className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${level}%` }}
         />
       </div>
@@ -97,7 +97,7 @@ function Gov24Summary({ data }: { data: Gov24Data }) {
     <div className="space-y-1.5">
       {certs.map((c) => (
         <div key={c.name} className="flex items-center gap-1.5 text-xs text-foreground/80">
-          <span className="material-symbols-outlined text-xs text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+          <span className="material-symbols-outlined text-xs text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
           <span className="truncate">{c.name}</span>
         </div>
       ))}
@@ -177,10 +177,10 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
   const connectionMap = new Map(connections.map((c) => [c.provider, c]));
 
   return (
-    <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Connected Data</h3>
-        <Link href="/datasource" className="text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 font-medium transition-colors">
+        <Link href="/datasource" className="text-xs text-primary hover:text-primary/80 font-bold transition-colors">
           Manage
         </Link>
       </div>
@@ -198,19 +198,19 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
             return (
               <div
                 key={provider.id}
-                className={`rounded-xl border p-4 transition-all ${
-                  connected
-                    ? 'bg-[#00F0FF]/[0.03] border-border/10'
-                    : 'bg-muted/30 border-border/10'
+                 className={`rounded-2xl border p-4 shadow-sm transition-[border-color,background-color,box-shadow] ${
+                   connected
+                    ? 'bg-primary/5 border-primary/15'
+                    : 'bg-white/55 border-border'
                 }`}
               >
                 {/* Header row */}
                 <div className="flex items-center gap-2 mb-3">
                   {provider.brandIcon ? (
-                    <provider.brandIcon className={`w-4 h-4 ${connected ? 'text-[#00F0FF]' : 'text-muted-foreground'}`} />
+                    <provider.brandIcon className={`w-4 h-4 ${connected ? 'text-primary' : 'text-muted-foreground'}`} />
                   ) : (
                     <span className={`material-symbols-outlined text-base ${
-                      connected ? 'text-[#00F0FF]' : 'text-muted-foreground'
+                      connected ? 'text-primary' : 'text-muted-foreground'
                     }`}>{provider.icon}</span>
                   )}
                   <span
@@ -222,7 +222,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
                   </span>
                   {connected ? (
                     <span
-                      className="material-symbols-outlined text-sm text-[#00F0FF] ml-auto"
+                      className="material-symbols-outlined text-sm text-primary ml-auto"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
                       check_circle
@@ -230,7 +230,7 @@ export function DatasourceStatus({ connections, onConnect }: DatasourceStatusPro
                   ) : (
                     <button
                       onClick={() => openConnectDialog(provider.id)}
-                      className="ml-auto text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 font-medium transition-colors cursor-pointer"
+                       className="ml-auto text-xs text-primary hover:text-primary/80 font-bold transition-colors cursor-pointer"
                     >
                       Connect
                     </button>

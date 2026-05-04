@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${inter.variable} ${manrope.variable} ${playfair.variable} dark antialiased`}
+      className={`${inter.variable} ${manrope.variable} ${playfair.variable} antialiased`}
     >
       <head>
         <link

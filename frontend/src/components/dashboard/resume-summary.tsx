@@ -6,12 +6,12 @@ import Link from 'next/link';
 export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
   if (!resume) {
     return (
-      <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
+      <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground mb-3">My Skills</h3>
         <p className="text-base text-muted-foreground mb-4">No analysis generated yet.</p>
         <Link
           href="/datasource"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#BF5AF2] text-white text-base font-bold hover:bg-[#BF5AF2]/90 transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#7c3aed] text-white text-base font-bold hover:bg-[#7c3aed]/90 transition-colors shadow-sm"
         >
           <span className="material-symbols-outlined text-base">auto_awesome</span>
           Generate My Skills
@@ -21,12 +21,12 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
   }
 
   return (
-    <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">My Skills</h3>
         <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium ${
           resume.status === 'COMPLETE'
-            ? 'bg-[#39FF14]/10 text-[#39FF14]'
+            ? 'bg-[#65a30d]/10 text-[#3f6212]'
             : 'bg-muted text-muted-foreground'
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -36,7 +36,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
       {resume.skills?.length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-3">
           {resume.skills.slice(0, 6).map((s) => (
-            <span key={s} className="px-2 py-1 rounded-md bg-[#BF5AF2]/10 text-[#BF5AF2] text-sm font-medium border border-[#BF5AF2]/20">
+            <span key={s} className="px-2 py-1 rounded-lg bg-[#7c3aed]/10 text-[#5b21b6] text-sm font-semibold border border-[#7c3aed]/20">
               {s}
             </span>
           ))}
@@ -51,7 +51,7 @@ export function ResumeSummary({ resume }: { resume: ResumeProfile | null }) {
       <div className="flex gap-2">
         <Link
           href="/datasource"
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-foreground text-base font-medium hover:bg-accent transition-all border border-border/10"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/70 text-foreground text-base font-semibold hover:bg-white transition-colors border border-border shadow-sm"
         >
           <span className="material-symbols-outlined text-base">visibility</span>
           View Details

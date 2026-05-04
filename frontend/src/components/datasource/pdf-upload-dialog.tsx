@@ -102,7 +102,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
                 className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 cursor-pointer transition-all ${
                   dragOver
                     ? 'border-[#FF6B35] bg-[#FF6B35]/5'
-                    : 'border-border/20 bg-[#060610] hover:border-border/40'
+                    : 'border-border bg-white/70 hover:border-primary/30'
                 }`}
               >
                 <span className="material-symbols-outlined text-3xl text-muted-foreground">
@@ -127,7 +127,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 text-sm">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200">
                   <span className="material-symbols-outlined text-sm">error</span>
                   {error}
                 </div>
@@ -155,7 +155,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
             <DialogHeader>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-lg text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  <span className="material-symbols-outlined text-lg text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                 </div>
                 <DialogTitle>Resume Parsed</DialogTitle>
               </div>
@@ -179,7 +179,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Skills</p>
                   <div className="flex flex-wrap gap-1.5">
                     {result.skills.map((s) => (
-                      <span key={s} className="px-2 py-1 rounded-md bg-[#BF5AF2]/10 text-[#BF5AF2] text-xs font-medium border border-[#BF5AF2]/20">
+                       <span key={s} className="px-2 py-1 rounded-lg bg-[#7c3aed]/10 text-[#5b21b6] text-xs font-semibold border border-[#7c3aed]/20">
                         {s}
                       </span>
                     ))}
@@ -193,7 +193,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Experience</p>
                   <div className="space-y-2">
                     {result.experience.map((exp, idx) => (
-                      <div key={idx} className="rounded-lg border border-border/10 bg-[#060610] px-3 py-2">
+                      <div key={idx} className="rounded-xl border border-border bg-white/70 px-3 py-2 shadow-sm">
                         <p className="text-sm font-semibold text-foreground">{exp.role}</p>
                         <p className="text-xs text-muted-foreground">{exp.company} &middot; {exp.period}</p>
                       </div>
@@ -208,7 +208,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Education</p>
                   <div className="space-y-2">
                     {result.education.map((edu, idx) => (
-                      <div key={idx} className="rounded-lg border border-border/10 bg-[#060610] px-3 py-2">
+                      <div key={idx} className="rounded-xl border border-border bg-white/70 px-3 py-2 shadow-sm">
                         <p className="text-sm font-semibold text-foreground">{edu.degree}</p>
                         <p className="text-xs text-muted-foreground">{edu.institution} &middot; {edu.year}</p>
                       </div>
@@ -230,7 +230,7 @@ export function PdfUploadDialog({ open, onOpenChange, onUploaded }: PdfUploadDia
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <span className="material-symbols-outlined text-4xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <p className="text-sm font-medium text-foreground">Resume Uploaded</p>
           </div>
         )}

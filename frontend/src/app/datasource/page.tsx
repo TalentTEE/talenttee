@@ -10,7 +10,7 @@ import {
   getResume, generateResume, getResumeStatus, USE_DUMMY,
   getPreferences, updatePreferences, updatePdfData,
 } from '@/lib/api';
-import { formatCurrency, formatSalary } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { GitHubConnectDialog } from '@/components/datasource/github-connect-dialog';
 import { SlackConnectDialog } from '@/components/datasource/slack-connect-dialog';
 import { DiscordConnectDialog } from '@/components/datasource/discord-connect-dialog';
@@ -290,7 +290,7 @@ export default function DatasourcePage() {
 
   if (loading) {
     return (
-      <div className="space-y-8 max-w-5xl mx-auto py-10 px-4">
+      <div className="space-y-8 max-w-6xl mx-auto py-10 px-4">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-48" />
           <div className="h-4 bg-muted rounded w-64" />
@@ -304,11 +304,12 @@ export default function DatasourcePage() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto py-10 px-4">
+    <div className="space-y-8 max-w-6xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-primary">Evidence pipeline</p>
+          <h1 className="font-[var(--font-manrope)] text-3xl md:text-4xl font-black text-foreground tracking-[-0.055em] mt-1">
             My Value
           </h1>
           <p className="text-base text-muted-foreground mt-1">
@@ -318,7 +319,7 @@ export default function DatasourcePage() {
         {(!resume || resume.status !== 'COMPLETE') && !generating && connectedCount > 0 && (
           <button
             onClick={handleGenerate}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-primary-foreground font-black text-base shadow-[0_16px_36px_rgba(8,145,178,0.22)] hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             <span className="material-symbols-outlined text-base">auto_awesome</span>
             Generate Analysis
@@ -328,7 +329,7 @@ export default function DatasourcePage() {
 
       {/* Generation Progress — always visible once generation has started */}
       {(generating || currentStatus) && (
-        <div className="rounded-2xl border border-border/10 bg-card p-6">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <h2 className="font-[var(--font-manrope)] font-bold text-foreground mb-6">
             Generation Progress
           </h2>
@@ -336,13 +337,11 @@ export default function DatasourcePage() {
             {STEPS.map((step, idx) => {
               const isActive = idx === currentStepIdx;
               const isDone = idx < currentStepIdx || (idx === currentStepIdx && currentStatus === 'COMPLETE' && !generating);
-              const isPending = idx > currentStepIdx || currentStepIdx === -1;
-
               return (
                 <div key={step.key} className="flex items-center flex-1 last:flex-none">
                   <div className="flex flex-col items-center gap-2">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                      isDone ? 'bg-emerald-500/10 text-emerald-400'
+                       isDone ? 'bg-[#65a30d]/10 text-[#3f6212]'
                         : isActive ? 'bg-primary/10 text-primary'
                         : 'bg-muted text-muted-foreground/40'
                     }`}>
@@ -354,7 +353,7 @@ export default function DatasourcePage() {
                       </span>
                     </div>
                     <span className={`text-sm font-medium ${
-                      isDone ? 'text-emerald-400' : isActive ? 'text-primary' : 'text-muted-foreground/40'
+                      isDone ? 'text-[#3f6212]' : isActive ? 'text-primary' : 'text-muted-foreground/40'
                     }`}>
                       {step.label}
                     </span>
@@ -362,7 +361,7 @@ export default function DatasourcePage() {
                   {idx < STEPS.length - 1 && (
                     <div className="flex-1 mx-3 h-0.5 rounded-full overflow-hidden bg-muted">
                       <div className={`h-full rounded-full transition-all duration-500 ${
-                        idx < currentStepIdx ? 'w-full bg-emerald-500'
+                         idx < currentStepIdx ? 'w-full bg-[#65a30d]'
                           : idx === currentStepIdx && generating ? 'w-1/2 bg-primary animate-pulse'
                           : 'w-0 bg-primary'
                       }`} />
@@ -399,7 +398,7 @@ export default function DatasourcePage() {
             <button
               onClick={handleResyncAll}
               disabled={syncingAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#00F0FF]/10 text-[#00F0FF] hover:bg-[#00F0FF]/20 transition-colors disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/15 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <span className={`material-symbols-outlined text-sm ${syncingAll ? 'animate-spin' : ''}`}>sync</span>
               {syncingAll ? 'Syncing...' : 'Resync All'}
@@ -414,19 +413,19 @@ export default function DatasourcePage() {
             return (
               <div
                 key={provider.id}
-                className={`rounded-2xl border p-5 transition-all ${
-                  isConnected ? 'bg-[#00F0FF]/[0.03] border-[#00F0FF]/15' : 'bg-card border-border/10'
+                className={`rounded-[1.75rem] border p-5 shadow-[0_16px_45px_rgba(15,23,42,0.07)] backdrop-blur-xl transition-[border-color,background-color,box-shadow] ${
+                  isConnected ? 'bg-primary/5 border-primary/20' : 'bg-white/75 border-border'
                 }`}
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    isConnected ? 'bg-[#00F0FF]/10' : 'bg-muted/50'
+                    isConnected ? 'bg-primary/10' : 'bg-white/70 ring-1 ring-border'
                   }`}>
                     {provider.brandIcon ? (
-                      <provider.brandIcon className={isConnected ? 'text-[#00F0FF]' : 'text-muted-foreground'} />
+                      <provider.brandIcon className={isConnected ? 'text-primary' : 'text-muted-foreground'} />
                     ) : (
                       <span className={`material-symbols-outlined text-lg ${
-                        isConnected ? 'text-[#00F0FF]' : 'text-muted-foreground'
+                        isConnected ? 'text-primary' : 'text-muted-foreground'
                       }`}>{provider.icon}</span>
                     )}
                   </div>
@@ -434,8 +433,8 @@ export default function DatasourcePage() {
                     <span className="text-sm font-semibold text-foreground">{provider.label}</span>
                     {isConnected ? (
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span className="text-xs text-emerald-400">Connected</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#65a30d]" />
+                        <span className="text-xs font-semibold text-[#3f6212]">Connected</span>
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground mt-0.5">Not connected</p>
@@ -453,7 +452,7 @@ export default function DatasourcePage() {
                         {provider.id === 'GITHUB' && (
                           <button
                             onClick={() => setDialogOpen('GITHUB_REPOS')}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-[#00F0FF] hover:bg-[#00F0FF]/10 transition-colors cursor-pointer"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-sm">rule_settings</span>
                             Manage repositories
@@ -461,7 +460,7 @@ export default function DatasourcePage() {
                         )}
                         <button
                           onClick={() => handleDisconnect(provider.id)}
-                          className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                          className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">link_off</span>
                           Disconnect
@@ -472,7 +471,7 @@ export default function DatasourcePage() {
                     {/* Expand/collapse toggle */}
                     <button
                       onClick={() => toggleExpand(provider.id)}
-                      className="w-full flex items-center justify-center gap-1 mt-3 pt-3 border-t border-border/10 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                       className="w-full flex items-center justify-center gap-1 mt-3 pt-3 border-t border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                       {expandedCards.has(provider.id) ? 'Hide details' : 'View details'}
                       <span className={`material-symbols-outlined text-sm transition-transform duration-200 ${expandedCards.has(provider.id) ? 'rotate-180' : ''}`}>
@@ -503,7 +502,7 @@ export default function DatasourcePage() {
                 ) : (
                   <button
                     onClick={() => openConnectDialog(provider.id)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-[#00F0FF] text-[#0a0a0a] hover:brightness-90 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-2xl text-sm font-black bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-sm">{provider.id === 'PDF' ? 'upload_file' : 'add_link'}</span>
                     {provider.id === 'PDF' ? 'Upload PDF' : 'Connect'}
@@ -519,22 +518,22 @@ export default function DatasourcePage() {
       {isComplete && resume && (
         <div className="space-y-6">
           {/* AI Summary */}
-          <div className="rounded-2xl border border-border/10 bg-card p-6">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-lg text-[#00F0FF]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              <span className="material-symbols-outlined text-lg text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
               <h2 className="font-[var(--font-manrope)] font-bold text-foreground">AI Summary</h2>
             </div>
             <p className="text-base text-muted-foreground leading-relaxed">{resume.summary}</p>
           </div>
 
           {/* Market Value + Negotiation Preferences */}
-          <div className="rounded-2xl border border-border/10 bg-card p-6">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-lg text-[#39FF14]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
+              <span className="material-symbols-outlined text-lg text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
               <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Estimated Market Value</h2>
             </div>
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="font-[var(--font-manrope)] text-3xl font-extrabold text-[#39FF14]">
+              <span className="font-[var(--font-manrope)] text-3xl font-extrabold text-[#3f6212] tabular-nums">
                 {formatCurrency(resume.marketValueMin)} - {formatCurrency(resume.marketValueMax)}
               </span>
               <span className="text-base text-muted-foreground">/ year</span>
@@ -547,7 +546,7 @@ export default function DatasourcePage() {
             {prefsLoaded && (
               <div className="mt-5 pt-5 border-t border-border/10">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="material-symbols-outlined text-base text-[#39FF14]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+                  <span className="material-symbols-outlined text-base text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
                   <p className="text-sm font-semibold text-foreground">Your Salary Floor</p>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
@@ -561,9 +560,9 @@ export default function DatasourcePage() {
                     step={5000}
                     value={salaryFloor}
                     onChange={(e) => handleFloorChange(Number(e.target.value))}
-                    className="flex-1 accent-[#39FF14] h-2 rounded-full cursor-pointer"
+                    className="flex-1 accent-[#65a30d] h-2 rounded-full cursor-pointer"
                   />
-                  <div className="flex items-center bg-muted rounded-lg px-2 py-1.5 focus-within:ring-1 focus-within:ring-[#39FF14]/50">
+                  <div className="flex items-center bg-white/70 border border-border rounded-xl px-2 py-1.5 focus-within:ring-1 focus-within:ring-[#65a30d]/50">
                     <span className="text-sm text-muted-foreground mr-1">$</span>
                     <input
                       type="number"
@@ -590,7 +589,7 @@ export default function DatasourcePage() {
                     <button
                       onClick={() => handleLimitChange(-1)}
                       disabled={autoNegLimit <= 1}
-                      className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground font-bold hover:bg-accent transition-colors disabled:opacity-30"
+                      className="w-8 h-8 rounded-xl bg-white/70 border border-border flex items-center justify-center text-foreground font-bold hover:bg-white transition-colors disabled:opacity-30"
                     >
                       &minus;
                     </button>
@@ -598,7 +597,7 @@ export default function DatasourcePage() {
                     <button
                       onClick={() => handleLimitChange(1)}
                       disabled={autoNegLimit >= 20}
-                      className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground font-bold hover:bg-accent transition-colors disabled:opacity-30"
+                      className="w-8 h-8 rounded-xl bg-white/70 border border-border flex items-center justify-center text-foreground font-bold hover:bg-white transition-colors disabled:opacity-30"
                     >
                       +
                     </button>
@@ -609,14 +608,14 @@ export default function DatasourcePage() {
           </div>
 
           {/* Skills */}
-          <div className="rounded-2xl border border-border/10 bg-card p-6">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-lg text-[#BF5AF2]" style={{ fontVariationSettings: "'FILL' 1" }}>code</span>
+              <span className="material-symbols-outlined text-lg text-[#7c3aed]" style={{ fontVariationSettings: "'FILL' 1" }}>code</span>
               <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Skills</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {resume.skills.map((skill) => (
-                <span key={skill} className="px-3 py-1.5 rounded-lg bg-[#BF5AF2]/10 text-[#BF5AF2] text-base font-medium border border-[#BF5AF2]/20">
+                <span key={skill} className="px-3 py-1.5 rounded-xl bg-[#7c3aed]/10 text-[#5b21b6] text-base font-semibold border border-[#7c3aed]/20">
                   {skill}
                 </span>
               ))}
@@ -624,16 +623,16 @@ export default function DatasourcePage() {
           </div>
 
           {/* Experience */}
-          <div className="rounded-2xl border border-border/10 bg-card p-6">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-6">
-              <span className="material-symbols-outlined text-lg text-[#FF2DF1]" style={{ fontVariationSettings: "'FILL' 1" }}>work</span>
+              <span className="material-symbols-outlined text-lg text-[#be185d]" style={{ fontVariationSettings: "'FILL' 1" }}>work</span>
               <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Experience</h2>
             </div>
             <div className="space-y-0">
               {resume.experience.map((exp, idx) => (
                 <div key={idx} className="relative flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 rounded-full bg-[#FF2DF1] border-2 border-card z-10" />
+                    <div className="w-3 h-3 rounded-full bg-[#be185d] border-2 border-white z-10" />
                     {idx < resume.experience.length - 1 && <div className="w-0.5 flex-1 bg-muted" />}
                   </div>
                   <div className="pb-8 last:pb-0 flex-1">
@@ -646,7 +645,7 @@ export default function DatasourcePage() {
                     <ul className="space-y-1">
                       {exp.highlights?.map((highlight, hIdx) => (
                         <li key={hIdx} className="flex items-start gap-2 text-base text-muted-foreground">
-                          <span className="text-[#FF2DF1]/40 mt-1 text-sm">&#9679;</span>
+                           <span className="text-[#be185d]/40 mt-1 text-sm">&#9679;</span>
                           {highlight}
                         </li>
                       ))}
@@ -658,14 +657,14 @@ export default function DatasourcePage() {
           </div>
 
           {/* Education */}
-          <div className="rounded-2xl border border-border/10 bg-card p-6">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-lg text-[#FFE600]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+              <span className="material-symbols-outlined text-lg text-[#d97706]" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
               <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Education</h2>
             </div>
             <div className="space-y-3">
               {resume.education.map((edu, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-accent">
+                <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-white/65 border border-border shadow-sm">
                   <div>
                     <p className="text-base font-semibold text-foreground">{edu.degree}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">{edu.institution}</p>
@@ -678,29 +677,29 @@ export default function DatasourcePage() {
 
           {/* Strengths & Improvement Areas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-border/10 bg-card p-6">
+            <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
               <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-lg text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>thumb_up</span>
+                <span className="material-symbols-outlined text-lg text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>thumb_up</span>
                 <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Strengths</h2>
               </div>
               <ul className="space-y-2">
                 {(resume.strengths ?? []).map((s, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-base text-muted-foreground">
-                    <span className="text-emerald-400 mt-0.5"><span className="material-symbols-outlined text-base">check</span></span>
+                    <span className="text-[#65a30d] mt-0.5"><span className="material-symbols-outlined text-base">check</span></span>
                     {s}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border border-border/10 bg-card p-6">
+            <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
               <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-lg text-[#FF2DF1]" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
+                <span className="material-symbols-outlined text-lg text-[#be185d]" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
                 <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Areas to Improve</h2>
               </div>
               <ul className="space-y-2">
                 {(resume.improvementAreas ?? []).map((area, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-base text-muted-foreground">
-                    <span className="text-[#FF2DF1] mt-0.5"><span className="material-symbols-outlined text-base">arrow_forward</span></span>
+                    <span className="text-[#be185d] mt-0.5"><span className="material-symbols-outlined text-base">arrow_forward</span></span>
                     {area}
                   </li>
                 ))}
@@ -710,29 +709,29 @@ export default function DatasourcePage() {
 
           {/* Negotiation Points */}
           {resume.negotiationPoints && (
-            <div className="rounded-2xl border border-border/10 bg-card p-6">
+            <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
               <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-lg text-[#00F0FF]" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+                <span className="material-symbols-outlined text-lg text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
                 <h2 className="font-[var(--font-manrope)] font-bold text-foreground">Negotiation Points</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3">Leverage Points</h3>
+                  <h3 className="text-sm font-semibold text-[#3f6212] uppercase tracking-wider mb-3">Leverage Points</h3>
                   <ul className="space-y-2">
                     {resume.negotiationPoints.strengths.map((s, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-base text-muted-foreground">
-                        <span className="text-emerald-400 mt-0.5"><span className="material-symbols-outlined text-base">add_circle</span></span>
+                        <span className="text-[#65a30d] mt-0.5"><span className="material-symbols-outlined text-base">add_circle</span></span>
                         {s}
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-[#FFE600] uppercase tracking-wider mb-3">Watch Out For</h3>
+                  <h3 className="text-sm font-semibold text-[#b45309] uppercase tracking-wider mb-3">Watch Out For</h3>
                   <ul className="space-y-2">
                     {resume.negotiationPoints.weaknesses.map((w, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-base text-muted-foreground">
-                        <span className="text-[#FFE600] mt-0.5"><span className="material-symbols-outlined text-base">warning</span></span>
+                        <span className="text-[#d97706] mt-0.5"><span className="material-symbols-outlined text-base">warning</span></span>
                         {w}
                       </li>
                     ))}

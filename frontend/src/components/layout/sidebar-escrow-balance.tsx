@@ -24,13 +24,13 @@ export function SidebarEscrowBalance() {
   if (loading) return null;
 
   return (
-    <Link href="/escrow" className="block mx-1 mb-3 rounded-xl bg-accent/50 border border-border/10 p-3 space-y-2 hover:border-[#39FF14]/20 transition-colors">
+    <Link href="/escrow" className="block mx-1 mb-3 rounded-2xl border border-border bg-white/65 p-3 space-y-2 shadow-sm hover:border-[#65a30d]/30 transition-colors">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
         <span className="text-xs font-medium uppercase tracking-wider">Escrow</span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-extrabold text-foreground">{balance}</span>
+        <span className="text-2xl font-extrabold text-foreground tabular-nums">{balance}</span>
         <span className="text-xs text-muted-foreground">NEAR</span>
       </div>
     </Link>

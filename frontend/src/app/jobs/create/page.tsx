@@ -90,7 +90,8 @@ export default function CreateJobPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#d97706]">Hiring agent</p>
+        <h1 className="font-[var(--font-manrope)] text-3xl font-black text-foreground tracking-[-0.055em] mt-1">
           Create Job Posting
         </h1>
         <p className="text-base text-muted-foreground mt-1">
@@ -99,12 +100,12 @@ export default function CreateJobPage() {
       </div>
 
       {/* Tab Toggle */}
-      <div className="flex gap-1 p-1 rounded-xl bg-accent w-fit">
+      <div className="flex gap-1 p-1 rounded-2xl bg-white/70 border border-border shadow-sm w-fit">
         <button
           onClick={() => setActiveTab('chat')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-base font-medium transition-all duration-200 ${
             activeTab === 'chat'
-              ? 'bg-[#FFE600] text-[#0a0a0a]'
+              ? 'bg-[#d97706] text-white shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -115,7 +116,7 @@ export default function CreateJobPage() {
           onClick={() => setActiveTab('form')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-base font-medium transition-all duration-200 ${
             activeTab === 'form'
-              ? 'bg-[#FFE600] text-[#0a0a0a]'
+              ? 'bg-[#d97706] text-white shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -166,11 +167,11 @@ function ChatSidebar({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col h-full min-h-0">
-      <div className="shrink-0 p-3 border-b border-border/10">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl overflow-hidden flex flex-col h-full min-h-0">
+      <div className="shrink-0 p-3 border-b border-border">
         <button
           onClick={onNew}
-          className="w-full flex items-center gap-2 justify-center px-3 py-2 rounded-lg bg-[#FFE600] text-[#0a0a0a] text-sm font-semibold hover:bg-[#FFE600]/90 transition-all"
+          className="w-full flex items-center gap-2 justify-center px-3 py-2 rounded-xl bg-[#d97706] text-white text-sm font-bold hover:bg-[#d97706]/90 transition-colors shadow-sm"
         >
           <span className="material-symbols-outlined text-base">add</span>
           New Chat
@@ -189,14 +190,14 @@ function ChatSidebar({
               key={s.id}
               className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${
                 isActive
-                  ? 'bg-[#FFE600]/10 text-foreground'
-                  : 'hover:bg-accent text-muted-foreground hover:text-foreground'
+                  ? 'bg-[#d97706]/10 text-foreground'
+                  : 'hover:bg-white/70 text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => onSelect(s.id)}
             >
               <span
                 className={`material-symbols-outlined text-base ${
-                  isActive ? 'text-[#FFE600]' : ''
+                  isActive ? 'text-[#d97706]' : ''
                 }`}
               >
                 {s.completedJob ? 'task_alt' : 'forum'}
@@ -352,7 +353,7 @@ function ChatMode({
   return (
     <div className="h-full min-h-0">
       {/* Chat Window — fills grid cell; preview card renders outside */}
-      <div className="h-full rounded-2xl border border-border/10 bg-card overflow-hidden flex flex-col">
+      <div className="h-full rounded-[1.75rem] border border-border bg-white/75 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl overflow-hidden flex flex-col">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -373,7 +374,7 @@ function ChatMode({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     msg.role === 'agent'
-                      ? 'bg-[#FFE600]/15 text-[#FFE600]'
+                        ? 'bg-[#d97706]/15 text-[#b45309]'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -385,8 +386,8 @@ function ChatMode({
                 <div
                   className={`px-4 py-3 rounded-2xl text-base leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
-                      ? 'bg-[#FFE600] text-[#0a0a0a] rounded-br-md'
-                      : 'bg-accent text-foreground rounded-bl-md'
+                       ? 'bg-[#d97706] text-white rounded-br-md'
+                       : 'bg-white/80 border border-border text-foreground rounded-bl-md'
                   }`}
                 >
                   {msg.content}
@@ -398,8 +399,8 @@ function ChatMode({
           {/* Salary Recommendation Card — shown inline when AI recommends before completion */}
           {salaryRec && !createdJob && (
             <div className="max-w-[80%]">
-              <div className="rounded-2xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-4 space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+              <div className="rounded-2xl border border-[#7c3aed]/20 bg-[#7c3aed]/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#5b21b6]">
                   <span className="material-symbols-outlined text-base">trending_up</span>
                   AI Market Analysis
                 </div>
@@ -430,7 +431,7 @@ function ChatMode({
                 <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-base">smart_toy</span>
                 </div>
-                <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-accent text-muted-foreground text-base">
+                <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-white/80 border border-border text-muted-foreground text-base">
                   <span className="flex gap-1">
                     <span
                       className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce"
@@ -452,7 +453,7 @@ function ChatMode({
         </div>
 
         {/* Input Bar */}
-        <div className="border-t border-border/10 p-4 bg-accent/30">
+        <div className="border-t border-border p-4 bg-white/55">
           <div className="flex gap-3">
             <input
               type="text"
@@ -461,12 +462,12 @@ function ChatMode({
               onKeyDown={handleKeyDown}
               placeholder={createdJob ? 'Job posting ready — start a new chat to create another' : 'Type your answer...'}
               disabled={isLoading || !!createdJob}
-              className="flex-1 bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all disabled:opacity-50"
+              className="flex-1 bg-white/75 border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#d97706]/25 transition-all disabled:opacity-50 shadow-sm"
             />
             <button
               onClick={handleSend}
               disabled={isLoading || !input.trim() || !!createdJob}
-              className="px-4 py-3 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-3 rounded-2xl bg-[#d97706] text-white text-base font-bold hover:bg-[#d97706]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
             >
               <span className="material-symbols-outlined text-lg">send</span>
               Send
@@ -541,10 +542,10 @@ function FormMode() {
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border border-border/10 bg-card p-8 text-center space-y-4">
-        <div className="w-16 h-16 mx-auto rounded-full bg-[#FFE600]/15 flex items-center justify-center">
+      <div className="rounded-[1.75rem] border border-border bg-white/75 p-8 text-center space-y-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
+        <div className="w-16 h-16 mx-auto rounded-full bg-[#d97706]/15 flex items-center justify-center">
           <span
-            className="material-symbols-outlined text-[#FFE600] text-3xl"
+            className="material-symbols-outlined text-[#d97706] text-3xl"
             style={{ fontVariationSettings: "'FILL' 1" }}
           >
             check_circle
@@ -561,7 +562,7 @@ function FormMode() {
             setSubmitted(false);
             setForm({ title: '', description: '', skills: '', salaryMax: '', remotePolicy: 'office' });
           }}
-          className="px-6 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all"
+          className="px-6 py-2.5 rounded-2xl bg-[#d97706] text-white text-base font-bold hover:bg-[#d97706]/90 transition-colors shadow-sm"
         >
           Create Another
         </button>
@@ -570,7 +571,7 @@ function FormMode() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-border/10 bg-card p-6 space-y-5">
+    <form onSubmit={handleSubmit} className="rounded-[1.75rem] border border-border bg-white/75 p-6 space-y-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       {/* Title */}
       <div className="space-y-2">
         <label className="text-base font-medium text-foreground">Job Title</label>
@@ -581,7 +582,7 @@ function FormMode() {
           onChange={handleChange}
           required
           placeholder="e.g. Senior Backend Developer"
-          className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all"
+          className="w-full bg-white/75 border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#d97706]/25 transition-all shadow-sm"
         />
       </div>
 
@@ -595,7 +596,7 @@ function FormMode() {
           required
           rows={4}
           placeholder="Describe the role, responsibilities, and team..."
-          className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all resize-none"
+          className="w-full bg-white/75 border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#d97706]/25 transition-all resize-none shadow-sm"
         />
       </div>
 
@@ -609,7 +610,7 @@ function FormMode() {
           onChange={handleChange}
           required
           placeholder="TypeScript, React, Node.js (comma-separated)"
-          className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all"
+          className="w-full bg-white/75 border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#d97706]/25 transition-all shadow-sm"
         />
         {form.skills && (
           <div className="flex flex-wrap gap-2 pt-1">
@@ -619,7 +620,7 @@ function FormMode() {
               return (
                 <span
                   key={i}
-                  className="px-2.5 py-1 rounded-lg bg-[#FFE600]/10 text-[#FFE600] text-sm font-medium"
+                  className="px-2.5 py-1 rounded-lg bg-[#d97706]/10 text-[#b45309] text-sm font-semibold"
                 >
                   {trimmed}
                 </span>
@@ -633,13 +634,13 @@ function FormMode() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-base font-medium text-foreground">
-            Maximum Salary Budget <span className="text-[#FFE600] text-sm font-medium">(Negotiation Ceiling)</span>
+            Maximum Salary Budget <span className="text-[#b45309] text-sm font-medium">(Negotiation Ceiling)</span>
           </label>
           <button
             type="button"
             disabled={!form.title || isLoadingSalary}
             onClick={handleRecommendSalary}
-            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-[#BF5AF2]/15 text-[#BF5AF2] hover:bg-[#BF5AF2]/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-[#7c3aed]/15 text-[#5b21b6] hover:bg-[#7c3aed]/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <span className={`material-symbols-outlined text-sm ${isLoadingSalary ? 'animate-spin' : ''}`}>
               {isLoadingSalary ? 'progress_activity' : 'auto_awesome'}
@@ -649,8 +650,8 @@ function FormMode() {
         </div>
         <span className="block text-sm text-muted-foreground">AI will negotiate up to this amount on your behalf. Candidates won't see this number.</span>
         {salaryRec && (
-          <div className="rounded-xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-3 space-y-1">
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+          <div className="rounded-2xl border border-[#7c3aed]/20 bg-[#7c3aed]/5 p-3 space-y-1">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#5b21b6]">
               <span className="material-symbols-outlined text-sm">trending_up</span>
               Market Range: ${salaryRec.salaryMin.toLocaleString()} ~ ${salaryRec.salaryMax.toLocaleString()} / year
             </div>
@@ -658,7 +659,7 @@ function FormMode() {
             <button
               type="button"
               onClick={() => setForm((prev) => ({ ...prev, salaryMax: String(salaryRec.salaryMax) }))}
-              className="text-xs font-semibold text-[#FFE600] hover:underline"
+              className="text-xs font-semibold text-[#b45309] hover:underline"
             >
               Use ${salaryRec.salaryMax.toLocaleString()} as ceiling
             </button>
@@ -671,7 +672,7 @@ function FormMode() {
           onChange={handleChange}
           required
           placeholder="e.g. 80,000,000 KRW/year"
-          className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all"
+          className="w-full bg-white/75 border border-border rounded-2xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#d97706]/25 transition-all shadow-sm"
         />
       </div>
 
@@ -682,7 +683,7 @@ function FormMode() {
           name="remotePolicy"
           value={form.remotePolicy}
           onChange={handleChange}
-          className="w-full bg-muted rounded-xl px-4 py-3 text-base text-foreground outline-none focus:ring-2 focus:ring-[#FFE600]/30 transition-all appearance-none cursor-pointer"
+          className="w-full bg-white/75 border border-border rounded-2xl px-4 py-3 text-base text-foreground outline-none focus:ring-2 focus:ring-[#d97706]/25 transition-all appearance-none cursor-pointer shadow-sm"
         >
           <option value="office">Full Office</option>
           <option value="hybrid-3">Hybrid (3 days office)</option>
@@ -696,7 +697,7 @@ function FormMode() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-2xl bg-[#d97706] text-white text-base font-bold hover:bg-[#d97706]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
         >
           {isSubmitting ? (
             <>
@@ -749,11 +750,11 @@ function JobPreviewCard({
   };
 
   return (
-    <div className="rounded-2xl border border-[#FFE600]/20 bg-card p-6 space-y-5">
+    <div className="rounded-[1.75rem] border border-[#d97706]/20 bg-white/75 p-6 space-y-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#FFE600]/15 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-2xl bg-[#d97706]/15 flex items-center justify-center">
           <span
-            className="material-symbols-outlined text-[#FFE600] text-xl"
+            className="material-symbols-outlined text-[#d97706] text-xl"
             style={{ fontVariationSettings: "'FILL' 1" }}
           >
             work
@@ -765,7 +766,7 @@ function JobPreviewCard({
           </h3>
           <p className="text-sm text-muted-foreground">Job Preview</p>
         </div>
-        <span className="ml-auto px-3 py-1 rounded-full bg-[#FFE600]/10 text-[#FFE600] text-sm font-semibold">
+        <span className="ml-auto px-3 py-1 rounded-full bg-[#d97706]/10 text-[#b45309] text-sm font-semibold">
           {job.status}
         </span>
       </div>
@@ -779,7 +780,7 @@ function JobPreviewCard({
             {job.requiredSkills.map((skill) => (
               <span
                 key={skill}
-                className="px-2 py-0.5 rounded-md bg-[#FFE600]/10 text-[#FFE600] text-sm font-medium"
+                className="px-2 py-0.5 rounded-md bg-[#d97706]/10 text-[#b45309] text-sm font-medium"
               >
                 {skill}
               </span>
@@ -795,8 +796,8 @@ function JobPreviewCard({
       </div>
 
       {salaryRecommendation && (
-        <div className="rounded-xl border border-[#BF5AF2]/20 bg-[#BF5AF2]/5 p-3 space-y-1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#BF5AF2]">
+        <div className="rounded-2xl border border-[#7c3aed]/20 bg-[#7c3aed]/5 p-3 space-y-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#5b21b6]">
             <span className="material-symbols-outlined text-sm">trending_up</span>
             Market Range: ${salaryRecommendation.min.toLocaleString()} ~ ${salaryRecommendation.max.toLocaleString()} / year
           </div>
@@ -812,14 +813,14 @@ function JobPreviewCard({
       )}
 
       {publishError && (
-        <p className="text-sm text-red-400">{publishError}</p>
+        <p className="text-sm text-red-700">{publishError}</p>
       )}
 
       <div className="flex gap-3 pt-2">
         <button
           onClick={handlePublish}
           disabled={isPublishing || isPublished}
-          className="flex-1 py-2.5 rounded-xl bg-[#FFE600] text-[#0a0a0a] text-base font-semibold hover:bg-[#FFE600]/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex-1 py-2.5 rounded-2xl bg-[#d97706] text-white text-base font-bold hover:bg-[#d97706]/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
         >
           {isPublishing ? (
             <>

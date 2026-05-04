@@ -25,7 +25,7 @@ export function SidebarSeekerEarnings() {
   if (loading) return null;
 
   return (
-    <div className="mx-1 mb-3 rounded-xl bg-accent/50 border border-border/10 p-3 space-y-2">
+    <div className="mx-1 mb-3 rounded-2xl border border-border bg-white/65 p-3 space-y-2 shadow-sm">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
           visibility
@@ -34,11 +34,11 @@ export function SidebarSeekerEarnings() {
       </div>
       <div className="flex items-baseline justify-between">
         <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-extrabold text-foreground">{viewCount}</span>
+          <span className="text-2xl font-extrabold text-foreground tabular-nums">{viewCount}</span>
           <span className="text-xs text-muted-foreground">views</span>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold text-[#39FF14]">{totalNear}</span>
+          <span className="text-lg font-bold text-[#65a30d] tabular-nums">{totalNear}</span>
           <span className="text-xs text-muted-foreground">NEAR</span>
         </div>
       </div>

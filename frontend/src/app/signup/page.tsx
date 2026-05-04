@@ -109,13 +109,13 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-12 selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center app-ambient px-6 py-12 selection:bg-primary selection:text-primary-foreground">
       {/* Back link */}
       <div className="w-full max-w-xl mb-8">
         {step === 'role' ? (
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-white/60 px-3 py-1.5 text-base font-semibold text-muted-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-white hover:text-foreground"
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Back to Home
@@ -126,7 +126,7 @@ export default function SignupPage() {
               setStep('role');
               setError(null);
             }}
-            className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-white/60 px-3 py-1.5 text-base font-semibold text-muted-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-white hover:text-foreground"
           >
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Choose a different role
@@ -136,7 +136,7 @@ export default function SignupPage() {
 
       {/* Header */}
       <div className="text-center mb-10">
-        <h1 className="font-[var(--font-manrope)] text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
+        <h1 className="font-[var(--font-manrope)] text-3xl md:text-5xl font-black tracking-[-0.055em] text-foreground mb-3">
           Create your account
         </h1>
         <p className="text-muted-foreground text-lg">
@@ -151,7 +151,7 @@ export default function SignupPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-xl">
           <button
             onClick={() => handleRoleSelect('SEEKER')}
-            className="group bg-card rounded-2xl p-8 border border-border/10 hover:border-primary/30 transition-all duration-500 ease-out-expo text-left cursor-pointer"
+            className="group rounded-[1.75rem] border border-border bg-white/75 p-8 text-left shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur-2xl transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-primary/30 cursor-pointer"
           >
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors duration-500">
               <span className="material-symbols-outlined text-primary text-2xl">person_search</span>
@@ -166,7 +166,7 @@ export default function SignupPage() {
 
           <button
             onClick={() => handleRoleSelect('EMPLOYER')}
-            className="group bg-card rounded-2xl p-8 border border-border/10 hover:border-primary/30 transition-all duration-500 ease-out-expo text-left cursor-pointer"
+            className="group rounded-[1.75rem] border border-border bg-white/75 p-8 text-left shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur-2xl transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-1 hover:border-primary/30 cursor-pointer"
           >
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors duration-500">
               <span className="material-symbols-outlined text-primary text-2xl">corporate_fare</span>
@@ -197,12 +197,12 @@ export default function SignupPage() {
           </div>
 
           {/* Social Login Buttons */}
-          <div className="rounded-2xl border border-border/10 bg-card p-8 space-y-3">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-8 space-y-3 shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
             {/* Google */}
             <button
               onClick={() => handleSocialSignup('google')}
               disabled={isSubmitting}
-              className="w-full py-3.5 rounded-xl bg-white text-[#1f1f1f] text-base font-bold tracking-wide hover:bg-gray-50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-gray-200"
+              className="w-full min-h-12 py-3.5 rounded-2xl bg-white text-[#1f1f1f] text-base font-bold tracking-wide hover:bg-gray-50 transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-gray-200 shadow-sm"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -217,7 +217,7 @@ export default function SignupPage() {
             <button
               onClick={() => handleSocialSignup('kakao')}
               disabled={isSubmitting}
-              className="w-full py-3.5 rounded-xl bg-[#FEE500] text-[#191919] text-base font-bold tracking-wide hover:bg-[#FDD800] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              className="w-full min-h-12 py-3.5 rounded-2xl bg-[#FEE500] text-[#191919] text-base font-bold tracking-wide hover:bg-[#FDD800] transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 0C4.029 0 0 3.13 0 6.99c0 2.485 1.644 4.671 4.121 5.912l-1.05 3.852c-.093.34.295.613.588.414L7.77 14.35c.4.055.81.084 1.23.084 4.971 0 9-3.13 9-6.99S13.971 0 9 0" fill="#191919"/>
@@ -229,7 +229,7 @@ export default function SignupPage() {
             <button
               onClick={() => handleSocialSignup('email_passwordless')}
               disabled={isSubmitting}
-              className="w-full py-3.5 rounded-xl bg-accent text-foreground text-base font-bold tracking-wide hover:bg-accent/80 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border/10"
+              className="w-full min-h-12 py-3.5 rounded-2xl bg-white/70 text-foreground text-base font-bold tracking-wide hover:bg-white transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border shadow-sm"
             >
               <span className="material-symbols-outlined text-lg">mail</span>
               {isSubmitting ? 'Creating account...' : 'Continue with Email'}
@@ -249,11 +249,11 @@ export default function SignupPage() {
             </button>
 
             {showAdvanced && (
-              <div className="mt-2 rounded-2xl border border-border/10 bg-card p-6">
+              <div className="mt-2 rounded-[1.75rem] border border-border bg-white/70 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
                 <button
                   onClick={handleConnectWallet}
                   disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full min-h-12 py-3.5 rounded-2xl bg-primary text-primary-foreground text-base font-bold tracking-wide shadow-[0_16px_36px_rgba(8,145,178,0.22)] hover:bg-primary/90 transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -277,7 +277,7 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-base text-center">
+            <div className="mt-4 px-4 py-3 rounded-2xl bg-red-50/90 border border-red-200 text-red-700 text-base text-center shadow-sm">
               {error}
             </div>
           )}
@@ -286,11 +286,11 @@ export default function SignupPage() {
 
       {/* Dev Login Panel */}
       {IS_DEV && (
-        <div className="w-full max-w-xl mt-10 rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-6">
+        <div className="w-full max-w-xl mt-10 rounded-[1.75rem] border border-amber-300 bg-amber-50/80 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-yellow-500 text-xl">science</span>
-            <h3 className="font-[var(--font-manrope)] text-lg font-bold text-yellow-500">Dev Login</h3>
-            <span className="text-xs text-yellow-500/60 ml-auto">No wallet required</span>
+            <span className="material-symbols-outlined text-amber-600 text-xl">science</span>
+            <h3 className="font-[var(--font-manrope)] text-lg font-bold text-amber-700">Dev Login</h3>
+            <span className="text-xs text-amber-700/70 ml-auto">No wallet required</span>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -298,12 +298,12 @@ export default function SignupPage() {
               value={devAccountId}
               onChange={(e) => setDevAccountId(e.target.value)}
               placeholder="account.testnet"
-              className="flex-1 px-3 py-2 rounded-lg bg-background border border-border/20 text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:border-yellow-500/50"
+              className="flex-1 px-3 py-2 rounded-xl bg-white/70 border border-amber-200 text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:border-amber-500/50"
             />
             <select
               value={devRole}
               onChange={(e) => setDevRole(e.target.value as UserRole)}
-              className="px-3 py-2 rounded-lg bg-background border border-border/20 text-foreground text-base focus:outline-none focus:border-yellow-500/50"
+              className="px-3 py-2 rounded-xl bg-white/70 border border-amber-200 text-foreground text-base focus:outline-none focus:border-amber-500/50"
             >
               <option value="SEEKER">Seeker</option>
               <option value="EMPLOYER">Employer</option>
@@ -311,7 +311,7 @@ export default function SignupPage() {
             <button
               onClick={handleDevLogin}
               disabled={devSubmitting || !devAccountId.trim()}
-              className="px-5 py-2 rounded-lg bg-yellow-500 text-black text-base font-bold hover:bg-yellow-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-2 rounded-xl bg-amber-500 text-black text-base font-bold hover:bg-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {devSubmitting ? 'Logging in...' : 'Dev Login'}
             </button>

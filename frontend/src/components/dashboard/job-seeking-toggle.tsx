@@ -80,7 +80,7 @@ export function JobSeekingToggle({ initialActive = false, onToggle, compact = fa
   }
 
   return (
-    <div className="bg-card rounded-2xl border border-border/10 p-6" data-testid="job-seeking-toggle">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl" data-testid="job-seeking-toggle">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${

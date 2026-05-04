@@ -129,7 +129,7 @@ export function WalletSelectorProvider({ children }: { children: ReactNode }) {
 
       const m = setupModal(sel, {
         contractId: ESCROW_CONTRACT_ID,
-        theme: 'dark',
+        theme: 'light',
       });
 
       // Read initial state

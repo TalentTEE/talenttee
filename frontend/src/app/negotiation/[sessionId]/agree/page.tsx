@@ -23,7 +23,7 @@ function ReasoningBubble({ reasoning, isSeeker }: { reasoning: string | import('
     <div className={`rounded-2xl px-3 py-2.5 text-sm leading-relaxed ${
       isSeeker
         ? 'bg-primary/10 border border-primary/10 rounded-br-md'
-        : 'bg-accent/50 border border-border/10 rounded-bl-md'
+        : 'bg-white/75 border border-border rounded-bl-md'
     }`}>
       <p className="text-foreground/90">
         &ldquo;{structured ? reasoning.summary : reasoning}&rdquo;
@@ -328,7 +328,7 @@ export default function AgreementPage() {
           </div>
 
           {/* Agreement Details Card */}
-          <div className="bg-card rounded-2xl border border-border/10 p-6">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-5">
               <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
                 description
@@ -337,7 +337,7 @@ export default function AgreementPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
+              <div className="rounded-2xl bg-white/65 border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">badge</span>
                   <p className="text-sm uppercase tracking-wider text-muted-foreground">Position</p>
@@ -345,7 +345,7 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.positionTitle}</p>
               </div>
 
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
+              <div className="rounded-2xl bg-white/65 border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">payments</span>
                   <p className="text-sm uppercase tracking-wider text-muted-foreground">Annual Salary</p>
@@ -353,7 +353,7 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-primary">{formatSalary(agreement.summary.agreedSalary)}</p>
               </div>
 
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
+              <div className="rounded-2xl bg-white/65 border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">home_work</span>
                   <p className="text-sm uppercase tracking-wider text-muted-foreground">Work Type</p>
@@ -361,7 +361,7 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.remotePolicy}</p>
               </div>
 
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
+              <div className="rounded-2xl bg-white/65 border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">calendar_month</span>
                   <p className="text-sm uppercase tracking-wider text-muted-foreground">Start Date</p>
@@ -369,7 +369,7 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.startDate}</p>
               </div>
 
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
+              <div className="rounded-2xl bg-white/65 border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">schedule</span>
                   <p className="text-sm uppercase tracking-wider text-muted-foreground">Probation Period</p>
@@ -377,7 +377,7 @@ export default function AgreementPage() {
                 <p className="text-base font-bold text-foreground">{agreement.summary.probationMonths} months</p>
               </div>
 
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-4">
+              <div className="rounded-2xl bg-white/65 border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="material-symbols-outlined text-base text-muted-foreground">repeat</span>
                   <p className="text-sm uppercase tracking-wider text-muted-foreground">Total Rounds</p>
@@ -394,7 +394,7 @@ export default function AgreementPage() {
 
           {/* On-Chain Warning — only when still deciding */}
           {flowState === 'idle' && (
-            <div className="bg-card rounded-2xl border border-amber-500/10 p-5">
+            <div className="rounded-[1.75rem] border border-amber-200 bg-amber-50/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 mt-0.5">
                   <span className="material-symbols-outlined text-base text-amber-400">warning</span>
@@ -430,7 +430,7 @@ export default function AgreementPage() {
                 </button>
                 <button
                   onClick={handleReject}
-                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground text-base font-bold hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/70 border border-border text-foreground text-base font-bold hover:bg-red-50 hover:text-red-700 transition-colors duration-300 cursor-pointer shadow-sm"
                 >
                   <span className="material-symbols-outlined text-base">cancel</span>
                   Reject
@@ -461,7 +461,7 @@ export default function AgreementPage() {
               </p>
               <div className="flex items-center justify-center gap-6 mt-4">
                 <div className="text-center">
-                  <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  <span className="material-symbols-outlined text-xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   <p className="text-xs text-muted-foreground mt-1">Your approval</p>
                 </div>
                 <div className="w-12 h-px bg-border/20" />
@@ -478,33 +478,33 @@ export default function AgreementPage() {
             <>
               <div className="bg-emerald-500/5 rounded-2xl border border-emerald-500/15 p-6 text-center">
                 <div className="w-14 h-14 rounded-full bg-emerald-500/10 mx-auto mb-3 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-3xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  <span className="material-symbols-outlined text-3xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                 </div>
-                <p className="text-lg font-extrabold text-emerald-400">Agreement Finalized</p>
+                <p className="text-lg font-extrabold text-[#3f6212]">Agreement Finalized</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Both parties have approved. The agreement has been recorded on-chain.
                 </p>
                 {/* Approval status */}
                 <div className="flex items-center justify-center gap-6 mt-4">
                   <div className="text-center">
-                    <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <p className="text-xs text-emerald-400/80 mt-1">Seeker</p>
+                    <span className="material-symbols-outlined text-xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <p className="text-xs text-[#3f6212]/80 mt-1">Seeker</p>
                   </div>
-                  <span className="material-symbols-outlined text-2xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+                  <span className="material-symbols-outlined text-2xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
                   <div className="text-center">
-                    <span className="material-symbols-outlined text-xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <p className="text-xs text-emerald-400/80 mt-1">Employer</p>
+                    <span className="material-symbols-outlined text-xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <p className="text-xs text-[#3f6212]/80 mt-1">Employer</p>
                   </div>
                 </div>
               </div>
 
               {/* On-Chain Record */}
-              <div className="bg-card rounded-2xl border border-emerald-500/15 p-5 space-y-4">
+              <div className="rounded-[1.75rem] border border-[#65a30d]/20 bg-white/75 p-5 space-y-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-base text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-base text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>
                     verified_user
                   </span>
-                  <p className="text-base font-bold text-emerald-400">On-Chain Verification</p>
+                  <p className="text-base font-bold text-[#3f6212]">On-Chain Verification</p>
                 </div>
 
                 {/* Agreement Hash */}
@@ -524,7 +524,7 @@ export default function AgreementPage() {
                       href={`${NEAR_EXPLORER_BASE}/txns/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm font-bold text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-2xl bg-[#65a30d]/10 border border-[#65a30d]/20 text-sm font-bold text-[#3f6212] hover:bg-[#65a30d]/15 transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">open_in_new</span>
                       View on NEAR Explorer
@@ -564,9 +564,9 @@ export default function AgreementPage() {
               </div>
 
               {/* Interview Messages */}
-              <div className="bg-card rounded-2xl border border-border/10 p-6">
+              <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="material-symbols-outlined text-base text-[#00F0FF]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
                     chat
                   </span>
                   <h3 className="text-base font-bold text-foreground">Interview Coordination</h3>
@@ -595,7 +595,7 @@ export default function AgreementPage() {
                         <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
                           isMe
                             ? 'bg-primary/10 border border-primary/10 rounded-br-md'
-                            : 'bg-accent/50 border border-border/10 rounded-bl-md'
+                            : 'bg-white/75 border border-border rounded-bl-md'
                         }`}>
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className="material-symbols-outlined text-xs text-muted-foreground">
@@ -624,7 +624,7 @@ export default function AgreementPage() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                     placeholder={user?.role === 'EMPLOYER' ? 'Send interview invite...' : 'Reply...'}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-accent/50 border border-border/10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 transition-colors"
+                    className="flex-1 px-4 py-2.5 rounded-2xl bg-white/70 border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 transition-colors shadow-sm"
                   />
                   <button
                     onClick={handleSendMessage}
@@ -651,9 +651,9 @@ export default function AgreementPage() {
             <div className="space-y-4">
               <div className="bg-red-500/5 rounded-2xl border border-red-500/10 p-6 text-center">
                 <div className="w-14 h-14 rounded-full bg-red-500/10 mx-auto mb-3 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-3xl text-red-400" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
+                  <span className="material-symbols-outlined text-3xl text-red-700" style={{ fontVariationSettings: "'FILL' 1" }}>cancel</span>
                 </div>
-                <p className="text-lg font-bold text-red-400">Agreement Rejected</p>
+                <p className="text-lg font-bold text-red-700">Agreement Rejected</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   You have rejected the proposed terms. The negotiation has been terminated.
                 </p>
@@ -670,7 +670,7 @@ export default function AgreementPage() {
         </div>
 
         {/* ── Right Column: Negotiation Conversation ── */}
-        <div className="bg-card rounded-2xl border border-border/10 p-5">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
               forum
@@ -733,7 +733,7 @@ export default function AgreementPage() {
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-background/50 border border-border/5 text-xs font-bold text-foreground">
                           {formatSalary(round.proposal.salary)}
                           {salaryDelta !== null && salaryDelta !== 0 && (
-                            <span className={`font-semibold ${salaryDelta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <span className={`font-semibold ${salaryDelta > 0 ? 'text-[#3f6212]' : 'text-red-700'}`}>
                               {salaryDelta > 0 ? '+' : ''}{formatSalary(salaryDelta)}
                             </span>
                           )}
@@ -755,8 +755,8 @@ export default function AgreementPage() {
                           round.decision === 'ACCEPT'
                             ? 'bg-primary/10 text-primary'
                             : round.decision === 'REJECT'
-                              ? 'bg-red-500/10 text-red-400'
-                              : 'bg-yellow-500/10 text-yellow-400'
+                              ? 'bg-red-50 text-red-700'
+                              : 'bg-amber-50 text-amber-700'
                         }`}>
                           <span
                             className="material-symbols-outlined text-xs"

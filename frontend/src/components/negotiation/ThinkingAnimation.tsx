@@ -24,7 +24,7 @@ export function ThinkingAnimation({ agentLabel }: ThinkingAnimationProps) {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-border/10 bg-card p-4 space-y-3">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 p-4 space-y-3 shadow-[0_16px_45px_rgba(15,23,42,0.07)] backdrop-blur-2xl">
       <div className="flex items-center gap-2">
         <div className="flex gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />

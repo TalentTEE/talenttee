@@ -10,11 +10,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     return (
         <AgentStatusProvider>
-            <div className="min-h-screen flex bg-background">
+            <div className="min-h-screen flex app-ambient">
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                 <div className="flex-1 flex flex-col min-w-0">
                     <Header onMenuToggle={() => setSidebarOpen((o) => !o)} />
-                    <main className="flex-1 p-6 lg:p-8">{children}</main>
+                    <main className="flex-1 p-5 md:p-6 lg:p-8">{children}</main>
                 </div>
             </div>
         </AgentStatusProvider>

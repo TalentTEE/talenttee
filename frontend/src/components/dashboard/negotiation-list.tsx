@@ -7,12 +7,12 @@ import { useSse } from '@/lib/sse';
 import Link from 'next/link';
 
 const stateInfo: Record<string, { label: string; icon: string; className: string }> = {
-  INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-yellow-400' },
-  EMPLOYER_OFFER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  SEEKER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  EMPLOYER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400' },
-  AGREED: { label: 'Agreed', icon: 'task_alt', className: 'text-[#FF2DF1]' },
-  FAILED: { label: 'Failed', icon: 'cancel', className: 'text-red-400' },
+  INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-amber-700' },
+  EMPLOYER_OFFER: { label: 'Negotiating', icon: 'sync', className: 'text-primary' },
+  SEEKER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-primary' },
+  EMPLOYER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-primary' },
+  AGREED: { label: 'Agreed', icon: 'task_alt', className: 'text-[#3f6212]' },
+  FAILED: { label: 'Failed', icon: 'cancel', className: 'text-red-700' },
   MAX_ROUNDS: { label: 'Max Rounds', icon: 'warning', className: 'text-orange-400' },
 };
 
@@ -31,7 +31,7 @@ const SECTIONS: SectionConfig[] = [
   {
     key: 'active',
     title: 'In Progress',
-    badgeColor: '#FF2DF1',
+    badgeColor: '#be185d',
     defaultOpen: true,
     ctaLabel: () => 'Monitor',
     ctaHref: (s) => `/negotiation/${s.id}`,
@@ -39,7 +39,7 @@ const SECTIONS: SectionConfig[] = [
   {
     key: 'agreed',
     title: 'Agreed',
-    badgeColor: '#39FF14',
+    badgeColor: '#65a30d',
     defaultOpen: true,
     ctaLabel: (s) => (s.seekerApproved && s.employerApproved) ? 'Open Chat' : 'Review & Approve',
     ctaHref: (s) => `/negotiation/${s.id}/agree`,
@@ -104,7 +104,7 @@ function SessionRow({
       className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
         activity
           ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/10'
-          : 'bg-accent/50 border-border/5 hover:bg-accent'
+          : 'bg-white/65 border-border hover:bg-white'
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -114,16 +114,16 @@ function SessionRow({
               <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted" />
               <circle
                 cx="20" cy="20" r="16" fill="none" strokeWidth="2.5"
-                className="text-[#FF2DF1]"
+                className="text-[#be185d]"
                 strokeDasharray={`${score * 1.005} 999`}
                 strokeLinecap="round"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#FF2DF1]">{score}%</span>
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#be185d]">{score}%</span>
           </div>
         ) : (
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-            isAgreed ? 'bg-[#FF2DF1]/10' : 'bg-muted'
+            isAgreed ? 'bg-[#65a30d]/10' : 'bg-muted'
           }`}>
             <span className={`material-symbols-outlined text-lg ${info.className}`} style={isAgreed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
               {info.icon}
@@ -138,20 +138,20 @@ function SessionRow({
           {isAgreed ? (
             <div className="flex items-center gap-2 mt-0.5">
               {bothApproved ? (
-                <span className="inline-flex items-center gap-1 text-xs text-[#39FF14]">
+                <span className="inline-flex items-center gap-1 text-xs text-[#3f6212]">
                   <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
                   {messageCount > 0 ? 'Interview scheduling' : 'Ready to chat'}
                   {unreadCount > 0 && (
                     <span
                       className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold"
-                      style={{ backgroundColor: '#00F0FF', color: '#0a0a0a' }}
+                      style={{ backgroundColor: '#0891b2', color: '#ffffff' }}
                     >
                       {unreadCount}
                     </span>
                   )}
                 </span>
               ) : !myApproved ? (
-                <span className="inline-flex items-center gap-0.5 text-xs text-[#FFE600]">
+                <span className="inline-flex items-center gap-0.5 text-xs text-amber-700">
                   <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>rate_review</span>
                   Needs your approval
                 </span>
@@ -274,15 +274,15 @@ function JobGroupedList({
               type="button"
               className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                 isActive
-                  ? 'bg-[#FFE600]/15 text-[#FFE600] border border-[#FFE600]/30'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/30 border border-transparent'
+                  ? 'bg-[#d97706]/15 text-[#b45309] border border-[#d97706]/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/60 border border-transparent'
               }`}
               onClick={() => handleJobChange(job.id)}
             >
               <span className="material-symbols-outlined text-base">work</span>
               <span className="truncate max-w-[180px]">{job.title}</span>
               <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full text-xs font-bold ${
-                isActive ? 'bg-[#FFE600]/20 text-[#FFE600]' : 'bg-muted text-muted-foreground'
+                isActive ? 'bg-[#d97706]/20 text-[#b45309]' : 'bg-muted text-muted-foreground'
               }`}>
                 {count}
               </span>
@@ -382,7 +382,7 @@ function StatusTabList({
               className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
                 isActive
                   ? 'border'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/30 border border-transparent'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/60 border border-transparent'
               }`}
               style={isActive ? {
                 backgroundColor: `color-mix(in srgb, ${section.badgeColor} 15%, transparent)`,
@@ -482,7 +482,7 @@ export function NegotiationList({
             label: 'New message',
             count,
             icon: 'chat',
-            color: '#00F0FF',
+            color: '#0891b2',
           });
           return next;
         });
@@ -496,7 +496,7 @@ export function NegotiationList({
           next.set(data.sessionId, {
             label: 'Completed',
             icon: 'check_circle',
-            color: '#39FF14',
+            color: '#65a30d',
           });
           return next;
         });
@@ -510,7 +510,7 @@ export function NegotiationList({
           next.set(data.sessionId, {
             label: data.action === 'approved' ? `${data.byRole} approved` : `${data.byRole} rejected`,
             icon: data.action === 'approved' ? 'thumb_up' : 'thumb_down',
-            color: data.action === 'approved' ? '#FFE600' : '#f87171',
+            color: data.action === 'approved' ? '#d97706' : '#dc2626',
           });
           return next;
         });
@@ -531,7 +531,7 @@ export function NegotiationList({
   // Employer mode: toggle between job-grouped and status-grouped
   if (jobs && jobs.length > 0) {
     return (
-      <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
+      <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Negotiations</h3>
@@ -544,14 +544,14 @@ export function NegotiationList({
           <div className="flex rounded-lg border border-border/20 overflow-hidden">
             <button
               type="button"
-              className={`px-3 py-1 text-xs font-semibold transition-all ${viewMode === 'job' ? 'bg-[#BF5AF2]/20 text-[#BF5AF2]' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1 text-xs font-semibold transition-all ${viewMode === 'job' ? 'bg-[#7c3aed]/20 text-[#5b21b6]' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setViewMode('job')}
             >
               By Job
             </button>
             <button
               type="button"
-              className={`px-3 py-1 text-xs font-semibold transition-all ${viewMode === 'status' ? 'bg-[#BF5AF2]/20 text-[#BF5AF2]' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1 text-xs font-semibold transition-all ${viewMode === 'status' ? 'bg-[#7c3aed]/20 text-[#5b21b6]' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => setViewMode('status')}
             >
               By Status
@@ -580,7 +580,7 @@ export function NegotiationList({
 
   // Seeker mode: group by status
   return (
-    <div className="bg-card rounded-2xl border border-[#BF5AF2]/30 p-6">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       <div className="flex items-center gap-2 mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">Negotiations</h3>
         {totalActivities > 0 && (

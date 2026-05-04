@@ -44,7 +44,7 @@ function GitHubDetail({ data }: { data: GitHubData }) {
         </h4>
         <div className="space-y-1.5">
           {data.repositories.map((repo) => (
-            <div key={repo.name} className="px-3 py-2 rounded-lg bg-muted/30">
+            <div key={repo.name} className="px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -68,23 +68,23 @@ function GitHubDetail({ data }: { data: GitHubData }) {
 
               {(repo.userCommits !== undefined || repo.totalCommits !== undefined) && (
                 <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                  <div className="rounded-lg bg-muted/60 px-2 py-1 text-center">
                     <p className="text-[10px] text-muted-foreground">My commits</p>
                     <p className="text-xs font-semibold text-foreground">{repo.userCommits ?? 0}</p>
                   </div>
-                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                  <div className="rounded-lg bg-muted/60 px-2 py-1 text-center">
                     <p className="text-[10px] text-muted-foreground">Total commits</p>
                     <p className="text-xs font-semibold text-foreground">{repo.totalCommits ?? 0}</p>
                   </div>
-                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                  <div className="rounded-lg bg-muted/60 px-2 py-1 text-center">
                     <p className="text-[10px] text-muted-foreground">Additions</p>
                     <p className="text-xs font-semibold text-foreground">{repo.additions ?? 0}</p>
                   </div>
-                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                  <div className="rounded-lg bg-muted/60 px-2 py-1 text-center">
                     <p className="text-[10px] text-muted-foreground">Deletions</p>
                     <p className="text-xs font-semibold text-foreground">{repo.deletions ?? 0}</p>
                   </div>
-                  <div className="rounded bg-background/30 px-2 py-1 text-center">
+                  <div className="rounded-lg bg-muted/60 px-2 py-1 text-center">
                     <p className="text-[10px] text-muted-foreground">Contribution</p>
                     <p className="text-xs font-semibold text-foreground">{((repo.contributionRatio ?? 0) * 100).toFixed(1)}%</p>
                   </div>
@@ -103,7 +103,7 @@ function GitHubDetail({ data }: { data: GitHubData }) {
           { label: 'Issues', value: data.contributions.issues_closed },
           { label: 'Reviews', value: data.contributions.code_reviews },
         ].map((stat) => (
-          <div key={stat.label} className="text-center px-3 py-2 rounded-lg bg-muted/30">
+          <div key={stat.label} className="text-center px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
             <p className="text-lg font-bold text-foreground">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
           </div>
@@ -115,7 +115,7 @@ function GitHubDetail({ data }: { data: GitHubData }) {
         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Languages</h4>
         <div className="flex flex-wrap gap-1.5">
           {Object.keys(data.languages).map((lang) => (
-            <span key={lang} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/30 text-xs text-muted-foreground">
+            <span key={lang} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/65 border border-border text-xs text-muted-foreground">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: LANG_COLORS[lang] ?? '#8b8b8b' }} />
               {lang}
             </span>
@@ -137,7 +137,7 @@ function SlackDetail({ data }: { data: SlackData }) {
             { label: 'Technical', value: data.analysis.communicationStyle.technicalDepth },
             { label: 'Proactive', value: data.analysis.communicationStyle.proactiveness },
           ].map((s) => (
-            <div key={s.label} className="text-center px-3 py-2 rounded-lg bg-muted/30">
+            <div key={s.label} className="text-center px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
               <p className="text-lg font-bold text-foreground">{s.value}</p>
               <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
@@ -152,8 +152,8 @@ function SlackDetail({ data }: { data: SlackData }) {
         </h4>
         <div className="space-y-1.5">
           {data.messages.slice(0, 3).map((msg) => (
-            <div key={msg.id} className="px-3 py-2 rounded-lg bg-muted/30">
-              <span className="text-xs font-medium text-[#00F0FF]">{msg.channel}</span>
+            <div key={msg.id} className="px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
+              <span className="text-xs font-bold text-primary">{msg.channel}</span>
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{msg.text}</p>
             </div>
           ))}
@@ -166,7 +166,7 @@ function SlackDetail({ data }: { data: SlackData }) {
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Work Areas</h4>
           <div className="flex flex-wrap gap-1.5">
             {data.analysis.workAreas.map((area) => (
-              <span key={area.area} className="px-2.5 py-1 rounded-md bg-muted/30 text-xs text-muted-foreground">
+              <span key={area.area} className="px-2.5 py-1 rounded-lg bg-white/65 border border-border text-xs text-muted-foreground">
                 {area.area}
               </span>
             ))}
@@ -187,10 +187,10 @@ function DiscordDetail({ data }: { data: DiscordData }) {
         </h4>
         <div className="space-y-1.5">
           {data.activities.map((act) => (
-            <div key={act.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/30">
+            <div key={act.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
               <div className="min-w-0">
                 <span className="text-sm font-medium text-foreground">{act.server}</span>
-                <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-[#00F0FF]/10 text-[#00F0FF]">{act.role}</span>
+                <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">{act.role}</span>
               </div>
               <div className="text-right text-xs text-muted-foreground shrink-0 ml-3">
                 <p>{act.messages_count} msgs</p>
@@ -210,7 +210,7 @@ function DiscordDetail({ data }: { data: DiscordData }) {
             { label: 'Helpful', value: data.analysis.communityImpact.totalHelpful },
             { label: 'Help %', value: `${data.analysis.communityImpact.helpfulRatio}%` },
           ].map((s) => (
-            <div key={s.label} className="text-center px-3 py-2 rounded-lg bg-muted/30">
+            <div key={s.label} className="text-center px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
               <p className="text-lg font-bold text-foreground">{s.value}</p>
               <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
@@ -230,12 +230,12 @@ function Gov24Detail({ data }: { data: Gov24Data }) {
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Certificates</h4>
           <div className="space-y-1.5">
             {data.certificates.map((cert) => (
-              <div key={cert.name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/30">
+              <div key={cert.name} className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-foreground">{cert.name}</span>
                   <p className="text-xs text-muted-foreground">{cert.issuer} &middot; {cert.issued_date}</p>
                 </div>
-                <span className="text-xs text-emerald-400 shrink-0 ml-3">{cert.status}</span>
+                <span className="text-xs text-[#3f6212] shrink-0 ml-3">{cert.status}</span>
               </div>
             ))}
           </div>
@@ -248,7 +248,7 @@ function Gov24Detail({ data }: { data: Gov24Data }) {
           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Education</h4>
           <div className="space-y-1.5">
             {data.education.map((edu) => (
-              <div key={edu.institution} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/30">
+              <div key={edu.institution} className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/65 border border-border shadow-sm">
                 <div className="min-w-0">
                   <span className="text-sm font-medium text-foreground">{edu.degree}</span>
                   <p className="text-xs text-muted-foreground">{edu.institution}</p>
@@ -328,16 +328,16 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
       {/* Edit / Save toolbar */}
       <div className="flex items-center justify-end gap-2">
         {!editing ? (
-          <button onClick={startEdit} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
+          <button onClick={startEdit} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/70 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-sm">edit</span>
             Edit
           </button>
         ) : (
           <>
-            <button onClick={cancel} className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
+            <button onClick={cancel} className="px-3 py-1.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/70 transition-colors cursor-pointer">
               Cancel
             </button>
-            <button onClick={save} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#00F0FF] text-[#0a0a0a] hover:brightness-90 transition-all disabled:opacity-50 cursor-pointer">
+            <button onClick={save} disabled={saving} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer shadow-sm">
               {saving ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span> : <span className="material-symbols-outlined text-sm">save</span>}
               Save
             </button>
@@ -354,7 +354,7 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
               value={draft.summary}
               onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
               rows={3}
-              className="w-full rounded-lg bg-[#060610] border border-border/20 px-3 py-2 text-sm text-foreground resize-none focus:outline-none focus:border-[#00F0FF]/40"
+              className="w-full rounded-xl bg-white/70 border border-border px-3 py-2 text-sm text-foreground resize-none focus:outline-none focus:border-primary/40 shadow-sm"
             />
           ) : (
             <p className="text-sm text-foreground leading-relaxed">{d.summary}</p>
@@ -369,24 +369,24 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
           <div className="flex flex-wrap gap-1.5">
             {d.skills.map((s, i) => (
               editing ? (
-                <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#BF5AF2]/10 border border-[#BF5AF2]/20">
+                <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#7c3aed]/10 border border-[#7c3aed]/20">
                   <input
                     value={s}
                     onChange={(e) => updateSkill(i, e.target.value)}
-                    className="bg-transparent text-xs text-[#BF5AF2] w-24 focus:outline-none"
+                    className="bg-transparent text-xs text-[#5b21b6] w-24 focus:outline-none"
                   />
-                  <button onClick={() => removeSkill(i)} className="text-[#BF5AF2]/50 hover:text-red-400 cursor-pointer">
+                  <button onClick={() => removeSkill(i)} className="text-[#7c3aed]/50 hover:text-red-600 cursor-pointer">
                     <span className="material-symbols-outlined text-xs">close</span>
                   </button>
                 </span>
               ) : (
-                <span key={i} className="px-2 py-1 rounded-md bg-[#BF5AF2]/10 text-[#BF5AF2] text-xs font-medium border border-[#BF5AF2]/20">
+                <span key={i} className="px-2 py-1 rounded-lg bg-[#7c3aed]/10 text-[#5b21b6] text-xs font-semibold border border-[#7c3aed]/20">
                   {s}
                 </span>
               )
             ))}
             {editing && (
-              <button onClick={addSkill} className="flex items-center gap-0.5 px-2 py-1 rounded-md border border-dashed border-border/30 text-xs text-muted-foreground hover:border-[#BF5AF2]/40 hover:text-[#BF5AF2] transition-all cursor-pointer">
+              <button onClick={addSkill} className="flex items-center gap-0.5 px-2 py-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-[#7c3aed]/40 hover:text-[#5b21b6] transition-colors cursor-pointer">
                 <span className="material-symbols-outlined text-xs">add</span>
                 Add
               </button>
@@ -401,18 +401,18 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Experience</p>
           <div className="space-y-2">
             {d.experience.map((exp, idx) => (
-              <div key={idx} className="rounded-lg border border-border/10 bg-[#060610] px-3 py-2">
+              <div key={idx} className="rounded-xl border border-border bg-white/70 px-3 py-2 shadow-sm">
                 {editing ? (
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <input value={exp.role} onChange={(e) => updateExp(idx, 'role', e.target.value)} placeholder="Role" className="flex-1 bg-transparent text-sm font-semibold text-foreground focus:outline-none border-b border-border/20 focus:border-[#00F0FF]/40 pb-0.5" />
-                      <button onClick={() => removeExp(idx)} className="text-muted-foreground/40 hover:text-red-400 cursor-pointer shrink-0">
+                      <input value={exp.role} onChange={(e) => updateExp(idx, 'role', e.target.value)} placeholder="Role" className="flex-1 bg-transparent text-sm font-semibold text-foreground focus:outline-none border-b border-border focus:border-primary/40 pb-0.5" />
+                      <button onClick={() => removeExp(idx)} className="text-muted-foreground/40 hover:text-red-600 cursor-pointer shrink-0">
                         <span className="material-symbols-outlined text-sm">delete</span>
                       </button>
                     </div>
                     <div className="flex gap-2">
-                      <input value={exp.company} onChange={(e) => updateExp(idx, 'company', e.target.value)} placeholder="Company" className="flex-1 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border/20 focus:border-[#00F0FF]/40 pb-0.5" />
-                      <input value={exp.period} onChange={(e) => updateExp(idx, 'period', e.target.value)} placeholder="Period" className="w-28 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border/20 focus:border-[#00F0FF]/40 pb-0.5" />
+                      <input value={exp.company} onChange={(e) => updateExp(idx, 'company', e.target.value)} placeholder="Company" className="flex-1 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border focus:border-primary/40 pb-0.5" />
+                      <input value={exp.period} onChange={(e) => updateExp(idx, 'period', e.target.value)} placeholder="Period" className="w-28 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border focus:border-primary/40 pb-0.5" />
                     </div>
                   </div>
                 ) : (
@@ -433,18 +433,18 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Education</p>
           <div className="space-y-2">
             {d.education.map((edu, idx) => (
-              <div key={idx} className="rounded-lg border border-border/10 bg-[#060610] px-3 py-2">
+              <div key={idx} className="rounded-xl border border-border bg-white/70 px-3 py-2 shadow-sm">
                 {editing ? (
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <input value={edu.degree} onChange={(e) => updateEdu(idx, 'degree', e.target.value)} placeholder="Degree" className="flex-1 bg-transparent text-sm font-semibold text-foreground focus:outline-none border-b border-border/20 focus:border-[#00F0FF]/40 pb-0.5" />
-                      <button onClick={() => removeEdu(idx)} className="text-muted-foreground/40 hover:text-red-400 cursor-pointer shrink-0">
+                      <input value={edu.degree} onChange={(e) => updateEdu(idx, 'degree', e.target.value)} placeholder="Degree" className="flex-1 bg-transparent text-sm font-semibold text-foreground focus:outline-none border-b border-border focus:border-primary/40 pb-0.5" />
+                      <button onClick={() => removeEdu(idx)} className="text-muted-foreground/40 hover:text-red-600 cursor-pointer shrink-0">
                         <span className="material-symbols-outlined text-sm">delete</span>
                       </button>
                     </div>
                     <div className="flex gap-2">
-                      <input value={edu.institution} onChange={(e) => updateEdu(idx, 'institution', e.target.value)} placeholder="Institution" className="flex-1 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border/20 focus:border-[#00F0FF]/40 pb-0.5" />
-                      <input value={edu.year} onChange={(e) => updateEdu(idx, 'year', e.target.value)} placeholder="Year" className="w-20 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border/20 focus:border-[#00F0FF]/40 pb-0.5" />
+                      <input value={edu.institution} onChange={(e) => updateEdu(idx, 'institution', e.target.value)} placeholder="Institution" className="flex-1 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border focus:border-primary/40 pb-0.5" />
+                      <input value={edu.year} onChange={(e) => updateEdu(idx, 'year', e.target.value)} placeholder="Year" className="w-20 bg-transparent text-xs text-muted-foreground focus:outline-none border-b border-border focus:border-primary/40 pb-0.5" />
                     </div>
                   </div>
                 ) : (
@@ -466,24 +466,24 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
           <div className="flex flex-wrap gap-1.5">
             {d.certifications.map((cert, i) => (
               editing ? (
-                <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                <span key={i} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#65a30d]/10 border border-[#65a30d]/20">
                   <input
                     value={cert}
                     onChange={(e) => updateCert(i, e.target.value)}
-                    className="bg-transparent text-xs text-emerald-400 w-32 focus:outline-none"
+                    className="bg-transparent text-xs text-[#3f6212] w-32 focus:outline-none"
                   />
-                  <button onClick={() => removeCert(i)} className="text-emerald-500/50 hover:text-red-400 cursor-pointer">
+                  <button onClick={() => removeCert(i)} className="text-[#65a30d]/50 hover:text-red-600 cursor-pointer">
                     <span className="material-symbols-outlined text-xs">close</span>
                   </button>
                 </span>
               ) : (
-                <span key={i} className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
+                <span key={i} className="px-2.5 py-1 rounded-lg bg-[#65a30d]/10 text-[#3f6212] text-xs font-semibold border border-[#65a30d]/20">
                   {cert}
                 </span>
               )
             ))}
             {editing && (
-              <button onClick={addCert} className="flex items-center gap-0.5 px-2 py-1 rounded-md border border-dashed border-border/30 text-xs text-muted-foreground hover:border-emerald-500/40 hover:text-emerald-400 transition-all cursor-pointer">
+              <button onClick={addCert} className="flex items-center gap-0.5 px-2 py-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:border-[#65a30d]/40 hover:text-[#3f6212] transition-colors cursor-pointer">
                 <span className="material-symbols-outlined text-xs">add</span>
                 Add
               </button>
@@ -499,7 +499,7 @@ function PdfDetail({ data, onSave }: { data: PdfData; onSave?: (updated: PdfData
           <div className="space-y-1">
             {d.strengths.map((s, i) => (
               <div key={i} className="flex items-start gap-2 text-xs text-foreground">
-                <span className="material-symbols-outlined text-xs text-emerald-400 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                <span className="material-symbols-outlined text-xs text-[#65a30d] mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                 {s}
               </div>
             ))}

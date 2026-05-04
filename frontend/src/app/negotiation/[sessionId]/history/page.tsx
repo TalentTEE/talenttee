@@ -20,8 +20,8 @@ interface DecryptedRound {
 
 function decisionStyle(decision: string) {
   if (decision === 'ACCEPT') return 'bg-primary/10 text-primary';
-  if (decision === 'REJECT') return 'bg-red-500/10 text-red-400';
-  return 'bg-yellow-500/10 text-yellow-400';
+  if (decision === 'REJECT') return 'bg-red-50 text-red-700';
+  return 'bg-amber-50 text-amber-700';
 }
 
 function decisionLabel(decision: string) {
@@ -127,7 +127,7 @@ export default function EncryptedHistoryPage() {
       <div className="bg-card rounded-2xl border border-border/10 p-5">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-lg text-yellow-400">encrypted</span>
+            <span className="material-symbols-outlined text-lg text-amber-700">encrypted</span>
           </div>
           <div>
             <p className="text-base font-semibold text-foreground">End-to-End Encrypted</p>
@@ -201,8 +201,8 @@ export default function EncryptedHistoryPage() {
       {/* Error */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3">
-          <span className="material-symbols-outlined text-lg text-red-400 shrink-0">error</span>
-          <p className="text-base text-red-400">{error}</p>
+          <span className="material-symbols-outlined text-lg text-red-700 shrink-0">error</span>
+          <p className="text-base text-red-700">{error}</p>
         </div>
       )}
 
@@ -227,7 +227,7 @@ export default function EncryptedHistoryPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-muted-foreground">Seeker Agent</span>
               <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-base text-blue-400">person</span>
+                <span className="material-symbols-outlined text-base text-primary">person</span>
               </div>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function EncryptedHistoryPage() {
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-sm font-bold text-foreground">
                           {formatSalary(round.proposal.salary)}
                           {salaryDelta !== null && salaryDelta !== 0 && (
-                            <span className={`text-sm font-semibold ${salaryDelta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <span className={`text-sm font-semibold ${salaryDelta > 0 ? 'text-[#3f6212]' : 'text-red-700'}`}>
                               {salaryDelta > 0 ? '+' : ''}{formatSalary(salaryDelta)}
                             </span>
                           )}

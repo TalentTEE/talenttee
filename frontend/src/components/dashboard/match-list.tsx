@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { MatchResultDisplay, NegotiationSession } from '@/lib/types';
 
 const stateLabels: Record<string, { label: string; icon: string; className: string }> = {
-  INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-yellow-400 bg-yellow-400/10' },
-  EMPLOYER_OFFER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400 bg-blue-400/10' },
-  SEEKER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400 bg-blue-400/10' },
-  EMPLOYER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-blue-400 bg-blue-400/10' },
+  INITIATED: { label: 'Starting', icon: 'hourglass_top', className: 'text-amber-700 bg-amber-50' },
+  EMPLOYER_OFFER: { label: 'Negotiating', icon: 'sync', className: 'text-primary bg-primary/10' },
+  SEEKER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-primary bg-primary/10' },
+  EMPLOYER_COUNTER: { label: 'Negotiating', icon: 'sync', className: 'text-primary bg-primary/10' },
   AGREED: { label: 'Agreed', icon: 'check_circle', className: 'text-primary bg-primary/10' },
-  FAILED: { label: 'Failed', icon: 'cancel', className: 'text-red-400 bg-red-400/10' },
+  FAILED: { label: 'Failed', icon: 'cancel', className: 'text-red-700 bg-red-50' },
   MAX_ROUNDS: { label: 'Max Rounds', icon: 'warning', className: 'text-orange-400 bg-orange-400/10' },
 };
 
@@ -25,7 +25,7 @@ export function MatchList({
   const sessionByJobId = new Map(sessions.map((s) => [s.jobId, s]));
 
   return (
-    <div className="bg-card rounded-2xl border border-border/10 p-6">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-[var(--font-manrope)] text-base font-bold text-foreground">
           Top {role === 'SEEKER' ? 'Job' : 'Candidate'} Matches
@@ -39,7 +39,7 @@ export function MatchList({
           const state = session ? stateLabels[session.state] : null;
 
           return (
-            <div key={m.id} className="flex items-center gap-4 p-3 rounded-xl bg-accent/50 border border-border/5 hover:bg-accent transition-all">
+            <div key={m.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white/65 border border-border hover:bg-white transition-colors shadow-sm">
               {/* Score Ring */}
               <div className="relative w-12 h-12 shrink-0">
                 <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">

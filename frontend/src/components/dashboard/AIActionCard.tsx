@@ -237,14 +237,14 @@ function getEmployerAction(
 }
 
 const stageColors: Record<PipelineStage, string> = {
-  connect: '#00F0FF',
-  analyze: '#BF5AF2',
-  match: '#39FF14',
-  negotiate: '#FF2DF1',
-  agree: '#FFE600',
-  post: '#FFE600',
-  fund: '#39FF14',
-  hire: '#00F0FF',
+  connect: '#0891b2',
+  analyze: '#7c3aed',
+  match: '#65a30d',
+  negotiate: '#be185d',
+  agree: '#d97706',
+  post: '#d97706',
+  fund: '#65a30d',
+  hire: '#0891b2',
 };
 
 export function AIActionCard({ datasources, resume, matches, sessions, role, jobs = [] }: AIActionCardProps) {
@@ -257,18 +257,18 @@ export function AIActionCard({ datasources, resume, matches, sessions, role, job
 
   return (
     <div
-      className="rounded-2xl border p-5 space-y-4"
+      className="relative overflow-hidden rounded-[1.75rem] border p-5 space-y-4 shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur-2xl"
       style={{
-        borderColor: `color-mix(in srgb, ${neon} 20%, transparent)`,
-        background: `linear-gradient(to right, color-mix(in srgb, ${neon} 5%, transparent), color-mix(in srgb, ${neon} 10%, transparent))`,
+        borderColor: `color-mix(in srgb, ${neon} 18%, white 70%)`,
+        background: `linear-gradient(135deg, color-mix(in srgb, ${neon} 10%, white 82%), rgba(255, 255, 255, 0.78))`,
       }}
     >
       <div className="flex items-start gap-4">
         {/* AI Icon */}
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${neon} 10%, transparent)` }}>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-white/70 shadow-sm ring-1 ring-border" style={{ color: neon }}>
           <span
             className={`material-symbols-outlined text-xl ${action.animating ? 'animate-pulse' : ''}`}
-            style={{ fontVariationSettings: "'FILL' 1", color: neon }}
+            style={{ fontVariationSettings: "'FILL' 1" }}
           >
             {action.icon}
           </span>
@@ -276,17 +276,17 @@ export function AIActionCard({ datasources, resume, matches, sessions, role, job
 
         {/* Message */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-[var(--font-manrope)] font-bold text-foreground text-base">
+          <h3 className="font-[var(--font-manrope)] font-black text-foreground text-lg tracking-tight">
             {action.message}
           </h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{action.detail}</p>
+          <p className="text-sm text-muted-foreground mt-1">{action.detail}</p>
         </div>
 
         {/* CTA */}
         <Link
           href={action.ctaHref}
-          className="shrink-0 px-4 py-2 rounded-xl text-base font-semibold transition-all hover:brightness-90"
-          style={{ backgroundColor: neon, color: '#0a0a0a' }}
+          className="shrink-0 px-4 py-2.5 rounded-2xl text-base font-black text-white shadow-sm transition-transform hover:-translate-y-0.5"
+          style={{ backgroundColor: neon }}
         >
           {action.ctaLabel}
         </Link>

@@ -246,7 +246,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
-              <div className="rounded-xl border border-border/10 bg-[#060610] px-4 py-3">
+              <div className="rounded-2xl border border-border bg-white/70 px-4 py-3 shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">Permissions</p>
                 <p className="text-sm text-foreground">contents: read, metadata: read</p>
               </div>
@@ -294,7 +294,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                     placeholder="Filter repositories..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-lg border border-border/20 bg-[#060610] text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/30"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-white/70 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
 
@@ -311,14 +311,14 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                   </span>
                 </div>
 
-                <div className="min-w-0 rounded-xl border border-border/10 bg-[#060610] px-3 py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 rounded-2xl border border-border bg-white/70 px-3 py-2.5 flex items-center justify-between gap-3 shadow-sm">
                   <p className="min-w-0 text-xs text-muted-foreground">
                     Need repos that are not listed? Update GitHub App access.
                   </p>
                   <button
                     type="button"
                     onClick={() => handleLogin({ manageAccess: true })}
-                    className="min-h-10 shrink-0 text-xs font-medium text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors cursor-pointer"
+                    className="min-h-10 shrink-0 text-xs font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
                   >
                     Manage GitHub App access
                   </button>
@@ -397,7 +397,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <span className="material-symbols-outlined text-4xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <p className="text-sm font-medium text-foreground">GitHub Connected</p>
           </div>
         )}

@@ -25,10 +25,10 @@ const TOAST_ICONS: Record<ToastType, string> = {
 };
 
 const TOAST_COLORS: Record<ToastType, string> = {
-  success: 'bg-green-500/10 border-green-500/30 text-green-400',
-  error: 'bg-red-500/10 border-red-500/30 text-red-400',
-  warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
-  info: 'bg-blue-500/10 border-blue-500/30 text-blue-400',
+  success: 'bg-green-50/95 border-green-200 text-green-700',
+  error: 'bg-red-50/95 border-red-200 text-red-700',
+  warning: 'bg-amber-50/95 border-amber-200 text-amber-700',
+  info: 'bg-cyan-50/95 border-cyan-200 text-cyan-700',
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -63,7 +63,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-sm shadow-lg animate-in slide-in-from-right-5 fade-in duration-300 ${TOAST_COLORS[toast.type]}`}
+            className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl shadow-[0_18px_45px_rgba(15,23,42,0.14)] animate-in slide-in-from-right-5 fade-in duration-300 ${TOAST_COLORS[toast.type]}`}
           >
             <span
               className="material-symbols-outlined text-lg shrink-0"

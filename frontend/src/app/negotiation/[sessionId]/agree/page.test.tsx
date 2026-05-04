@@ -31,6 +31,12 @@ vi.mock('@/lib/auth', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('@/lib/wallet-adapter', () => ({
+  useUnifiedWallet: () => ({
+    signAndSendTransaction: vi.fn(),
+  }),
+}));
+
 vi.mock('@/lib/sse', () => ({
   useSse: () => ({ on: vi.fn(() => vi.fn()) }),
 }));
@@ -71,6 +77,7 @@ describe('AgreementPage', () => {
   beforeEach(() => {
     mockGetAgreement.mockReset();
     mockApproveAgreement.mockReset();
+    mockRejectAgreement.mockReset();
   });
 
   it('shows loading state initially', () => {
@@ -115,7 +122,7 @@ describe('AgreementPage', () => {
 
   it('calls approveAgreement on approve click', async () => {
     mockGetAgreement.mockResolvedValue(MOCK_AGREEMENT);
-    mockApproveAgreement.mockResolvedValue(undefined);
+    mockApproveAgreement.mockResolvedValue({ status: 'waiting' });
     // After approval, getAgreement returns updated data
     mockGetAgreement.mockResolvedValueOnce(MOCK_AGREEMENT).mockResolvedValueOnce(MOCK_AGREEMENT_APPROVED);
 
@@ -135,6 +142,7 @@ describe('AgreementPage', () => {
 
   it('shows rejected state on reject click', async () => {
     mockGetAgreement.mockResolvedValue(MOCK_AGREEMENT);
+    mockRejectAgreement.mockResolvedValue(undefined);
 
     const user = userEvent.setup();
     render(<AgreementPage />);

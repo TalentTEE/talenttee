@@ -25,15 +25,15 @@ function stateLabel(state: string): string {
 }
 
 function stateColor(state: string): string {
-  if (state === 'AGREED') return 'bg-[#FF2DF1]/10 text-[#FF2DF1] border-[#FF2DF1]/20';
-  if (state === 'FAILED' || state === 'MAX_ROUNDS') return 'bg-red-500/10 text-red-400 border-red-500/20';
-  return 'bg-muted text-muted-foreground border-border/10';
+  if (state === 'AGREED') return 'bg-[#65a30d]/10 text-[#3f6212] border-[#65a30d]/20';
+  if (state === 'FAILED' || state === 'MAX_ROUNDS') return 'bg-red-50 text-red-700 border-red-200';
+  return 'bg-white/70 text-muted-foreground border-border';
 }
 
 function decisionStyle(decision: string) {
-  if (decision === 'ACCEPT') return 'bg-[#FF2DF1]/10 text-[#FF2DF1]';
-  if (decision === 'REJECT') return 'bg-red-500/10 text-red-400';
-  return 'bg-yellow-500/10 text-yellow-400';
+  if (decision === 'ACCEPT') return 'bg-[#65a30d]/10 text-[#3f6212]';
+  if (decision === 'REJECT') return 'bg-red-50 text-red-700';
+  return 'bg-amber-50 text-amber-700';
 }
 
 function decisionLabel(decision: string) {
@@ -79,10 +79,11 @@ export default function NegotiationMonitorPage() {
   }, [sessionId, isTerminal]);
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {/* Page Title */}
       <div>
-        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#be185d]">Agent workspace</p>
+        <h1 className="font-[var(--font-manrope)] text-3xl font-black text-foreground tracking-[-0.055em] mt-1">
           Negotiation Monitor
         </h1>
         <p className="text-base text-muted-foreground mt-1">
@@ -92,12 +93,12 @@ export default function NegotiationMonitorPage() {
 
       {/* Status Bar */}
       {session && (
-        <div className="bg-card rounded-2xl border border-border/10 p-5">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#FF2DF1]/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-[#be185d]/10 flex items-center justify-center">
                 <span
-                  className="material-symbols-outlined text-lg text-[#FF2DF1]"
+                  className="material-symbols-outlined text-lg text-[#be185d]"
                   style={session.state === 'AGREED' ? { fontVariationSettings: "'FILL' 1" } : undefined}
                 >
                   {session.state === 'AGREED' ? 'task_alt' : session.state === 'FAILED' || session.state === 'MAX_ROUNDS' ? 'cancel' : 'sync'}
@@ -119,7 +120,7 @@ export default function NegotiationMonitorPage() {
               </div>
               <div className="w-32 h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[#FF2DF1] transition-all duration-500"
+                  className="h-full rounded-full bg-[#be185d] transition-all duration-500"
                   style={{ width: `${(session.currentRound / session.maxRounds) * 100}%` }}
                 />
               </div>
@@ -136,7 +137,7 @@ export default function NegotiationMonitorPage() {
         const lastProposal = rounds[rounds.length - 1].proposal;
         if (!lastProposal) return null;
         return (
-          <div className="bg-card rounded-2xl border border-border/10 p-5">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
                 summarize
@@ -144,19 +145,19 @@ export default function NegotiationMonitorPage() {
               <h2 className="text-base font-bold text-foreground">Final Terms</h2>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+              <div className="rounded-2xl bg-white/65 border border-border p-3 text-center shadow-sm">
                 <p className="text-sm text-muted-foreground mb-1">Salary</p>
                 <p className="text-base font-bold text-foreground">{formatSalary(lastProposal.salary)}</p>
               </div>
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+              <div className="rounded-2xl bg-white/65 border border-border p-3 text-center shadow-sm">
                 <p className="text-sm text-muted-foreground mb-1">Remote Policy</p>
                 <p className="text-base font-bold text-foreground">{lastProposal.remotePolicy ?? 'N/A'}</p>
               </div>
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+              <div className="rounded-2xl bg-white/65 border border-border p-3 text-center shadow-sm">
                 <p className="text-sm text-muted-foreground mb-1">Working Hours</p>
                 <p className="text-base font-bold text-foreground">{lastProposal.workingHours ?? 'N/A'}</p>
               </div>
-              <div className="rounded-xl bg-accent/50 border border-border/5 p-3 text-center">
+              <div className="rounded-2xl bg-white/65 border border-border p-3 text-center shadow-sm">
                 <p className="text-sm text-muted-foreground mb-1">Signing Bonus</p>
                 <p className="text-base font-bold text-foreground">
                   {lastProposal.signingBonus ? formatSalary(lastProposal.signingBonus) : 'N/A'}
@@ -171,15 +172,15 @@ export default function NegotiationMonitorPage() {
       {rounds.length > 0 && (
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-base text-[#FF2DF1]">corporate_fare</span>
+            <div className="w-8 h-8 rounded-full bg-[#be185d]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-base text-[#be185d]">corporate_fare</span>
             </div>
             <span className="text-sm font-semibold text-muted-foreground">Employer Agent</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-muted-foreground">Seeker Agent</span>
-            <div className="w-8 h-8 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-base text-[#FF2DF1]">person</span>
+            <div className="w-8 h-8 rounded-full bg-[#be185d]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-base text-[#be185d]">person</span>
             </div>
           </div>
         </div>
@@ -209,8 +210,8 @@ export default function NegotiationMonitorPage() {
                   {/* Reasoning Message */}
                   <div className={`rounded-2xl p-4 ${
                     isSeeker
-                      ? 'bg-[#FF2DF1]/10 border border-[#FF2DF1]/10 rounded-br-md'
-                      : 'bg-card border border-border/10 rounded-bl-md'
+                      ? 'bg-[#be185d]/10 border border-[#be185d]/10 rounded-br-md'
+                      : 'bg-white/75 border border-border rounded-bl-md'
                   }`}>
                     {isStructuredReasoning(round.reasoning) ? (
                       <>
@@ -235,15 +236,15 @@ export default function NegotiationMonitorPage() {
 
                   {/* Proposal Card */}
                   {round.proposal ? (
-                  <div className={`rounded-xl border border-border/10 p-3 w-full ${
-                    isSeeker ? 'bg-[#FF2DF1]/5' : 'bg-accent/30'
+                  <div className={`rounded-2xl border border-border p-3 w-full shadow-sm ${
+                    isSeeker ? 'bg-[#be185d]/5' : 'bg-white/65'
                   }`}>
                     {/* Key Terms Row */}
                     <div className="flex flex-wrap gap-2 mb-2">
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-background/50 text-sm font-bold text-foreground">
                         {formatSalary(round.proposal.salary)}
                         {salaryDelta !== null && salaryDelta !== 0 && (
-                          <span className={`text-sm font-semibold ${salaryDelta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          <span className={`text-sm font-semibold ${salaryDelta > 0 ? 'text-[#3f6212]' : 'text-red-700'}`}>
                             {salaryDelta > 0 ? '+' : ''}{formatSalary(salaryDelta)}
                           </span>
                         )}
@@ -314,7 +315,7 @@ export default function NegotiationMonitorPage() {
         )}
 
         {rounds.length === 0 && (
-          <div className="bg-card rounded-2xl border border-border/10 p-8 text-center">
+          <div className="rounded-[1.75rem] border border-border bg-white/75 p-8 text-center shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <span className="material-symbols-outlined text-3xl text-muted-foreground mb-2">hourglass_empty</span>
             <p className="text-base text-muted-foreground">Waiting for agents to begin negotiation...</p>
           </div>
@@ -323,7 +324,7 @@ export default function NegotiationMonitorPage() {
 
       {/* Pause / Manual Intervention Controls */}
       {!isTerminal && rounds.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border/10 p-5 space-y-3">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-5 space-y-3 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setPaused(!paused)}
@@ -343,7 +344,7 @@ export default function NegotiationMonitorPage() {
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-base font-bold transition-all duration-300 cursor-pointer ${
                 showIntervention
                   ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'bg-muted text-foreground hover:bg-accent'
+                  : 'bg-white/70 border border-border text-foreground hover:bg-white'
               }`}
             >
               <span className="material-symbols-outlined text-base">edit_note</span>
@@ -377,7 +378,7 @@ export default function NegotiationMonitorPage() {
                     }
                   }}
                   placeholder="e.g. Push harder on remote work policy..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-accent/50 border border-border/10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-2xl bg-white/70 border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 transition-colors shadow-sm"
                 />
                 <button
                   onClick={() => {
@@ -394,7 +395,7 @@ export default function NegotiationMonitorPage() {
                 </button>
               </div>
               {interventionSent && (
-                <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+                <div className="flex items-center gap-1.5 text-xs text-[#3f6212]">
                   <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                   Direction sent — your AI agent will apply this in the next round.
                 </div>
@@ -406,7 +407,7 @@ export default function NegotiationMonitorPage() {
 
       {/* Terminal State Banner — Agreement */}
       {isTerminal && session?.state === 'AGREED' && (
-        <div className="relative bg-card rounded-2xl border border-[#FF2DF1]/20 p-6 text-center overflow-hidden animate-[fadeSlideUp_500ms_ease-out]">
+        <div className="relative rounded-[1.75rem] border border-[#be185d]/20 bg-white/75 p-6 text-center overflow-hidden shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl animate-[fadeSlideUp_500ms_ease-out]">
           {/* Confetti particles (CSS only) */}
           <div className="absolute inset-0 pointer-events-none">
             {[...Array(8)].map((_, i) => (
@@ -416,22 +417,22 @@ export default function NegotiationMonitorPage() {
                 style={{
                   left: `${12 + i * 11}%`,
                   top: '60%',
-                  backgroundColor: ['#00E5FF', '#FF2DF1', '#39FF14', '#FFE600', '#BF5AF2', '#FF3B5C', '#00E5FF', '#39FF14'][i],
+                  backgroundColor: ['#0891b2', '#be185d', '#65a30d', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#65a30d'][i],
                   animation: `confetti ${0.8 + i * 0.1}s ease-out ${i * 0.08}s both`,
                 }}
               />
             ))}
           </div>
           <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-lg text-[#FF2DF1]">corporate_fare</span>
+            <div className="w-10 h-10 rounded-full bg-[#be185d]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-lg text-[#be185d]">corporate_fare</span>
             </div>
-            <span className="material-symbols-outlined text-3xl text-[#FF2DF1] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
-            <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-lg text-[#FF2DF1]">person</span>
+            <span className="material-symbols-outlined text-3xl text-[#be185d] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+            <div className="w-10 h-10 rounded-full bg-[#be185d]/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-lg text-[#be185d]">person</span>
             </div>
           </div>
-          <p className="text-base font-bold text-[#39FF14]">
+          <p className="text-base font-bold text-[#3f6212]">
             Agreement Reached!
           </p>
           <p className="text-sm text-muted-foreground mt-1">Both agents have agreed on the terms.</p>
@@ -440,17 +441,17 @@ export default function NegotiationMonitorPage() {
 
       {/* Terminal State Banner — Failure */}
       {isTerminal && session?.state !== 'AGREED' && (
-        <div className="bg-card rounded-2xl border border-red-500/10 p-6 text-center animate-[fadeSlideUp_500ms_ease-out]" style={{ boxShadow: 'inset 0 0 60px rgba(0,0,0,0.3)' }}>
+        <div className="rounded-[1.75rem] border border-red-200 bg-red-50/80 p-6 text-center shadow-[0_20px_60px_rgba(15,23,42,0.08)] animate-[fadeSlideUp_500ms_ease-out]">
           <div className="flex items-center justify-center gap-6 mb-2">
-            <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center -translate-x-2 transition-transform">
-              <span className="material-symbols-outlined text-lg text-[#FF2DF1]">corporate_fare</span>
+            <div className="w-10 h-10 rounded-full bg-[#be185d]/10 flex items-center justify-center -translate-x-2 transition-transform">
+              <span className="material-symbols-outlined text-lg text-[#be185d]">corporate_fare</span>
             </div>
-            <span className="material-symbols-outlined text-3xl text-red-400">warning</span>
-            <div className="w-10 h-10 rounded-full bg-[#FF2DF1]/10 flex items-center justify-center translate-x-2 transition-transform">
-              <span className="material-symbols-outlined text-lg text-[#FF2DF1]">person</span>
+            <span className="material-symbols-outlined text-3xl text-red-700">warning</span>
+            <div className="w-10 h-10 rounded-full bg-[#be185d]/10 flex items-center justify-center translate-x-2 transition-transform">
+              <span className="material-symbols-outlined text-lg text-[#be185d]">person</span>
             </div>
           </div>
-          <p className="text-base font-bold text-red-400">
+          <p className="text-base font-bold text-red-700">
             Negotiation {session?.state === 'FAILED' ? 'Failed' : 'Reached Maximum Rounds'}
           </p>
           <p className="text-sm text-muted-foreground mt-1">This negotiation session has ended without agreement.</p>
@@ -462,7 +463,7 @@ export default function NegotiationMonitorPage() {
         <div className="text-center">
           <Link
             href={`/negotiation/${sessionId}/history`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border/10 bg-card text-base font-medium text-foreground hover:bg-accent/50 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-border bg-white/70 text-base font-semibold text-foreground hover:bg-white transition-colors shadow-sm"
           >
             <span className="material-symbols-outlined text-lg">encrypted</span>
             View Encrypted History

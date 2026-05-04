@@ -88,7 +88,7 @@ export function Gov24ConnectDialog({ open, onOpenChange, onVerified }: Gov24Conn
 
         {step === 'verified' && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <span className="material-symbols-outlined text-4xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             <p className="text-sm font-medium text-foreground">Verification complete</p>
           </div>
         )}
@@ -102,7 +102,7 @@ export function Gov24ConnectDialog({ open, onOpenChange, onVerified }: Gov24Conn
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <span className="material-symbols-outlined text-4xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <p className="text-sm font-medium text-foreground">Gov24 Connected</p>
           </div>
         )}

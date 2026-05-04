@@ -117,7 +117,7 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
               {AVAILABLE_SERVERS.map((srv) => (
                 <label
                   key={srv.id}
-                  className="flex items-start gap-3 rounded-xl border border-border/10 bg-[#060610] px-4 py-3 cursor-pointer hover:border-border/20 transition-colors"
+                  className="flex items-start gap-3 rounded-2xl border border-border bg-white/70 px-4 py-3 cursor-pointer hover:border-primary/20 transition-colors shadow-sm"
                 >
                   <input
                     type="checkbox"
@@ -156,7 +156,7 @@ export function DiscordConnectDialog({ open, onOpenChange, onConnect }: DiscordC
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <span className="material-symbols-outlined text-4xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <p className="text-sm font-medium text-foreground">Discord Connected</p>
           </div>
         )}

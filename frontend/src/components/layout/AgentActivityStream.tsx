@@ -20,7 +20,7 @@ export function AgentActivityStream({ activities }: AgentActivityStreamProps) {
   if (activities.length === 0) return null;
 
   return (
-    <div className="mt-auto pt-4 border-t border-border/10 space-y-1">
+    <div className="mt-auto pt-4 border-t border-border space-y-1">
       <p className="px-3 text-sm font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">
         AI Activity
       </p>
@@ -28,7 +28,7 @@ export function AgentActivityStream({ activities }: AgentActivityStreamProps) {
         <Link
           key={activity.id}
           href={activity.href}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-accent/50 transition-all group animate-[slideIn_300ms_ease-out_both]"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-white/60 transition-colors group animate-[slideIn_300ms_ease-out_both]"
           style={{ animationDelay: `${i * 80}ms` }}
         >
           <span className="material-symbols-outlined text-base text-muted-foreground group-hover:text-primary transition-colors">

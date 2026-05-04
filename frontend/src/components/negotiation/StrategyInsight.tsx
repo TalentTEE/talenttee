@@ -13,10 +13,10 @@ export function StrategyInsight({ reasoning }: StrategyInsightProps) {
   const structured = isStructuredReasoning(reasoning);
 
   return (
-    <div className="rounded-xl border border-border/10 overflow-hidden">
+    <div className="rounded-2xl border border-border bg-white/55 overflow-hidden shadow-sm">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-accent/30 transition-all"
+        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-white/70 transition-colors"
       >
         <span className="material-symbols-outlined text-base text-primary/70">
           lightbulb

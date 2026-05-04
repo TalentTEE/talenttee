@@ -10,7 +10,7 @@ interface MatchContextCardProps {
 function ScorePill({ label, value }: { label: string; value: number }) {
   const pct = Math.round(value * 100);
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF2DF1]/10 border border-[#FF2DF1]/20 text-sm font-bold text-[#FF2DF1]">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#be185d]/10 border border-[#be185d]/20 text-sm font-bold text-[#be185d]">
       {pct}% {label}
     </span>
   );
@@ -18,9 +18,9 @@ function ScorePill({ label, value }: { label: string; value: number }) {
 
 function SkillTag({ skill, variant }: { skill: string; variant: 'matched' | 'missing' | 'muted' }) {
   const styles = {
-    matched: 'bg-[#39FF14]/10 text-[#39FF14] border-[#39FF14]/20',
-    missing: 'bg-red-500/10 text-red-400 border-red-500/20',
-    muted: 'bg-muted text-muted-foreground border-border/10',
+    matched: 'bg-[#65a30d]/10 text-[#3f6212] border-[#65a30d]/20',
+    missing: 'bg-red-50 text-red-700 border-red-200',
+    muted: 'bg-white/70 text-muted-foreground border-border',
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-sm border ${styles[variant]}`}>
@@ -37,16 +37,16 @@ export function MatchContextCard({ context }: MatchContextCardProps) {
   );
 
   return (
-    <div className="bg-card rounded-2xl border border-border/10 overflow-hidden">
+    <div className="rounded-[1.75rem] border border-border bg-white/75 overflow-hidden shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
       {/* Header — always visible */}
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-accent/30 transition-colors"
+        className="w-full flex items-center justify-between p-5 text-left hover:bg-white/60 transition-colors"
       >
         <div className="flex items-center gap-2">
           <span
-            className="material-symbols-outlined text-base text-[#FF2DF1]"
+            className="material-symbols-outlined text-base text-[#be185d]"
             style={{ fontVariationSettings: "'FILL' 1" }}
           >
             mystery
@@ -71,7 +71,7 @@ export function MatchContextCard({ context }: MatchContextCardProps) {
 
           {/* Seeker Summary */}
           {context.seekerSummary && (
-            <p className="text-sm text-muted-foreground italic leading-relaxed border-l-2 border-[#FF2DF1]/30 pl-3">
+            <p className="text-sm text-muted-foreground italic leading-relaxed border-l-2 border-[#be185d]/30 pl-3">
               {context.seekerSummary}
             </p>
           )}

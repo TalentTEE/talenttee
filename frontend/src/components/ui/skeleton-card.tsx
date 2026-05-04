@@ -1,11 +1,11 @@
 export function SkeletonCard({ lines = 3 }: { lines?: number }) {
   return (
-    <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4 animate-pulse">
-      <div className="h-4 w-1/3 bg-muted rounded-lg" />
+    <div className="rounded-2xl border border-border bg-white/70 p-6 space-y-4 shadow-[0_18px_48px_rgba(15,23,42,0.07)] animate-pulse">
+      <div className="h-4 w-1/3 bg-slate-200 rounded-lg" />
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
-          className="h-3 bg-muted rounded-lg"
+          className="h-3 bg-slate-200 rounded-lg"
           style={{ width: `${85 - i * 15}%` }}
         />
       ))}

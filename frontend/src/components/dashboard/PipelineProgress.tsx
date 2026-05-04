@@ -14,19 +14,19 @@ interface StageConfig {
 }
 
 const seekerStages: StageConfig[] = [
-  { key: 'connect', label: 'Connect', icon: 'link', color: '#00F0FF' },
-  { key: 'analyze', label: 'Analyze', icon: 'analytics', color: '#BF5AF2' },
-  { key: 'match', label: 'Match', icon: 'groups', color: '#39FF14' },
-  { key: 'negotiate', label: 'Negotiate', icon: 'handshake', color: '#FF2DF1' },
-  { key: 'agree', label: 'Agree', icon: 'task_alt', color: '#FFE600' },
+  { key: 'connect', label: 'Connect', icon: 'link', color: '#0891b2' },
+  { key: 'analyze', label: 'Analyze', icon: 'analytics', color: '#7c3aed' },
+  { key: 'match', label: 'Match', icon: 'groups', color: '#65a30d' },
+  { key: 'negotiate', label: 'Negotiate', icon: 'handshake', color: '#be185d' },
+  { key: 'agree', label: 'Agree', icon: 'task_alt', color: '#d97706' },
 ];
 
 const employerStages: StageConfig[] = [
-  { key: 'post', label: 'Post', icon: 'edit_note', color: '#FFE600' },
-  { key: 'fund', label: 'Fund', icon: 'account_balance', color: '#39FF14' },
-  { key: 'match', label: 'Match', icon: 'groups', color: '#FF2DF1' },
-  { key: 'negotiate', label: 'Negotiate', icon: 'handshake', color: '#BF5AF2' },
-  { key: 'hire', label: 'Hire', icon: 'celebration', color: '#00F0FF' },
+  { key: 'post', label: 'Post', icon: 'edit_note', color: '#d97706' },
+  { key: 'fund', label: 'Fund', icon: 'account_balance', color: '#65a30d' },
+  { key: 'match', label: 'Match', icon: 'groups', color: '#be185d' },
+  { key: 'negotiate', label: 'Negotiate', icon: 'handshake', color: '#7c3aed' },
+  { key: 'hire', label: 'Hire', icon: 'celebration', color: '#0891b2' },
 ];
 
 interface PipelineProgressProps {

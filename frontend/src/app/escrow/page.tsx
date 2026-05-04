@@ -182,7 +182,7 @@ export default function EscrowPage() {
             Manage your escrow funds on NEAR Protocol
           </p>
         </div>
-        <div className="rounded-2xl border border-border/10 bg-card p-12 flex items-center justify-center">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-12 flex items-center justify-center shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <span className="material-symbols-outlined text-3xl text-muted-foreground animate-spin">
             progress_activity
           </span>
@@ -195,7 +195,8 @@ export default function EscrowPage() {
     <div className="max-w-5xl space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="font-[var(--font-manrope)] text-2xl font-extrabold text-foreground tracking-tight">
+        <p className="text-sm font-black uppercase tracking-[0.18em] text-[#65a30d]">On-chain funding</p>
+        <h1 className="font-[var(--font-manrope)] text-3xl font-black text-foreground tracking-[-0.055em] mt-1">
           Escrow Account
         </h1>
         <p className="text-base text-muted-foreground mt-1">
@@ -214,7 +215,7 @@ export default function EscrowPage() {
       {/* Balance + Deposit Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Balance Card */}
-        <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 space-y-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="material-symbols-outlined text-lg">account_balance</span>
             <span className="text-base font-medium">Available Balance</span>
@@ -230,7 +231,7 @@ export default function EscrowPage() {
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-[#39FF14]"
+                className="text-[#65a30d]"
               >
                 <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2" />
                 <text
@@ -259,7 +260,7 @@ export default function EscrowPage() {
         </div>
 
         {/* Deposit Card */}
-        <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 space-y-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="material-symbols-outlined text-lg">add_circle</span>
             <span className="text-base font-medium">Deposit Funds</span>
@@ -273,7 +274,7 @@ export default function EscrowPage() {
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                className="w-full bg-muted rounded-xl px-4 py-3 pr-16 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#39FF14]/30 transition-all"
+                className="w-full bg-white/70 border border-border rounded-2xl px-4 py-3 pr-16 text-base text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-[#65a30d]/25 transition-all shadow-sm"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
                 NEAR
@@ -282,7 +283,7 @@ export default function EscrowPage() {
             <button
               onClick={handleDeposit}
               disabled={!depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
-              className="w-full py-3 rounded-xl bg-[#39FF14] text-[#0a0a0a] text-base font-semibold hover:bg-[#39FF14]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-2xl bg-[#65a30d] text-white text-base font-bold hover:bg-[#65a30d]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
             >
               {isDepositing ? (
                 <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -302,24 +303,24 @@ export default function EscrowPage() {
       {txStatus && (
         <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
           txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
-            ? 'bg-red-500/10 border-red-500/20'
-            : 'bg-[#39FF14]/10 border-[#39FF14]/20'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-[#65a30d]/10 border-[#65a30d]/20'
         }`}>
           <span className={`material-symbols-outlined text-lg shrink-0 ${
             txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
-              ? 'text-red-400' : 'text-[#39FF14]'
+              ? 'text-red-700' : 'text-[#3f6212]'
           }`}>
             {txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR') ? 'error' : 'check_circle'}
           </span>
           <p className={`text-base ${
             txStatus.includes('failed') || txStatus.includes('Failed') || txStatus.includes('No NEAR')
-              ? 'text-red-400' : 'text-[#39FF14]'
+              ? 'text-red-700' : 'text-[#3f6212]'
           }`}>{txStatus}</p>
         </div>
       )}
 
       {/* Agent Key Setup */}
-      <div className="rounded-2xl border border-border/10 bg-card p-6 space-y-4">
+      <div className="rounded-[1.75rem] border border-border bg-white/75 p-6 space-y-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="material-symbols-outlined text-lg">vpn_key</span>
           <span className="text-base font-medium">Agent Key Setup</span>
@@ -332,12 +333,12 @@ export default function EscrowPage() {
             type="text"
             value={agentPubKey}
             readOnly
-            className="w-full bg-muted rounded-xl px-4 py-3 text-sm text-foreground/70 outline-none font-mono truncate"
+            className="w-full bg-white/70 border border-border rounded-2xl px-4 py-3 text-sm text-foreground/70 outline-none font-mono truncate shadow-sm"
           />
           <button
             onClick={handleAddAgentKey}
             disabled={!agentPubKey.trim() || isSettingKey || (escrow?.agentKeySet ?? false)}
-            className="w-full py-3 rounded-xl bg-[#39FF14] text-[#0a0a0a] text-base font-semibold hover:bg-[#39FF14]/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-2xl bg-[#65a30d] text-white text-base font-bold hover:bg-[#65a30d]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
           >
             {isSettingKey ? (
               <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -350,7 +351,7 @@ export default function EscrowPage() {
       </div>
 
       {/* Payment History */}
-      <div className="rounded-2xl border border-border/10 bg-card overflow-hidden">
+      <div className="rounded-[1.75rem] border border-border bg-white/75 overflow-hidden shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
         <div className="px-6 py-4 border-b border-border/10 flex items-center gap-2">
           <span className="material-symbols-outlined text-lg text-muted-foreground">receipt_long</span>
           <h2 className="font-[var(--font-manrope)] text-base font-bold text-foreground">
@@ -428,22 +429,22 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
   const typeConfig: Record<string, { label: string; color: string; icon: string }> = {
     DEPOSIT: {
       label: 'Deposit',
-      color: 'bg-green-500/10 text-green-400 border-green-500/20',
+      color: 'bg-green-50 text-green-700 border-green-200',
       icon: 'arrow_downward',
     },
     HOLD: {
       label: 'Hold',
-      color: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      color: 'bg-cyan-50 text-cyan-700 border-cyan-200',
       icon: 'lock',
     },
     RELEASE: {
       label: 'Release',
-      color: 'bg-[#39FF14]/10 text-[#39FF14] border-[#39FF14]/20',
+      color: 'bg-[#65a30d]/10 text-[#3f6212] border-[#65a30d]/20',
       icon: 'arrow_upward',
     },
     REFUND: {
       label: 'Refund',
-      color: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+      color: 'bg-slate-100 text-slate-600 border-slate-200',
       icon: 'undo',
     },
   };
@@ -451,7 +452,7 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
   const config = typeConfig['RELEASE'];
 
   return (
-    <tr className="border-b border-border/5 hover:bg-accent/30 transition-colors">
+    <tr className="border-b border-border/70 hover:bg-white/60 transition-colors">
       <td className="px-6 py-4">
         <div>
           <p className="text-base text-foreground">{formatDate(payment.timestamp)}</p>
@@ -472,8 +473,8 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
         </span>
       </td>
       <td className="px-6 py-4">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400 text-sm font-medium">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-green-700 text-sm font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-600" />
           Completed
         </span>
       </td>
@@ -483,7 +484,7 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
             href={`${NEAR_EXPLORER_BASE}/txns/${payment.txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300 font-mono transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-[#3f6212] hover:text-[#65a30d] font-mono transition-colors"
             title={payment.txHash}
           >
             {payment.txHash.slice(0, 8)}...{payment.txHash.slice(-6)}

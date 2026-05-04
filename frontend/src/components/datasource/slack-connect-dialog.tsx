@@ -80,7 +80,7 @@ export function SlackConnectDialog({ open, onOpenChange, onConnect }: SlackConne
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-4">
-              <div className="rounded-xl border border-border/10 bg-[#060610] px-4 py-3">
+              <div className="rounded-2xl border border-border bg-white/70 px-4 py-3 shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">Workspace</p>
                 <p className="text-sm text-foreground">acme-corp.slack.com</p>
               </div>
@@ -116,7 +116,7 @@ export function SlackConnectDialog({ open, onOpenChange, onConnect }: SlackConne
               {AVAILABLE_CHANNELS.map((ch) => (
                 <label
                   key={ch.id}
-                  className="flex items-start gap-3 rounded-xl border border-border/10 bg-[#060610] px-4 py-3 cursor-pointer hover:border-border/20 transition-colors"
+                  className="flex items-start gap-3 rounded-2xl border border-border bg-white/70 px-4 py-3 cursor-pointer hover:border-primary/20 transition-colors shadow-sm"
                 >
                   <input
                     type="checkbox"
@@ -154,7 +154,7 @@ export function SlackConnectDialog({ open, onOpenChange, onConnect }: SlackConne
 
         {step === 'done' && (
           <div className="flex flex-col items-center gap-3 py-10">
-            <span className="material-symbols-outlined text-4xl text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <span className="material-symbols-outlined text-4xl text-[#65a30d]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             <p className="text-sm font-medium text-foreground">Slack Connected</p>
           </div>
         )}

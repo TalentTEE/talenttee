@@ -84,12 +84,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-12 selection:bg-primary selection:text-primary-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center app-ambient px-6 py-12 selection:bg-primary selection:text-primary-foreground">
       {/* Back link */}
       <div className="w-full max-w-md mb-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-base text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-white/60 px-3 py-1.5 text-base font-semibold text-muted-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-white hover:text-foreground"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Back to Home
@@ -98,10 +98,10 @@ export default function LoginPage() {
 
       {/* Header */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-accent mb-5 ring-1 ring-border/20">
+        <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white/70 mb-5 ring-1 ring-border shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <span className="material-symbols-outlined text-primary text-4xl">lock_open</span>
         </div>
-        <h1 className="font-[var(--font-manrope)] text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
+        <h1 className="font-[var(--font-manrope)] text-3xl md:text-5xl font-black tracking-[-0.055em] text-foreground mb-3">
           Welcome back
         </h1>
         <p className="text-muted-foreground text-lg">
@@ -111,12 +111,12 @@ export default function LoginPage() {
 
       {/* Social Login Buttons */}
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-border/10 bg-card p-8 space-y-3">
+        <div className="rounded-[1.75rem] border border-border bg-white/75 p-8 space-y-3 shadow-[0_24px_70px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
           {/* Google */}
           <button
             onClick={() => handleSocialLogin('google')}
             disabled={isLoggingIn}
-            className="w-full py-3.5 rounded-xl bg-white text-[#1f1f1f] text-base font-bold tracking-wide hover:bg-gray-50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-gray-200"
+            className="w-full min-h-12 py-3.5 rounded-2xl bg-white text-[#1f1f1f] text-base font-bold tracking-wide hover:bg-gray-50 transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-gray-200 shadow-sm"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -131,7 +131,7 @@ export default function LoginPage() {
           <button
             onClick={() => handleSocialLogin('kakao')}
             disabled={isLoggingIn}
-            className="w-full py-3.5 rounded-xl bg-[#FEE500] text-[#191919] text-base font-bold tracking-wide hover:bg-[#FDD800] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            className="w-full min-h-12 py-3.5 rounded-2xl bg-[#FEE500] text-[#191919] text-base font-bold tracking-wide hover:bg-[#FDD800] transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 0C4.029 0 0 3.13 0 6.99c0 2.485 1.644 4.671 4.121 5.912l-1.05 3.852c-.093.34.295.613.588.414L7.77 14.35c.4.055.81.084 1.23.084 4.971 0 9-3.13 9-6.99S13.971 0 9 0" fill="#191919"/>
@@ -143,7 +143,7 @@ export default function LoginPage() {
           <button
             onClick={() => handleSocialLogin('email_passwordless')}
             disabled={isLoggingIn}
-            className="w-full py-3.5 rounded-xl bg-accent text-foreground text-base font-bold tracking-wide hover:bg-accent/80 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border/10"
+            className="w-full min-h-12 py-3.5 rounded-2xl bg-white/70 text-foreground text-base font-bold tracking-wide hover:bg-white transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 border border-border shadow-sm"
           >
             <span className="material-symbols-outlined text-lg">mail</span>
             {isLoggingIn ? 'Signing in...' : 'Continue with Email'}
@@ -151,12 +151,12 @@ export default function LoginPage() {
         </div>
 
         {/* Wallet Connect Hub */}
-        <div className="mt-4 rounded-2xl border border-border/10 bg-card p-6">
+        <div className="mt-4 rounded-[1.75rem] border border-border bg-white/70 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
           <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold mb-3">Wallets</p>
           <button
             onClick={handleConnectWallet}
             disabled={isLoggingIn}
-            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full min-h-12 py-3.5 rounded-2xl bg-primary text-primary-foreground text-base font-bold tracking-wide shadow-[0_16px_36px_rgba(8,145,178,0.22)] hover:bg-primary/90 transition-[background-color,transform] active:scale-[0.96] duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoggingIn ? (
               <>
@@ -181,11 +181,11 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="mt-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-base text-center">
+          <div className="mt-4 px-4 py-3 rounded-2xl bg-red-50/90 border border-red-200 text-red-700 text-base text-center shadow-sm">
             <p>{error}</p>
             {error.toLowerCase().includes('not registered') && (
               <p className="mt-2">
-                <Link href="/signup" className="underline font-semibold text-red-300 hover:text-red-200">
+                <Link href="/signup" className="underline font-semibold text-red-700 hover:text-red-800">
                   Sign up
                 </Link>
               </p>
@@ -195,7 +195,7 @@ export default function LoginPage() {
 
         {/* Demo Quick Login (dummy mode only) */}
         {useDummy && (
-          <div className="mt-6 rounded-2xl border border-border/10 bg-card p-6">
+          <div className="mt-6 rounded-[1.75rem] border border-border bg-white/70 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
             <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold mb-4 text-center">Demo Login</p>
             <div className="flex gap-3">
               <button
@@ -211,9 +211,9 @@ export default function LoginPage() {
                   }
                 }}
                 disabled={isLoggingIn}
-                className="flex-1 py-3 rounded-xl border border-border/10 bg-accent/50 text-base font-semibold text-foreground hover:bg-accent transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-2xl border border-border bg-white/70 text-base font-semibold text-foreground hover:bg-white transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-base text-blue-400">person</span>
+                <span className="material-symbols-outlined text-base text-primary">person</span>
                 Seeker (Alice)
               </button>
               <button
@@ -229,7 +229,7 @@ export default function LoginPage() {
                   }
                 }}
                 disabled={isLoggingIn}
-                className="flex-1 py-3 rounded-xl border border-border/10 bg-accent/50 text-base font-semibold text-foreground hover:bg-accent transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-2xl border border-border bg-white/70 text-base font-semibold text-foreground hover:bg-white transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-base text-primary">corporate_fare</span>
                 Employer (Bob)

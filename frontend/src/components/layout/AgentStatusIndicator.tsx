@@ -14,16 +14,16 @@ const stateConfig: Record<AgentState, { color: string; dotClass: string; ringCla
     dotClass: 'animate-[pulse_3s_ease-in-out_infinite]',
   },
   analyzing: {
-    color: 'bg-[#00E5FF]',
+    color: 'bg-[#0891b2]',
     dotClass: 'animate-[pulse_1s_ease-in-out_infinite]',
     ringClass: 'animate-spin',
   },
   negotiating: {
-    color: 'bg-[#FF2DF1]',
+    color: 'bg-[#be185d]',
     dotClass: 'animate-[pulse_2s_ease-in-out_infinite]',
   },
   waiting: {
-    color: 'bg-[#39FF14]',
+    color: 'bg-[#65a30d]',
     dotClass: '',
   },
 };
@@ -34,19 +34,19 @@ export function AgentStatusIndicator({ state, message, onClick }: AgentStatusInd
   return (
     <button
       onClick={onClick}
-      className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-accent/50 transition-all cursor-pointer group"
+      className="hidden sm:flex items-center gap-2.5 px-3 py-2 rounded-full border border-border bg-white/60 shadow-sm hover:bg-white transition-[background-color,box-shadow] cursor-pointer group"
     >
       {/* Animated Dot */}
       <span className="relative flex items-center justify-center w-5 h-5">
         {/* Outer ring for analyzing state */}
         {config.ringClass && (
           <span
-            className={`absolute inset-0 rounded-full border-2 border-[#00E5FF]/30 border-t-[#00E5FF] ${config.ringClass}`}
+             className={`absolute inset-0 rounded-full border-2 border-[#0891b2]/30 border-t-[#0891b2] ${config.ringClass}`}
           />
         )}
         {/* Glow for waiting state */}
         {state === 'waiting' && (
-          <span className="absolute inset-0 rounded-full bg-[#39FF14]/20 animate-[pulse_2s_ease-in-out_infinite]" />
+          <span className="absolute inset-0 rounded-full bg-[#65a30d]/20 animate-[pulse_2s_ease-in-out_infinite]" />
         )}
         {/* Core dot */}
         <span

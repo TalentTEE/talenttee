@@ -32,7 +32,7 @@ export function VerifyBadge({ roundNumber, actor, timestamp, sessionId, onChainT
     <div className="relative inline-flex" ref={popoverRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium text-emerald-400/80 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium text-[#3f6212]/80 hover:text-[#3f6212] hover:bg-[#65a30d]/10 transition-colors cursor-pointer"
         title="Verified — click for details"
       >
         <span
@@ -44,11 +44,11 @@ export function VerifyBadge({ roundNumber, actor, timestamp, sessionId, onChainT
       </button>
 
       {open && (
-        <div className="absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 w-72 bg-card border border-border/20 rounded-xl shadow-2xl p-4 space-y-3 animate-[fadeSlideUp_150ms_ease-out]">
+        <div className="absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 w-72 bg-white/95 border border-border rounded-2xl shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl p-4 space-y-3 animate-[fadeSlideUp_150ms_ease-out]">
           {/* Header */}
           <div className="flex items-center gap-2">
             <span
-              className="material-symbols-outlined text-base text-emerald-400"
+              className="material-symbols-outlined text-base text-[#65a30d]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               verified_user
@@ -79,7 +79,7 @@ export function VerifyBadge({ roundNumber, actor, timestamp, sessionId, onChainT
               href={`${NEAR_EXPLORER_BASE}/txns/${onChainTxHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm font-medium text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-[#65a30d]/10 border border-[#65a30d]/20 text-sm font-medium text-[#3f6212] hover:bg-[#65a30d]/15 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">open_in_new</span>
               View on NEAR Explorer
@@ -87,7 +87,7 @@ export function VerifyBadge({ roundNumber, actor, timestamp, sessionId, onChainT
           )}
 
           {!onChainTxHash && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/10 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 border border-border text-xs text-muted-foreground">
               <span className="material-symbols-outlined text-xs">lock</span>
               Data encrypted & stored off-chain. Agreement recorded on-chain upon approval.
             </div>
