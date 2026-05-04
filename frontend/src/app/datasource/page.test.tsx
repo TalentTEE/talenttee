@@ -121,4 +121,29 @@ describe('DatasourcePage GitHub repository management', () => {
       expect(screen.getByTestId('github-dialog')).toHaveTextContent('mode: manage');
     });
   });
+
+  it('keeps GitHub disconnect aligned to the card action edge when sync time is missing', async () => {
+    mockGetDatasourceStatus.mockResolvedValueOnce([
+      {
+        id: 'conn-1',
+        userId: 'user-1',
+        provider: 'GITHUB',
+        status: 'CONNECTED',
+      },
+    ]);
+
+    render(<DatasourcePage />);
+
+    const disconnectButton = await screen.findByRole('button', { name: /disconnect/i });
+    expect(disconnectButton).toHaveClass('ml-auto');
+  });
+
+  it('uses upload copy for the PDF resume source action', async () => {
+    mockGetDatasourceStatus.mockResolvedValueOnce([]);
+
+    render(<DatasourcePage />);
+
+    expect(await screen.findByText('PDF Resume')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /upload pdf/i })).toBeInTheDocument();
+  });
 });

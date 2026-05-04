@@ -187,8 +187,7 @@ describe('GitHubConnectDialog', () => {
     });
   });
 
-  it('keeps repository selection inside the modal and reveals more repos on demand', async () => {
-    const user = userEvent.setup();
+  it('renders all repositories inside a scrollable modal list', async () => {
     mockGetGithubRepos.mockResolvedValueOnce({
       selectedRepos: [],
       repos: Array.from({ length: 10 }, (_, index) => ({
@@ -213,12 +212,15 @@ describe('GitHubConnectDialog', () => {
     );
 
     expect(await screen.findByText('repo-8')).toBeInTheDocument();
-    expect(screen.queryByText('repo-9')).not.toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toHaveClass('overflow-hidden');
-
-    await user.click(screen.getByRole('button', { name: /show 2 more repositories/i }));
-
     expect(screen.getByText('repo-9')).toBeInTheDocument();
     expect(screen.getByText('repo-10')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveClass('overflow-hidden');
+    expect(screen.getByRole('dialog')).toHaveStyle({
+      height: 'calc(100vh - 2rem)',
+      maxHeight: '720px',
+    });
+    expect(screen.getByTestId('github-repo-list')).toHaveClass('overflow-y-auto', 'overscroll-contain');
+    expect(screen.queryByRole('button', { name: /show .* more repositories/i })).not.toBeInTheDocument();
+
   });
 });

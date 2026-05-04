@@ -449,7 +449,7 @@ export default function DatasourcePage() {
                       {conn?.lastSyncedAt && (
                         <p className="text-xs text-muted-foreground">Last synced: {formatTime(conn.lastSyncedAt)}</p>
                       )}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex flex-1 items-center gap-1.5">
                         {provider.id === 'GITHUB' && (
                           <button
                             onClick={() => setDialogOpen('GITHUB_REPOS')}
@@ -461,7 +461,7 @@ export default function DatasourcePage() {
                         )}
                         <button
                           onClick={() => handleDisconnect(provider.id)}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
+                          className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">link_off</span>
                           Disconnect
@@ -505,8 +505,8 @@ export default function DatasourcePage() {
                     onClick={() => openConnectDialog(provider.id)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-[#00F0FF] text-[#0a0a0a] hover:brightness-90 transition-all cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-sm">add_link</span>
-                    Connect
+                    <span className="material-symbols-outlined text-sm">{provider.id === 'PDF' ? 'upload_file' : 'add_link'}</span>
+                    {provider.id === 'PDF' ? 'Upload PDF' : 'Connect'}
                   </button>
                 )}
               </div>

@@ -16,7 +16,6 @@ interface GitHubConnectDialogProps {
 }
 
 type Step = 'intro' | 'waiting' | 'repos' | 'done' | 'error';
-const REPO_PAGE_SIZE = 8;
 
 const LANGUAGE_COLORS: Record<string, string> = {
   TypeScript: 'bg-blue-500',
@@ -38,7 +37,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [selectedRepoNames, setSelectedRepoNames] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleRepoCount, setVisibleRepoCount] = useState(REPO_PAGE_SIZE);
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [savingRepos, setSavingRepos] = useState(false);
 
@@ -48,7 +46,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
     setRepos([]);
     setSelectedRepoNames(new Set());
     setSearchQuery('');
-    setVisibleRepoCount(REPO_PAGE_SIZE);
   }
 
   useEffect(() => {
@@ -67,7 +64,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
         const data = await getGithubRepos();
         if (cancelled) return;
         setRepos(data.repos);
-        setVisibleRepoCount(REPO_PAGE_SIZE);
         setSelectedRepoNames(new Set(
           data.selectedRepos && data.selectedRepos.length > 0
             ? data.selectedRepos
@@ -195,8 +191,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
   }, [repos, searchQuery]);
 
   const allFilteredSelected = filteredRepos.length > 0 && filteredRepos.every((repo) => selectedRepoNames.has(repo.fullName));
-  const visibleRepos = filteredRepos.slice(0, visibleRepoCount);
-  const hiddenRepoCount = Math.max(0, filteredRepos.length - visibleRepos.length);
 
   function toggleAll() {
     setSelectedRepoNames((prev) => {
@@ -218,10 +212,22 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
       }
     }}>
       <DialogContent
-        className="min-w-0 overflow-hidden"
+        className={step === 'repos'
+          ? 'min-w-0 overflow-hidden overscroll-contain grid-rows-[auto_minmax(0,1fr)]'
+          : 'min-w-0 overflow-hidden'}
+        onWheel={(event) => {
+          if (step !== 'repos') return;
+          const target = event.target;
+          if (!(target instanceof Element) || !target.closest('[data-github-repo-list]')) {
+            event.preventDefault();
+          }
+          event.stopPropagation();
+        }}
         style={{
           width: step === 'repos' ? 'min(560px, calc(100vw - 2rem))' : undefined,
           maxWidth: step === 'repos' ? 'min(560px, calc(100vw - 2rem))' : 448,
+          height: step === 'repos' ? 'calc(100vh - 2rem)' : undefined,
+          maxHeight: step === 'repos' ? 720 : undefined,
         }}
       >
         {step === 'intro' && (
@@ -280,17 +286,14 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                 <p className="text-sm text-muted-foreground">Loading repositories...</p>
               </div>
             ) : (
-              <div className="min-w-0 space-y-3 overflow-hidden py-2">
+              <div className="min-h-0 min-w-0 flex flex-col gap-3 overflow-hidden py-2">
                 <div className="relative min-w-0 w-full">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">search</span>
                   <input
                     type="text"
                     placeholder="Filter repositories..."
                     value={searchQuery}
-                    onChange={(event) => {
-                      setSearchQuery(event.target.value);
-                      setVisibleRepoCount(REPO_PAGE_SIZE);
-                    }}
+                    onChange={(event) => setSearchQuery(event.target.value)}
                     className="w-full pl-9 pr-3 py-2 rounded-lg border border-border/20 bg-[#060610] text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/30"
                   />
                 </div>
@@ -321,8 +324,12 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                   </button>
                 </div>
 
-                <div className="max-h-[350px] min-w-0 overflow-y-auto space-y-1 pr-1 -mr-1">
-                  {visibleRepos.map((repo) => (
+                <div
+                  data-github-repo-list
+                  data-testid="github-repo-list"
+                  className="min-h-[180px] min-w-0 flex-1 overflow-y-auto overscroll-contain space-y-1 pr-1 -mr-1"
+                >
+                  {filteredRepos.map((repo) => (
                     <label
                       key={repo.fullName}
                       className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-foreground/5 transition-colors cursor-pointer"
@@ -367,16 +374,6 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                     <p className="text-center text-sm text-muted-foreground py-6">No repositories match your search.</p>
                   )}
                 </div>
-
-                {hiddenRepoCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setVisibleRepoCount((count) => count + REPO_PAGE_SIZE)}
-                    className="min-h-10 w-full rounded-lg border border-border/10 bg-foreground/[0.03] px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    Show {Math.min(REPO_PAGE_SIZE, hiddenRepoCount)} more repositories
-                  </button>
-                )}
 
                 <button
                   type="button"
