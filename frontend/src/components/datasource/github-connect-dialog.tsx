@@ -110,10 +110,20 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
     return timer;
   }, [initialStep]);
 
-  function handleLogin() {
+  async function handleLogin(options?: { forceInstall?: boolean }) {
     if (useDummy) {
       setStep('repos');
       return;
+    }
+
+    if (!options?.forceInstall) {
+      try {
+        await getGithubRepos();
+        setStep('repos');
+        return;
+      } catch {
+        // No reusable installation is stored for this account yet; fall through to GitHub.
+      }
     }
 
     const url = getGithubOAuthUrl();
@@ -221,7 +231,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                 <p className="text-sm text-foreground">contents: read, metadata: read</p>
               </div>
               <button
-                onClick={handleLogin}
+                onClick={() => handleLogin()}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-foreground text-background font-semibold text-base hover:bg-foreground/90 transition-all cursor-pointer"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
@@ -287,7 +297,7 @@ export function GitHubConnectDialog({ open, onOpenChange, onConnected, useDummy,
                   </p>
                   <button
                     type="button"
-                    onClick={handleLogin}
+                    onClick={() => handleLogin({ forceInstall: true })}
                     className="shrink-0 text-xs font-medium text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors cursor-pointer"
                   >
                     Manage GitHub App access

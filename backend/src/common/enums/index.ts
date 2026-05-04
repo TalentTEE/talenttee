@@ -14,6 +14,7 @@ export enum DataSourceProvider {
 export enum DataSourceStatus {
   CONNECTED = 'CONNECTED',
   MOCK = 'MOCK',
+  DISCONNECTED = 'DISCONNECTED',
 }
 
 export enum JobPostingStatus {

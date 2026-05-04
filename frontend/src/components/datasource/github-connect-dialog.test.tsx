@@ -50,6 +50,7 @@ describe('GitHubConnectDialog', () => {
     const user = userEvent.setup();
     const onConnected = vi.fn();
     const onOpenChange = vi.fn();
+    mockGetGithubRepos.mockRejectedValueOnce(new Error('GitHub is not connected'));
 
     render(
       <GitHubConnectDialog
@@ -77,6 +78,24 @@ describe('GitHubConnectDialog', () => {
       expect(mockSaveSelectedRepos).toHaveBeenCalledWith(['talent-dev/core', 'talent-dev/api']);
       expect(onConnected).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('reuses an existing GitHub App installation before opening the install popup', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <GitHubConnectDialog
+        open
+        onOpenChange={vi.fn()}
+        onConnected={vi.fn()}
+        useDummy={false}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /install github app/i }));
+
+    expect(await screen.findByText(/select repositories/i)).toBeInTheDocument();
+    expect(window.open).not.toHaveBeenCalled();
   });
 
   it('opens directly to repository selection in manage mode and saves removals', async () => {

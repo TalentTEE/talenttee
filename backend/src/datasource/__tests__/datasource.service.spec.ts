@@ -21,14 +21,19 @@ describe('DatasourceService GitHub App repository selection', () => {
   const repo = {
     findOne: jest.fn(),
     save: jest.fn(),
+    remove: jest.fn(),
+    find: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.restoreAllMocks();
     repo.findOne.mockReset();
     repo.save.mockReset();
+    repo.remove.mockReset();
+    repo.find.mockReset();
     repo.findOne.mockResolvedValue({ ...connection });
     repo.save.mockImplementation(async (value) => value);
+    repo.find.mockResolvedValue([{ ...connection, status: DataSourceStatus.DISCONNECTED }]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -90,8 +95,32 @@ describe('DatasourceService GitHub App repository selection', () => {
 
     expect(repo.save).toHaveBeenCalledWith(
       expect.objectContaining({
+        status: DataSourceStatus.CONNECTED,
         selectedRepos: ['talent-dev/core', 'talent-dev/api'],
       }),
     );
+  });
+
+  it('keeps GitHub installation details when disconnecting so reconnect can skip reinstall', async () => {
+    await service.disconnect('user-1', DataSourceProvider.GITHUB);
+
+    expect(repo.remove).not.toHaveBeenCalled();
+    expect(repo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        installationId: 12345,
+        githubLogin: 'talent-dev',
+        selectedRepos: ['talent-dev/core'],
+        status: DataSourceStatus.DISCONNECTED,
+      }),
+    );
+  });
+
+  it('skips disconnected GitHub connections during collection', async () => {
+    jest.spyOn(global, 'fetch');
+
+    const result = await service.collectAllData('user-1');
+
+    expect(result.github).toBeNull();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

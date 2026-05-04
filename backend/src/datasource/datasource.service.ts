@@ -157,6 +157,7 @@ export class DatasourceService {
     }
 
     conn.selectedRepos = repos;
+    conn.status = DataSourceStatus.CONNECTED;
     conn.analysisCache = null as any;
     conn.analysisCachedAt = null as any;
     await this.dsRepo.save(conn);
@@ -206,6 +207,17 @@ export class DatasourceService {
   async disconnect(userId: string, provider: DataSourceProvider): Promise<void> {
     const conn = await this.dsRepo.findOne({ where: { userId, provider } });
     if (!conn) throw new NotFoundException(`${provider} is not connected`);
+
+    if (provider === DataSourceProvider.GITHUB && conn.installationId) {
+      conn.status = DataSourceStatus.DISCONNECTED;
+      conn.accessToken = null;
+      conn.analysisCache = null as any;
+      conn.analysisCachedAt = null as any;
+      conn.lastSyncedAt = null as any;
+      await this.dsRepo.save(conn);
+      return;
+    }
+
     await this.dsRepo.remove(conn);
   }
 
@@ -231,6 +243,9 @@ export class DatasourceService {
   async getProviderData(userId: string, provider: DataSourceProvider): Promise<Record<string, any>> {
     const conn = await this.getConnectionByProvider(userId, provider);
     if (!conn) throw new NotFoundException(`${provider} is not connected`);
+    if (conn.status === DataSourceStatus.DISCONNECTED) {
+      throw new NotFoundException(`${provider} is not connected`);
+    }
 
     // 1. Get raw data (live GitHub, PDF cache, or fixture)
     let rawData: Record<string, any>;
@@ -607,6 +622,7 @@ export class DatasourceService {
     const result: Record<string, any> = { github: null, slack: null, discord: null, gov24: null, pdf: null };
 
     for (const conn of connections) {
+      if (conn.status === DataSourceStatus.DISCONNECTED) continue;
       const key = conn.provider.toLowerCase();
       try {
         result[key] = await this.getProviderData(userId, conn.provider);
