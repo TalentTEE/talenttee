@@ -9,6 +9,8 @@ import { EscrowAccount, EscrowPayment } from '@/lib/types';
 import { AINudge } from '@/components/ui/AINudge';
 import { actionCreators } from '@near-js/transactions';
 
+const NEAR_EXPLORER_BASE = 'https://testnet.nearblocks.io';
+
 /** Convert a NEAR amount string (e.g. "1.5") to yoctoNEAR string */
 function parseNearAmount(amount: string): string {
   const [whole, fraction = ''] = amount.split('.');
@@ -477,9 +479,16 @@ function PaymentRow({ payment }: { payment: EscrowPayment }) {
       </td>
       <td className="px-6 py-4">
         {payment.txHash ? (
-          <span className="text-sm text-muted-foreground font-mono">
-            {payment.txHash}
-          </span>
+          <a
+            href={`${NEAR_EXPLORER_BASE}/txns/${payment.txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300 font-mono transition-colors"
+            title={payment.txHash}
+          >
+            {payment.txHash.slice(0, 8)}...{payment.txHash.slice(-6)}
+            <span className="material-symbols-outlined text-xs">open_in_new</span>
+          </a>
         ) : (
           <span className="text-sm text-muted-foreground/50">{'\u2014'}</span>
         )}

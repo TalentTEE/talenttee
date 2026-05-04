@@ -20,6 +20,7 @@ import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
 import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
 import { setupHereWallet } from '@near-wallet-selector/here-wallet';
 import { setupEthereumWallets } from '@near-wallet-selector/ethereum-wallets';
+import { setupWalletConnect } from '@near-wallet-selector/wallet-connect';
 import { createConfig, http } from '@wagmi/core';
 import { type Chain } from 'viem';
 
@@ -30,6 +31,9 @@ const NEAR_NETWORK =
 
 const ESCROW_CONTRACT_ID =
   process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID || 'escrow.testnet';
+
+const WALLETCONNECT_PROJECT_ID =
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
 
 /* ── NEAR Protocol chain definitions for wagmi/viem ── */
 const nearTestnet = {
@@ -88,17 +92,37 @@ export function WalletSelectorProvider({ children }: { children: ReactNode }) {
     let observer: MutationObserver | null = null;
 
     async function init() {
+      const modules = [
+        setupMyNearWallet(),
+        setupMeteorWallet(),
+        setupHereWallet(),
+        setupEthereumWallets({
+          wagmiConfig,
+          chainId: NEAR_NETWORK === 'mainnet' ? 397 : 398,
+        }),
+      ] as Parameters<typeof setupWalletSelector>[0]['modules'];
+
+      if (WALLETCONNECT_PROJECT_ID) {
+        const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://talenttee.app';
+        modules.push(
+          setupWalletConnect({
+            projectId: WALLETCONNECT_PROJECT_ID,
+            chainId: `near:${NEAR_NETWORK}`,
+            metadata: {
+              name: 'TalentTee',
+              description: 'AI negotiation and hiring platform',
+              url: appUrl,
+              icons: [`${appUrl}/favicon.ico`],
+            },
+          }),
+        );
+      } else {
+        console.warn('[WalletSelector] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set — WalletConnect module disabled');
+      }
+
       const sel = await setupWalletSelector({
         network: NEAR_NETWORK,
-        modules: [
-          setupMyNearWallet(),
-          setupMeteorWallet(),
-          setupHereWallet(),
-          setupEthereumWallets({
-            wagmiConfig,
-            chainId: NEAR_NETWORK === 'mainnet' ? 397 : 398,
-          }),
-        ],
+        modules,
       });
 
       if (cancelled) return;

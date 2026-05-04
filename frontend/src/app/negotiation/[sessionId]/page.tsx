@@ -8,6 +8,7 @@ import { NegotiationSession, NegotiationRound, MatchContext, isStructuredReasoni
 import { ThinkingAnimation } from '@/components/negotiation/ThinkingAnimation';
 import { StrategyInsight } from '@/components/negotiation/StrategyInsight';
 import { MatchContextCard } from '@/components/negotiation/MatchContextCard';
+import { VerifyBadge } from '@/components/negotiation/VerifyBadge';
 import { formatSalary } from '@/lib/format';
 
 function stateLabel(state: string): string {
@@ -267,14 +268,21 @@ export default function NegotiationMonitorPage() {
                   </div>
                   ) : null}
 
-                  {/* Decision Badge */}
-                  <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'}`}>
+                  {/* Decision Badge + Verify */}
+                  <div className={`flex items-center gap-1 ${isSeeker ? 'justify-end' : 'justify-start'}`}>
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-bold ${decisionStyle(round.decision)}`}>
                       <span className="material-symbols-outlined text-sm" style={round.decision === 'ACCEPT' ? { fontVariationSettings: "'FILL' 1" } : undefined}>
                         {round.decision === 'ACCEPT' ? 'task_alt' : round.decision === 'REJECT' ? 'cancel' : 'swap_horiz'}
                       </span>
                       {decisionLabel(round.decision)}
                     </span>
+                    <VerifyBadge
+                      roundNumber={round.round}
+                      actor={round.actor}
+                      timestamp={round.timestamp}
+                      sessionId={sessionId}
+                      onChainTxHash={session?.onChainTxHash}
+                    />
                   </div>
 
                   {/* Strategy Insight */}

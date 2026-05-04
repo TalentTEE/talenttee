@@ -359,6 +359,7 @@ export class NegotiationService {
           proposal: data.proposal,
           reasoning: data.reasoning,
           decision: round.decision,
+          timestamp: round.timestamp,
         };
       } catch {
         return {
@@ -369,6 +370,7 @@ export class NegotiationService {
           proposal: null,
           reasoning: 'Decryption failed',
           decision: round.decision,
+          timestamp: round.timestamp,
         };
       }
     });

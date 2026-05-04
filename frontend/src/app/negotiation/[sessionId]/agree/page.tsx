@@ -2,11 +2,16 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, getInterviewMessages, sendInterviewMessage, USE_DUMMY } from '@/lib/api';
-import { AgreementRecord, NegotiationRound, InterviewMessage, isStructuredReasoning } from '@/lib/types';
+import { getAgreement, getNegotiationSession, getNegotiationRounds, approveAgreement, rejectAgreement, confirmAgreementTx, getInterviewMessages, sendInterviewMessage, USE_DUMMY } from '@/lib/api';
+import { AgreementRecord, NegotiationSession, NegotiationRound, InterviewMessage, isStructuredReasoning } from '@/lib/types';
 import { formatSalary } from '@/lib/format';
 import { useAuth } from '@/lib/auth';
+import { useUnifiedWallet } from '@/lib/wallet-adapter';
 import { useSse } from '@/lib/sse';
+import { VerifyBadge } from '@/components/negotiation/VerifyBadge';
+import { actionCreators } from '@near-js/transactions';
+
+const NEAR_EXPLORER_BASE = 'https://testnet.nearblocks.io';
 
 type FlowState = 'idle' | 'approving' | 'waiting' | 'completed' | 'rejected';
 
@@ -54,10 +59,12 @@ export default function AgreementPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { signAndSendTransaction } = useUnifiedWallet();
   const { on } = useSse();
   const sessionId = params.sessionId as string;
 
   const [agreement, setAgreement] = useState<AgreementRecord | null>(null);
+  const [session, setSession] = useState<NegotiationSession | null>(null);
   const [rounds, setRounds] = useState<NegotiationRound[]>([]);
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -72,6 +79,7 @@ export default function AgreementPage() {
     if (!sessionId) return;
 
     getNegotiationRounds(sessionId).then(setRounds).catch(() => {});
+    getNegotiationSession(sessionId).then(setSession).catch(() => {});
 
     getAgreement(sessionId)
       .then((data) => {
@@ -178,17 +186,37 @@ export default function AgreementPage() {
     }
   };
 
+  const recordOnChain = async (txParams: any) => {
+    try {
+      const result: any = await signAndSendTransaction({
+        receiverId: txParams.contractId,
+        actions: [
+          actionCreators.functionCall(
+            txParams.methodName,
+            txParams.args,
+            BigInt(txParams.gas || '30000000000000'),
+            BigInt(txParams.deposit || '0'),
+          ),
+        ],
+      });
+      const hash = result?.txHash ?? result?.transaction?.hash ?? null;
+      if (hash) {
+        await confirmAgreementTx(sessionId, hash).catch(() => {});
+        setTxHash(hash);
+      }
+    } catch {
+      // On-chain recording failed (contract may not exist) — agreement still valid
+    }
+  };
+
   const handleApprove = async () => {
     if (flowState === 'approving') return;
     setFlowState('approving');
     try {
-      await approveAgreement(sessionId);
-
-      // Move to waiting state
-      setFlowState('waiting');
+      const res = await approveAgreement(sessionId);
 
       if (USE_DUMMY) {
-        // Simulate other party approving after 3 seconds
+        setFlowState('waiting');
         setTimeout(() => {
           setTxHash('0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''));
           if (agreement) {
@@ -196,18 +224,28 @@ export default function AgreementPage() {
           }
           setFlowState('completed');
         }, 3000);
+        return;
+      }
+
+      if (res.status === 'both_approved' && res.txParams) {
+        // Both approved — record on-chain
+        await recordOnChain(res.txParams);
+        const updated = await getAgreement(sessionId);
+        setAgreement(updated);
+        setTxHash(updated.onChainTxHash ?? null);
+        setFlowState('completed');
       } else {
-        // Try to fetch updated agreement — might already be completed
+        // Waiting for other party
+        setFlowState('waiting');
         try {
           const updated = await getAgreement(sessionId);
           if (updated.seekerApproved && updated.employerApproved) {
             setAgreement(updated);
             setTxHash(updated.onChainTxHash ?? null);
             setFlowState('completed');
-            return;
           }
         } catch {
-          // Not yet — SSE will notify when the other party acts
+          // SSE will notify when the other party acts
         }
       }
     } catch (err) {
@@ -460,21 +498,70 @@ export default function AgreementPage() {
                 </div>
               </div>
 
-              {/* TX Hash */}
-              {txHash && (
-                <div className="bg-card rounded-2xl border border-border/10 p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="material-symbols-outlined text-base text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      verified
-                    </span>
-                    <p className="text-base font-bold text-primary">On-Chain Transaction</p>
-                  </div>
-                  <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
-                    <p className="text-sm uppercase tracking-wider text-muted-foreground mb-1">Transaction Hash</p>
-                    <p className="text-sm font-mono text-foreground break-all">{txHash}</p>
-                  </div>
+              {/* On-Chain Record */}
+              <div className="bg-card rounded-2xl border border-emerald-500/15 p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    verified_user
+                  </span>
+                  <p className="text-base font-bold text-emerald-400">On-Chain Verification</p>
                 </div>
-              )}
+
+                {/* Agreement Hash */}
+                <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Agreement Hash (SHA-256)</p>
+                  <p className="text-xs font-mono text-foreground/70 break-all">{agreement.agreementHash}</p>
+                </div>
+
+                {/* TX Hash + Explorer Link */}
+                {txHash && (
+                  <div className="space-y-2">
+                    <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
+                      <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Transaction Hash</p>
+                      <p className="text-xs font-mono text-foreground break-all">{txHash}</p>
+                    </div>
+                    <a
+                      href={`${NEAR_EXPLORER_BASE}/txns/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm font-bold text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      View on NEAR Explorer
+                    </a>
+                  </div>
+                )}
+
+                {/* Party Accounts */}
+                {session && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="material-symbols-outlined text-xs text-muted-foreground">corporate_fare</span>
+                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Employer</p>
+                      </div>
+                      <p className="text-xs font-mono text-foreground/70 truncate">
+                        {session.employer?.nearAccountId || 'N/A'}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-muted/50 border border-border/5 p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="material-symbols-outlined text-xs text-muted-foreground">person</span>
+                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Seeker</p>
+                      </div>
+                      <p className="text-xs font-mono text-foreground/70 truncate">
+                        {session.seeker?.nearAccountId || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Encryption Info */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/5 text-xs text-muted-foreground">
+                  <span className="material-symbols-outlined text-xs">lock</span>
+                  Negotiation encrypted with ECDH + XChaCha20-Poly1305
+                </div>
+              </div>
 
               {/* Interview Messages */}
               <div className="bg-card rounded-2xl border border-border/10 p-6">
@@ -662,8 +749,8 @@ export default function AgreementPage() {
                       </div>
                       )}
 
-                      {/* Decision Badge */}
-                      <div className={`flex ${isSeeker ? 'justify-end' : 'justify-start'} px-1`}>
+                      {/* Decision Badge + Verify */}
+                      <div className={`flex items-center gap-1 ${isSeeker ? 'justify-end' : 'justify-start'} px-1`}>
                         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-bold ${
                           round.decision === 'ACCEPT'
                             ? 'bg-primary/10 text-primary'
@@ -679,6 +766,13 @@ export default function AgreementPage() {
                           </span>
                           {round.decision === 'ACCEPT' ? 'Accepted' : round.decision === 'REJECT' ? 'Rejected' : 'Counter'}
                         </span>
+                        <VerifyBadge
+                          roundNumber={round.round}
+                          actor={round.actor}
+                          timestamp={round.timestamp}
+                          sessionId={sessionId}
+                          onChainTxHash={agreement?.onChainTxHash}
+                        />
                       </div>
                     </div>
                   </div>

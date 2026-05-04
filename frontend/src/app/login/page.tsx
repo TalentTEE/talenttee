@@ -13,13 +13,13 @@ export default function LoginPage() {
     connectWeb3Auth,
     showWalletSelector,
     loginMethod,
+    signOut,
   } = useUnifiedWallet();
   const useDummy = process.env.NEXT_PUBLIC_USE_DUMMY === 'true';
   const router = useRouter();
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [walletReady, setWalletReady] = useState(false);
 
   const doLogin = useCallback(async (accountId: string) => {
@@ -51,6 +51,10 @@ export default function LoginPage() {
     setIsLoggingIn(true);
     setError(null);
     try {
+      // Prevent provider stickiness (e.g. Kakao click opening Google session)
+      // by clearing any existing wallet session before social connect.
+      await signOut().catch(() => {});
+
       const result = await connectWeb3Auth(provider);
       if (!result) {
         setIsLoggingIn(false);
@@ -146,44 +150,34 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Advanced: NEAR Wallet */}
-        <div className="mt-4">
+        {/* Wallet Connect Hub */}
+        <div className="mt-4 rounded-2xl border border-border/10 bg-card p-6">
+          <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold mb-3">Wallets</p>
           <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            onClick={handleConnectWallet}
+            disabled={isLoggingIn}
+            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined text-sm">
-              {showAdvanced ? 'expand_less' : 'expand_more'}
-            </span>
-            Advanced: Connect NEAR Wallet
+            {isLoggingIn ? (
+              <>
+                <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                Logging in...
+              </>
+            ) : walletReady && walletAccountId ? (
+              <>
+                <span className="material-symbols-outlined text-base">login</span>
+                Continue as {walletAccountId.split('.')[0]}
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-base">account_balance_wallet</span>
+                Connect NEAR or WalletConnect
+              </>
+            )}
           </button>
-
-          {showAdvanced && (
-            <div className="mt-2 rounded-2xl border border-border/10 bg-card p-6">
-              <button
-                onClick={handleConnectWallet}
-                disabled={isLoggingIn}
-                className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-base font-bold tracking-wide hover:bg-primary/90 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLoggingIn ? (
-                  <>
-                    <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                    Logging in...
-                  </>
-                ) : walletReady && walletAccountId ? (
-                  <>
-                    <span className="material-symbols-outlined text-base">login</span>
-                    Continue as {walletAccountId.split('.')[0]}
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-base">account_balance_wallet</span>
-                    Connect Wallet
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            Choose MetaMask, HERE, MyNearWallet, Meteor and more from the wallet modal.
+          </p>
         </div>
 
         {error && (

@@ -16,6 +16,7 @@ export default function SignupPage() {
     connectWeb3Auth,
     showWalletSelector,
     loginMethod,
+    signOut,
   } = useUnifiedWallet();
   const router = useRouter();
 
@@ -81,6 +82,9 @@ export default function SignupPage() {
     setIsSubmitting(true);
     setError(null);
     try {
+      // Prevent provider stickiness between social logins
+      await signOut().catch(() => {});
+
       const result = await connectWeb3Auth(provider);
       if (!result) {
         setIsSubmitting(false);
